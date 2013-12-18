@@ -1,0 +1,30 @@
+=head1 NAME 
+
+Form::Data::Processor - yet another form data processor
+
+
+=head1 DESCRIPTION
+
+Actually it is just another form data validator,  which was inspired by
+L<HTML::FormHandler>. It has similar syntax and similar features, except one: it
+is B<NOT> a form renderer (but it is written using L<Moose>, so you can extend
+it as you wish).
+
+
+=head1 Form::Data::Processor vs HTML::FormHandler
+
+The main goal was increasing validation speed with saving count of validate
+features as possible.
+
+And here is benchmarks:
+
+TODO
+
+
+=head1 START HERE
+
+=head2 L<Form::Data::Processor::Form>
+
+=head2 L<Form::Data::Processor::Field>
+
+=cut
