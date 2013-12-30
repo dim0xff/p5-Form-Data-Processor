@@ -5,6 +5,7 @@ use namespace::autoclean;
 
 use Class::Load qw(load_optional_class);
 use Data::Clone;
+use List::MoreUtils qw(uniq);
 
 has fields => (
     is      => 'rw',
@@ -338,7 +339,9 @@ sub validate_fields {
     for my $field ( $self->all_fields ) {
         $field->validate;
 
-        # TODO не выполняется валидация для дочерних полей
+        for my $code ( $field->all_external_validators ) {
+            $code->( $self, $field );
+        }
     }
 }
 
@@ -389,6 +392,34 @@ sub result {
         map { $_->name => $_->_result }
         grep { $_->has_value } $self->all_fields
     };
+}
+
+sub _find_external_validators {
+    my $self  = shift;
+    my $field = shift;
+
+    my @validators;
+
+    ( my $validator = $field->full_name ) =~ s/\./_/g;
+
+    unless ( $self->is_form ) {
+        ( my $full_name = $self->full_name ) =~ s/\./_/g;
+        $validator =~ s/^\Q$full_name\E_//;
+    }
+
+    $validator = 'validate_' . $validator;
+
+    # Search validator in current obj
+    if ( my $code = $self->can($validator) ) {
+        push( @validators, $code );
+    }
+
+    # Search validator in parent objects
+    if ( $self->can('parent') ) {
+        push( @validators, $self->parent->_find_external_validators($field) );
+    }
+
+    return @validators;
 }
 
 1;

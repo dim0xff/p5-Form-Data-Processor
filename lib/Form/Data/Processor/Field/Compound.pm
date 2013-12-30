@@ -23,6 +23,14 @@ sub BUILD {
     $self->_build_fields;
 }
 
+after _init_external_validators => sub {
+    my $self = shift;
+
+    for my $field ( $self->all_fields ) {
+        $field->_init_external_validators;
+    }
+};
+
 sub _before_ready {
     $_[0]->_ready_fields;
 }

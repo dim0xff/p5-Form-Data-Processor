@@ -223,7 +223,7 @@ Clear current form (L</clear_params>, L<Form::Data::Processor::Role::Errors/clea
 Process (L</clear_form>, L</setup_form>, L<Form::Data::Processor::Role::Fields/init_input> and L<Form::Data::Processor::Role::Fields/validate_fields>)
 current form with provided parameters.
 
-If arguments provided, it will be placed to L</setup_form>.
+If arguments are provided, it will be placed to L</setup_form>.
 
 Returns true, if form validated without errors via L</validated>.
 
