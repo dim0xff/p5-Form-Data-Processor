@@ -46,6 +46,16 @@ package Form {
         return { map { $_->full_name => [ $_->all_errors ] }
                 shift->all_error_fields };
     }
+
+    sub validate_text_max {
+        my $self  = shift;
+        my $field = shift;
+
+        return if $field->has_errors;
+
+        $field->add_error('validate_text_max')
+            if ( $field->value || '' ) =~ /try/;
+    }
 }
 
 package main {
@@ -135,6 +145,28 @@ package main {
             $form->dump_errors,
             {
                 text_min => ['Field is too short'],
+            },
+            'OK, right error messages'
+        );
+    };
+
+    subtest 'external_validators' => sub {
+        ok(
+            !$form->process(
+                {
+                    text                      => ' ' x 10,
+                    text_required             => 'required',
+                    text_required_notnullable => ' ' x 10,
+                    text_min                  => 'c' x 10,
+                    text_max                  => 'try',
+                }
+            ),
+            'Form validated with errors'
+        );
+        is_deeply(
+            $form->dump_errors,
+            {
+                text_max => ['validate_text_max'],
             },
             'OK, right error messages'
         );

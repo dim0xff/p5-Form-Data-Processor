@@ -46,9 +46,29 @@ package Form::TraitFor::Text {
     ];
 }
 
+package Form::TraitFor::Compound {
+    use Form::Data::Processor::Moose::Role;
+
+    sub validate_text {
+        my $self  = shift;
+        my $field = shift;
+
+        return if $field->has_errors;
+
+        $self->test_str( $self->test_str . '1' );
+    }
+}
+
 package Form::Field::TextCompound {
     use Form::Data::Processor::Moose;
     extends 'Form::Data::Processor::Field::Compound';
+    with 'Form::TraitFor::Compound';
+
+    has test_str => (
+        is      => 'rw',
+        isa     => 'Str',
+        default => '',
+    );
 
     has_field text => ( type => 'Text', );
 
@@ -87,6 +107,26 @@ package Form {
     sub dump_errors {
         return { map { $_->full_name => [ $_->all_errors ] }
                 shift->all_error_fields };
+    }
+
+    sub validate_compound_compound_text {
+        my $self  = shift;
+        my $field = shift;
+
+        return if $field->has_errors;
+
+        $self->field('compound.compound')
+            ->test_str( $self->field('compound.compound')->test_str . '2' );
+    }
+
+    sub validate_compound_compound_text_max {
+        my $self  = shift;
+        my $field = shift;
+
+        return if $field->has_errors;
+
+        $field->add_error('validate_text_max')
+            if ( $field->value || '' ) =~ /try/;
     }
 }
 
@@ -200,6 +240,35 @@ package main {
         !$form->field('compound.compound.text_max')->has_value,
         'text_max does not have value after parent value cleared'
     );
+
+    subtest 'external_validators' => sub {
+        $form->field('compound.compound')->test_str('');
+
+        ok(
+            !$form->process(
+                {
+                    compound => {
+                        text     => 'text',
+                        compound => {
+                            text_max => 'try',
+                        },
+                    }
+                }
+            ),
+            'Form validated with errors'
+        );
+
+        is_deeply(
+            $form->dump_errors,
+            {
+                'compound.compound.text_max' => ['validate_text_max'],
+            },
+            'OK, right error messages'
+        );
+
+        is( $form->field('compound.compound')->test_str,
+            '12', 'Deep inheritance' );
+    };
 
     done_testing();
 }

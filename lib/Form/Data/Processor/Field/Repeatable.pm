@@ -59,6 +59,12 @@ sub BUILD {
     );
 }
 
+after _init_external_validators => sub {
+    my $self = shift;
+
+    $self->contains->_init_external_validators if $self->has_contains;
+};
+
 sub _before_ready {
     my $self = shift;
 
@@ -101,6 +107,9 @@ sub _build_contains {
 
     $self->clear_fields;
     $self->clear_index;
+
+    $self->contains->name('');
+    $self->contains->_init_external_validators;
 
     confess 'Repeatable does not contain fields' unless $self->has_contains;
 

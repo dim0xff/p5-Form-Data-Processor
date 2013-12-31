@@ -25,6 +25,8 @@ sub BUILD {
     $self->_build_apply_list;
     $self->add_actions( $field_attr->{apply} )
         if ref $field_attr->{apply} eq 'ARRAY';
+
+    $self->_init_external_validators();
 }
 
 #
@@ -61,7 +63,6 @@ has required => (
     isa     => 'Bool',
     default => 0,
 );
-
 
 has form => (
     is        => 'rw',
@@ -131,24 +132,48 @@ has _init_input_actions => (
     }
 );
 
+has _external_validators => (
+    is      => 'rw',
+    isa     => 'ArrayRef[CodeRef]',
+    traits  => ['Array'],
+    default => sub { [] },
+    handles => {
+        add_external_validator    => 'push',
+        all_external_validators   => 'elements',
+        num_external_validators   => 'count',
+        clear_external_validators => 'clear',
+    },
+);
 
 #
 # Methods
 #
 
+sub _init_external_validators {
+    my $self = shift;
+
+    return unless $self->parent;
+
+    $self->clear_external_validators;
+
+    $self->add_external_validator(
+        $self->parent->_find_external_validators($self) );
+}
+
 sub _set_full_name {
     my $self = shift;
 
-    $self->full_name(
-        (
-              $self->parent
-            ? $self->parent->is_form
-                    ? ''
-                    : $self->parent->full_name . '.'
-            : ''
-        )
-        . $self->name
-    );
+    my $full_name = (
+          $self->parent
+        ? $self->parent->is_form
+                ? ''
+                : $self->parent->full_name . '.'
+        : ''
+    ) . $self->name;
+
+    $full_name =~ s/\.$//g;
+
+    $self->full_name($full_name);
 
     if ( $self->DOES('Form::Data::Processor::Role::Fields') ) {
         for my $field ( $self->all_fields ) {
@@ -257,7 +282,6 @@ sub validate {
         $sub->($self);
     }
 }
-
 
 sub validate_required {
     my $self = shift;
@@ -475,6 +499,9 @@ by Form::Data::Processor::Field:: you can create you own by extending current cl
 
 Every field, which is based on this class, does L<MooseX::Traits> and L<Form::Data::Processor::Role::Errors>.
 
+Field could be validated in different ways: L<actions|/add_actions>, L<internal validation|/validate>
+or L<external validation|/EXTERNAL VALIDATION>. These ways could be mixed.
+
 =head1 ACCESSORS
 
 =head2 disabled
@@ -497,7 +524,7 @@ on this field.
 
 =over 4
 
-=item Type: L</Form::Data::Processor::Form>
+=item Type: L<Form::Data::Processor::Form>
 
 =back
 
@@ -562,7 +589,7 @@ Indicate if field will not be reseted to default value when L</reset> is called.
 
 =over 4
 
-=item Type: L</Form::Data::Processor::Field>|L</Form::Data::Processor::Form>
+=item Type: L<Form::Data::Processor::Field>|L<Form::Data::Processor::Form>
 
 =back
 
@@ -1019,19 +1046,12 @@ Validating contains next steps:
 
 =item 2. Apply validation actions
 
-=item 3. Validate field via L</validate_field>
-
 =back
 
 If required validation raises error, then validation process will be stopped.
 
 If you are gonna override this subroutine you have to know that it has hook
 C<before validate> which does L<Form::Data::Processor::Role::Errors/clear_errors>.
-
-
-=head2 validate_field
-
-Method for overwriting in classes, which are extending FDP::Field.
 
 
 =head2 validate_required
@@ -1063,5 +1083,90 @@ Check required field value is passed require checks.
 =back
 
 Error messages builder.
+
+
+=head1 EXTERNAL VALIDATION
+
+External validation is one of the ways to validate field.
+
+External validators is a subroutines, which are described in L</parent>. These subroutines
+should have name, which looks like C<validate_field_full_name>.
+
+Validation will be performed from "bottom" to "top".
+
+=head2 Example
+
+    package My::Field::Address {
+        use Form::Data::Processor::Moose;
+        extends 'Form::Data::Processor::Field::Compound';
+
+        has_field addr1   => (type => 'Text');
+        has_field addr2   => (type => 'Text');
+        has_field city    => (type => 'Text');
+        has_field country => (type => 'Text');
+        has_field zip     => (type => 'Text');
+
+        # It is first external validation for field 'zip'
+        sub validate_zip {
+            my $self  = shift;
+            my $field = shift;
+
+            # Here we want to validate zip value
+            # via some do_zip_validation. Eg. check that zip is correct.
+            $field->add_error('Zip is not valid') unless do_zip_validation( $field->value );
+        }
+    }
+
+    package My::Field::User {
+        use Form::Data::Processor::Moose;
+        extends 'Form::Data::Processor::Field::Compound';
+
+        has_field country => (type => 'Text');
+        has_field address => (type => '+My::Field::Address');
+
+        # External validation for field country
+        sub validate_country {
+            my $self  = shift;
+            my $field = shift;
+
+            # Validate user country field
+            ...
+        }
+
+        # It is second external validation for field 'zip'
+        sub validate_address_zip {
+            my $self  = shift;
+            my $field = shift;
+
+            # Don't validate if user already has errors
+            return if $self->has_errors;
+
+            # Second 'zip' validation'. Eg. check if zip corresponds to user
+            # country.
+            $field->add_error('Zip does not correspond to user country')
+                unless $self->zip_correspond_to_country;
+        }
+
+        sub zip_correspond_to_country {
+            my $self = shift;
+
+            # Do correspond check
+            ...
+        }
+    }
+
+    package My::Form::Order {
+        use Form::Data::Processor::Moose;
+        extends 'Form::Data::Processor::Form';
+
+        has_field user             => (type => '+My::Field::User');
+        has_field billing_address  => (type => '+My::Field::Address');
+        has_field shipping_address => (type => '+My::Field::Address');
+
+        # It is third external validation for field zip, for user.
+        sub validate_user_address_zip {
+            ...
+        }
+    }
 
 =cut

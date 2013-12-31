@@ -88,13 +88,35 @@ package Form {
         return { map { $_->full_name => [ $_->all_errors ] }
                 shift->all_error_fields };
     }
+
+    sub validate_rep_3_rep_text {
+        my $self  = shift;
+        my $field = shift;
+
+        return if $field->has_errors;
+
+        $field->add_error('validate_rep_3_rep_text')
+            if ( $field->value || '' ) =~ /try/;
+    }
+
+    sub validate_rep_4_text_req {
+        my $self  = shift;
+        my $field = shift;
+
+        return if $field->has_errors;
+
+        $field->add_error('validate_rep_4_text_req')
+            if ( $field->value || '' ) =~ /try/;
+    }
 }
 
 package main {
     my $form = Form->new();
 
-    is( $form->field('rep_1')->num_fields, 10, 'rep_1 has 10 subfields (via prebuild_subfields)' );
-    is( $form->field('rep_2')->num_fields, 4,  'rep_2 has 4 subfields (by default)' );
+    is( $form->field('rep_1')->num_fields,
+        10, 'rep_1 has 10 subfields (via prebuild_subfields)' );
+    is( $form->field('rep_2')->num_fields,
+        4, 'rep_2 has 4 subfields (by default)' );
 
     ok( !$form->field('rep_1.text'), 'Form: no subfields for repeatable' );
     ok(
@@ -194,7 +216,6 @@ package main {
 
     is( scalar( @{ $form->result->{rep_1} } ), 2, 'Only two fields returned' );
 
-
     my $data = {
         rep_1 => [
             (
@@ -242,6 +263,53 @@ package main {
         $form->process($data);
         diag tv_interval( $t0, [gettimeofday] );
     }
+
+    subtest 'external_validators' => sub {
+        my $data = {
+            rep_1 => [
+                {
+                    text => 'Text'
+                }
+            ],
+            rep_2 => [
+                {
+                    text_min => 'Text' x 10,
+                }
+            ],
+            rep_3 => [
+                {
+                    rep => [
+                        {
+                            text => 'Text',
+                        },
+                        {
+                            text => 'try',
+                        }
+                    ],
+                    text_min => 'Text' x 10,
+                }
+            ],
+            rep_4 => [
+                {
+                    text_req => 'Required',
+                },
+                {
+                    text_req => 'try',
+                    text     => 'Text',
+                }
+            ],
+        };
+        ok( !$form->process($data), 'Form validated with errors' );
+
+        is_deeply(
+            $form->dump_errors,
+            {
+                'rep_3.0.rep.1.text' => ['validate_rep_3_rep_text'],
+                'rep_4.1.text_req'   => ['validate_rep_4_text_req'],
+            },
+            'OK, right error messages'
+        );
+    };
 
     done_testing();
 }
