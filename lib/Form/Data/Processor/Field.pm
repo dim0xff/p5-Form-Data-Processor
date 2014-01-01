@@ -188,6 +188,8 @@ sub ready         { }
 sub has_fields { return 0 }
 sub is_form    { return 0 }
 
+sub _has_result { return $_[0]->has_value }
+
 sub result {
     my $self = shift;
 
@@ -274,7 +276,7 @@ sub validate {
     return if $self->disabled;
 
     return $self->add_error('required')
-        if $self->required && !$self->validate_required($self);
+        if $self->required && !$self->validate_required();
 
     return unless $self->has_value;
 
@@ -290,7 +292,6 @@ sub validate_required {
 
     return 0 unless $self->has_value;
     return 0 unless defined $self->value;
-
 
     return 1;
 }
