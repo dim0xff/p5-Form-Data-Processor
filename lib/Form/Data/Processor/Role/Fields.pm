@@ -390,7 +390,7 @@ sub result {
 
     return {
         map { $_->name => $_->_result }
-        grep { $_->has_value } $self->all_fields
+        grep { $_->_has_result } $self->all_fields
     };
 }
 
