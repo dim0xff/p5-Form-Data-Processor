@@ -4,3 +4,6 @@ Benchmarks
 
 Add Form::Data::Processor::Field::List - field with list of selectable values. By default has multiple selection
 Add Form::Data::Processor::Field::List::Single - Form::Data::Processor::Field::List with single selection
+
+Fix around validate for Boolean
+Fix ->add_error with values

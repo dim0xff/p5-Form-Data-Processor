@@ -5,7 +5,6 @@ use namespace::autoclean;
 
 use Class::Load qw(load_optional_class);
 use Data::Clone;
-use List::MoreUtils qw(uniq);
 
 has fields => (
     is      => 'rw',
@@ -300,6 +299,8 @@ sub reset_fields {
     for my $field ( $self->all_fields ) {
         $field->_before_reset;
         $field->reset;
+        $field->_after_reset;
+
         $field->clear_value if $field->has_value;
     }
 }

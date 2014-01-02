@@ -249,6 +249,8 @@ sub reset {
     }
 }
 
+sub _after_reset { }
+
 
 sub init_input {
     my $self   = shift;
