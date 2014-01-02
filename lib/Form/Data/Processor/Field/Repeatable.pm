@@ -136,6 +136,10 @@ sub init_input {
     return $self->clear_value if $self->disabled;
     return $self->clear_value unless $posted || $value;
 
+    for my $sub ( $self->all_init_input_actions ) {
+        $sub->( $self, \$value );
+    }
+
     if ( ref $value eq 'ARRAY' ) {
         my $input_length = scalar( @{$value} );
         $self->_set_input_length($input_length);

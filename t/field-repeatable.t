@@ -69,7 +69,24 @@ package Form {
     has_field 'rep_1'                    => ( type => 'Repeatable', prebuild_subfields => 10, max_input_length => 10);
     has_field 'rep_1.text'               => ( type => 'Text', required => 1, );
 
-    has_field 'rep_2'                    => ( type => 'Repeatable', );
+    has_field 'rep_2'                    => (
+        type => 'Repeatable',
+        apply  => [
+            {
+                input_transform => sub {
+                    my ( $value, $self ) = @_;
+                    return $value unless $value;
+
+                    if ( ( $value->[0]{text_min} || '' )
+                        =~ /^_input_transform=(\d+)$/ )
+                    {
+                        $value->[0]{text_min} = 'X' x $1;
+                    }
+                    return $value;
+                },
+            },
+        ],
+    );
     has_field 'rep_2.contains'           => ( type => 'Compound', );
     has_field 'rep_2.contains.text_min'  => ( type => 'Text', minlength => 10, );
 
@@ -309,6 +326,35 @@ package main {
             },
             'OK, right error messages'
         );
+    };
+
+    subtest 'input_transform' => sub {
+        my $data = {
+            rep_2 => [
+                {
+                    text_min => '_input_transform=5',
+                }
+            ]
+        };
+        ok( !$form->process($data), 'Form validated with errors' );
+        is_deeply(
+            $form->dump_errors,
+            {
+                'rep_2.0.text_min' => ['Field is too short'],
+            },
+            'Correct error messages'
+        );
+
+        $data = {
+            rep_2 => [
+                {
+                    text_min => '_input_transform=15',
+                }
+            ]
+        };
+        ok( $form->process($data), 'Form validated with errors' );
+        is( $form->field('rep_2.0.text_min')->result,
+            'X' x 15, 'Result for field is correct' );
     };
 
     done_testing();
