@@ -88,6 +88,21 @@ package Form {
     has_field 'compound' => (
         type   => 'Compound',
         traits => ['Form::Role::Ready'],
+        apply  => [
+            {
+                input_transform => sub {
+                    my ( $value, $self ) = @_;
+                    return $value unless $value;
+
+                    if ( ( $value->{text_min} || '' )
+                        =~ /^_input_transform=(\d+)$/ )
+                    {
+                        $value->{text_min} = 'X' x $1;
+                    }
+                    return $value;
+                },
+            },
+        ]
     );
 
     has_field 'compound.text' => (
@@ -268,6 +283,33 @@ package main {
 
         is( $form->field('compound.compound')->test_str,
             '12', 'Deep inheritance' );
+    };
+
+    subtest 'input_transform' => sub {
+        my $data = {
+            compound => {
+                text     => 'text   text',
+                text_min => '_input_transform=5',
+            }
+        };
+        ok( !$form->process($data), 'Form validated with errors' );
+        is_deeply(
+            $form->dump_errors,
+            {
+                'compound.text_min' => ['Field is too short'],
+            },
+            'Correct error messages'
+        );
+
+        $data = {
+            compound => {
+                text     => 'text   text',
+                text_min => '_input_transform=15',
+            }
+        };
+        ok( $form->process($data), 'Form validated with errors' );
+        is( $form->field('compound.text_min')->result,
+            'X' x 15, 'Result for field is correct' );
     };
 
     done_testing();
