@@ -1,6 +1,3 @@
 Tests for Form::Data::Processor::Field::Repeatable
 Documentation
 Benchmarks
-
-Fix around validate for Boolean
-Fix ->add_error with values
