@@ -7,7 +7,7 @@ use List::MoreUtils qw(uniq);
 
 has errors => (
     is      => 'rw',
-    isa     => 'ArrayRef[Str]',
+    isa     => 'ArrayRef',
     traits  => ['Array'],
     default => sub { [] },
     handles => {
@@ -37,11 +37,17 @@ sub all_errors {
 }
 
 sub add_error {
-    my $self  = shift;
-    my $error = shift;
+    my $self = shift;
+
+    return unless @_;
+
+    return $self->_add_error( $self->get_error_message( $_[0] ) || $_[0] );
+}
+
+after _add_error => sub {
+    my $self = shift;
 
     $self->parent->has_fields_errors(1) if $self->can('parent');
-    return $self->_add_error( $self->get_error_message($error) || $error );
-}
+};
 
 1;
