@@ -214,6 +214,7 @@ sub clone {
 
     if ( $self->DOES('Form::Data::Processor::Role::Fields') ) {
         $clone->clear_fields;
+        $clone->clear_index;
 
         for my $subfield ( $self->all_fields ) {
             my $cloned_subfield = $subfield->clone(%params);
