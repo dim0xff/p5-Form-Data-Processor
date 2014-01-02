@@ -89,6 +89,12 @@ has options => (
     isa     => 'ArrayRef[HashRef]',
     trigger => \&_set_options_index,
 );
+has options_builder => (
+    is        => 'rw',
+    isa       => 'CodeRef',
+    predicate => 'has_options_builder',
+    clearer   => 'clear_opions_builder',
+);
 
 
 has _options_index => (
@@ -97,12 +103,6 @@ has _options_index => (
     default => sub { {} },
 );
 
-has options_builder => (
-    is        => 'rw',
-    isa       => 'CodeRef',
-    predicate => 'has_options_builder',
-    clearer   => 'clear_opions_builder',
-);
 
 apply [
     {
@@ -232,17 +232,19 @@ __END__
 
 =head1 DESCRIPTION
 
-This field represent boolean data.
+This field represent data which could be selected from list.
 
 This field is directly inherited from L<Form::Data::Processor::Field>.
 
 Field sets own error messages:
 
-    'required_input' => 'Value is not provided',
+    'required_input'   => 'Value is not provided',
+    'disabled_value'   => 'Value is disabled',
+    'is_not_multiple'  => 'Field does not take multiple values',
+    'max_input_length' => 'Input exceeds max length',
 
-If provided value is C<undef>, C<0>, C<''> (or other "empty" value), than this
-means than field L<Form::Data::Processor::Field/result> will be C<1> - true.
-Otherwise result will be C<0> - false.
+It could be L</multiple> (and then L<Form::Data::Processor::Field/result> will be ArrayRef) or
+single (and then result will be a selected value).
 
 =head1 SYNOPSYS
 
@@ -251,8 +253,11 @@ Otherwise result will be C<0> - false.
 
     extends 'Form::Data::Processor::Form';
 
-    has_field agree_license     => ( type => 'Boolean', required => 1 );
-    has_field search_with_photo => ( type => 'Boolean' );
+    has photos => (
+        type     => 'List',
+        multiple => 0,
+        options  => [ 'WITH', 'WITHOUT', 'ANY', ],
+    );
 
     # Addition fields for search
     ...
@@ -264,16 +269,7 @@ Other accessors can be found in L<Form::Data::Processor::Field/ACCESSORS>
 
 All local accessors will be resettable.
 
-=head2 required
-
-After field input value passed L<Form::Data::Processor::Field/required> test,
-it has one more required test - test for boolean required.
-
-Boolean required test is passed when field value is not empty
-(C<undef>, C<0>, C<''> etc.).
-
-
-=head2 required_input
+=head2 do_not_reload
 
 =over 4
 
@@ -283,8 +279,169 @@ Boolean required test is passed when field value is not empty
 
 =back
 
-If set to C<true>, then value for field MUST be provided (in any form).
-If value is not provided for required input field, then error C<required_input>
-will be added to field errors.
+By default for List field with L<options builder|/options_builder>
+L</options> are being rebuilt every time, when this field is
+L<Form::Data::Processor::Field/ready>.
+
+If you don't want this rebuilding set C<do_not_reload> to C<true>.
+
+
+=head2 max_input_length
+
+=over 4
+
+=item Type: Positive or zero Int
+
+=item Default: 10_000
+
+=back
+
+It answers the question "how many input values List could validate?".
+Zero means no limit.
+
+B<WARNING>: when you set it to zero and try to validate huge number
+of non unique values, this could take a lot of time.
+
+When input length is great than C<max_input_length>,
+then error C<max_input_length> will be added to field.
+
+
+=head2 multiple
+
+=over 4
+
+=item Type: Bool
+
+=item Default: true
+
+=back
+
+If set to C<false>, then only one value could be selected.
+
+When is C<false> and multiple values is being validated, then error
+C<is_not_multiple> will be added to field.
+
+
+=head2 options
+
+=over 4
+
+=item Type: ArrayRef[HashRef]
+
+=back
+
+It is a list of available options, which could be selected.
+
+When set, you could provide an ArrayRef of strings (and it will be values), or
+ArrayRef of HashRefs. When set via ArrayRef of HashRefs, then disabled values could
+be provided
+
+    # ArrayRef of HashRefs
+    has_field rating => (
+        type     => 'List',
+        multiple => 0,
+        options  => [
+            { value => 1, disabled => 1 },
+            { value => 2 },
+            { value => 3 },
+            { value => 4 },
+            { value => 5 },
+    );
+
+    # Or ArrayRef of strings
+    has_field rating => (
+        type     => 'List',
+        multiple => 0,
+        options  => [ (1..5) ],
+    );
+
+
+Could be set in different ways.
+
+=head3 From a field declaration
+
+    has_field 'opt_in' => (
+        type => 'List',
+        options => [
+            { value => 0 }
+            { value => 1 }
+        ],
+    );
+
+=head3 From a field class 'build_options' method
+
+It will set L</options_builder>.
+
+    package Form::Field::Fruits;
+
+    use Form::Data::Processor::Moose;
+    extends 'Form::Data::Processor::Field::List';
+
+    sub build_options {
+        return ( 'kiwi', 'apples', 'oranges' );
+    }
+
+=head3 From a coderef via L</options_builder>
+
+=head3 From a form 'options_<field_name>' method
+
+    has_field fruit => ( type => 'List' );
+
+    sub options_fruit {
+        # $_[0] - form
+        # $_[1] - field
+
+        # Must return ArrayRef
+        return [
+            'apples',
+            'oranges',
+            'kiwi',
+        ];
+    }
+
+
+=head2 options_builder
+
+=over 4
+
+=item Type: CodeRef
+
+=back
+
+This is a builder for options. If C<options_builder> is set, then options will
+be rebuilt before using (see L</do_not_reload>).
+
+    has_field days_of_week => (
+        type            => 'List',
+        options_builder => \&build_days,
+        required        => 1,
+    );
+
+    sub build_days {
+        my $form  = shift;
+        my $field = shift;
+
+        my @days = (
+            'Monday', 'Tuesday', 'Wednesday', 'Thursday',
+            'Friday', 'Saturday'
+        );
+
+        return ( { value => 'Sunday', disabled => 1, }, @days );
+    }
+
+
+=head2 uniq_input
+
+=over 4
+
+=item Type: Bool
+
+=item Default: true
+
+=back
+
+Field has input L<action|Form::Data::Processor::Field/Input initialization level action>,
+which removes duplicated and undefined input values, when there are more
+than one input value.
 
 =cut

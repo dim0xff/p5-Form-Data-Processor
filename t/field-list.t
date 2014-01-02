@@ -61,9 +61,10 @@ package Form {
     );
 
     has_field comments => (
-        type    => 'List::Single',
-        options => [ 'WITH+COMMENTS', 'WITHOUT+COMMENTS', ],
-        traits  => ['Form::TraitFor::Field::List'],
+        type     => 'List',
+        options  => [ 'WITH+COMMENTS', 'WITHOUT+COMMENTS', ],
+        traits   => ['Form::TraitFor::Field::List'],
+        multiple => 0,
     );
 
     # With coderef
