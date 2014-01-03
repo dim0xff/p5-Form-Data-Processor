@@ -117,11 +117,11 @@ package main {
     cmpthese(
         -5,
         {
-            'Create fdp' => sub {
+            'Create Form::Data::Processor' => sub {
                 $fdp = FDP::Form->new();
 
             },
-            'Create hfh' => sub {
+            'Create HTML::FormHandler' => sub {
 
                 $hfh = HFH::Form->new();
             },
@@ -152,16 +152,16 @@ package main {
     $hfh->process($data);
 
     is_deeply( $fdp->result, $hfh->values,
-        'FDP::result equals to HFH::values' );
+        'Form::Data::Processor "result()" equals to HTML::FormHandler "values()"' );
 
     cmpthese(
         -5,
         {
-            'FDP' => sub {
-                die 'FDP: validate error' unless $fdp->process($data);
+            'Form::Data::Processor' => sub {
+                die 'Form::Data::Processor: validate error' unless $fdp->process($data);
             },
-            'HFH' => sub {
-                die 'HFH: validate error' unless $hfh->process($data);
+            'HTML::FormHandler' => sub {
+                die 'HTML::FormHandler: validate error' unless $hfh->process($data);
             },
         }
     );
