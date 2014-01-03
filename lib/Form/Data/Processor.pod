@@ -22,13 +22,13 @@ On my machine "Intel(R) Core(TM) i5-2520M CPU @ 2.50GHz, 8GB, Arch Linux
 3.12.5-1-ARCH" it looks like:
 
     $> perl benchmarks/simple.pl
-                Rate Create hfh Create fdp
-    Create hfh 82.1/s         --       -84%
-    Create fdp  515/s       527%         --
+                 Rate Create hfh Create fdp
+    Create hfh 80.6/s         --       -83%
+    Create fdp  480/s       495%         --
 
-        Rate FDP HFH
-    FDP 289/s  -- -8%
-    HFH 315/s  9%  --
+         Rate FDP HFH
+    FDP 306/s  -- -8%
+    HFH 334/s  9%  --
 
     ----------------------------------------
 

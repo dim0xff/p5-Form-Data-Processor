@@ -105,9 +105,7 @@ around validate_required => sub {
 # $_[1] - value
 
 sub trim {
-    return $_[1] unless defined $_[1];
-
-    $_[1] =~ s/^\s+|\s+$//gs unless ref $_[1];
+    $_[1] =~ s/^\s+|\s+$//g unless ref $_[1] || !defined $_[1];
 
     return $_[1];
 }

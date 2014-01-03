@@ -298,7 +298,7 @@ sub reset_fields {
 
     for my $field ( $self->all_fields ) {
         $field->_before_reset;
-        $field->reset;
+        $field->reset unless $field->not_resettable;
         $field->_after_reset;
 
         $field->clear_value if $field->has_value;
