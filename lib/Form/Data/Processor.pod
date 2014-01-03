@@ -32,6 +32,19 @@ On my machine "Intel(R) Core(TM) i5-2520M CPU @ 2.50GHz, 8GB, Arch Linux
 
     ----------------------------------------
 
+    $> perl benchmarks/medium.pl
+    1..1
+                 Rate Create hfh Create fdp
+    Create hfh 22.5/s         --       -44%
+    Create fdp 39.9/s        78%         --
+    ok 1 - FDP::result equals to HFH::values
+
+          Rate  HFH  FDP
+    HFH 38.7/s   -- -90%
+    FDP  372/s 861%   --
+
+    ----------------------------------------
+
     $> perl benchmarks/complex.pl 
     1..2
                  Rate Create fdp Create hfh
