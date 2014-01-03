@@ -17,21 +17,25 @@ package FDP::Form {
 
     has_field text => (
         type           => 'Text',
+        not_resettable => 1,
     );
 
     has_field text_required => (
         type           => 'Text',
         required       => 1,
+        not_resettable => 1,
     );
 
     has_field text_min => (
         type           => 'Text',
         minlength      => 10,
+        not_resettable => 1,
     );
 
     has_field text_max => (
         type           => 'Text',
         maxlength      => 10,
+        not_resettable => 1,
     );
 
     sub validate_text_max {
