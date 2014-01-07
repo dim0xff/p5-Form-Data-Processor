@@ -51,8 +51,10 @@ has has_fields_errors => (
     default => 0,
     trigger => sub {
         my $self = shift;
+        # $_[0] - new
+        # $_[1] - old
 
-        # Tell to parent than we have errors
+        # Tell to parent when we have errors, so parent as well
         $self->parent->has_fields_errors(1)
             if $_[0] && !$_[1] && $self->can('parent');
     }
@@ -352,8 +354,8 @@ around has_errors => sub {
     my $orig = shift;
     my $self = shift;
 
-    return 1 if $self->$orig;
-    return $self->has_fields_errors;
+    return 1 if $self->has_fields_errors;
+    return $self->$orig;
 };
 
 sub error_fields {
