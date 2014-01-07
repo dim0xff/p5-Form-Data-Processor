@@ -55,6 +55,9 @@ package Form {
 
         $field->add_error('validate_text_max')
             if ( $field->value || '' ) =~ /try/;
+
+        $field->add_error('required')
+            if $field->required;
     }
 }
 
@@ -170,6 +173,40 @@ package main {
             },
             'OK, right error messages'
         );
+    };
+
+    subtest 'disabled' => sub {
+        ok(
+            !$form->process(
+                {
+                    text                      => 'text',
+                    text_required             => 'required',
+                    text_required_notnullable => ' ' x 10,
+                    text_min                  => 'c' x 10,
+                    text_max                  => 'try',
+                }
+            ),
+            'Form validated with errors'
+        );
+
+        $form->field('text_max')->set_default_value(
+            'disabled' => 1,
+            required   => 1,
+        );
+
+        ok(
+            $form->process(
+                {
+                    text                      => 'text',
+                    text_required             => 'required',
+                    text_required_notnullable => ' ' x 10,
+                    text_min                  => 'c' x 10,
+                    text_max                  => 'c',
+                }
+            ),
+            'Form validated without errors, when required is disabled'
+        );
+        diag Dumper( $form->result );
     };
 
     done_testing();

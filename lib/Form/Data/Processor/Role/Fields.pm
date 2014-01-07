@@ -338,6 +338,8 @@ sub validate_fields {
 
     my %values;
     for my $field ( $self->all_fields ) {
+        next if $field->disabled;
+
         $field->validate;
 
         for my $code ( $field->all_external_validators ) {
