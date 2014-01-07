@@ -95,7 +95,7 @@ around validate_required => sub {
     my $self = shift;
 
     return 0 unless $self->$orig();
-    return 0 unless $self->value ne '' || $self->not_nullable;
+    return 0 unless $self->value;
 
     return 1;
 };
@@ -134,6 +134,9 @@ This field validates any data, which looks like text.
 
 This field is directly inherited from L<Form::Data::Processor::Field>.
 
+In addition to L<Form::Data::Processor::Field/required>,
+required also means that value must not be empty text.
+
 Field sets own error messages:
 
     'text_invalid'   => 'Field value is not a valid text',
@@ -160,9 +163,8 @@ Error C<text_invalid> will be raised when field value is not look like text
         required => 1,
     );
 
-    has_field text_required_notnullable => (
+    has_field text_notnullable => (
         type         => 'Text',
-        required     => 1,
         not_nullable => 1,
     );
 
