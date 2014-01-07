@@ -615,6 +615,8 @@ Normally is being set by FDP internals.
 
 Indicate if field is required.
 
+Required means that field must have value and value is not C<undef>.
+
 
 =head2 type
 

@@ -90,6 +90,8 @@ package main {
     );
 
     subtest 'FDP::Field::Text not_nullable && trim' => sub {
+        $form->field('text_required_notnullable')
+            ->set_default_value( required => 0 );
         ok(
             $form->process(
                 {
@@ -106,6 +108,27 @@ package main {
             '', 'Not nullable field has empty ("") value' );
         is( $form->field('text')->value,
             undef, 'Nullable field has empty (undef) value' );
+
+        $form->field('text_required_notnullable')
+            ->set_default_value( required => 1 );
+        ok(
+            !$form->process(
+                {
+                    text                      => ' ' x 10,
+                    text_required             => 'required',
+                    text_required_notnullable => ' ' x 10,
+                    text_min                  => 'c' x 10,
+                    text_max                  => 'c' x 10,
+                }
+            ),
+            'Form validated with errors'
+        );
+        is_deeply(
+            $form->dump_errors,
+            {
+                text_required_notnullable => ['Field is required']
+            }
+        );
     };
 
     subtest 'FDP::Field::Text validate_(min/max)length' => sub {
@@ -114,7 +137,7 @@ package main {
                 {
                     text                      => 'text',
                     text_required             => 'required',
-                    text_required_notnullable => ' ',
+                    text_required_notnullable => ' required ',
                     text_min                  => 'c' x 9,
                     text_max                  => 'c' x 11,
                 }
@@ -136,7 +159,7 @@ package main {
                 {
                     text                      => 'text',
                     text_required             => 'required',
-                    text_required_notnullable => ' ',
+                    text_required_notnullable => ' required ',
                     text_min                  => ' ' x 9,
                     text_max                  => ' ' x 11,
                 }
@@ -159,7 +182,7 @@ package main {
                 {
                     text                      => ' ' x 10,
                     text_required             => 'required',
-                    text_required_notnullable => ' ' x 10,
+                    text_required_notnullable => ' required ',
                     text_min                  => 'c' x 10,
                     text_max                  => 'try',
                 }
@@ -175,13 +198,13 @@ package main {
         );
     };
 
-    subtest 'disabled' => sub {
+    subtest 'disabled + external validators' => sub {
         ok(
             !$form->process(
                 {
                     text                      => 'text',
                     text_required             => 'required',
-                    text_required_notnullable => ' ' x 10,
+                    text_required_notnullable => ' required ',
                     text_min                  => 'c' x 10,
                     text_max                  => 'try',
                 }
@@ -199,14 +222,13 @@ package main {
                 {
                     text                      => 'text',
                     text_required             => 'required',
-                    text_required_notnullable => ' ' x 10,
+                    text_required_notnullable => ' required ',
                     text_min                  => 'c' x 10,
                     text_max                  => 'c',
                 }
             ),
             'Form validated without errors, when required is disabled'
         );
-        diag Dumper( $form->result );
     };
 
     done_testing();

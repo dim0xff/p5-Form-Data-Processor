@@ -183,7 +183,6 @@ package main {
             'Field is invalid message on ""'
         );
 
-        $form->field('compound')->required(0);
         $form->field('compound')->not_resettable(0);
         ok( !$form->process( { compound => undef, } ),
             'Form validated with errors' );
