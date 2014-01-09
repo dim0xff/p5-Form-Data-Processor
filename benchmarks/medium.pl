@@ -64,6 +64,16 @@ package FDP::Form {
         maxlength      => 10,
         not_resettable => 1,
     );
+
+    sub validate_address {
+        my $self  = shift;
+        my $field = shift;
+
+        return if $field->has_errors;
+
+        $field->add_error('zip_error')
+            unless $field->subfield('zip')->value =~ /^\d+$/;
+    }
 }
 
 
@@ -109,6 +119,16 @@ package HFH::Form {
         type      => 'Text',
         maxlength => 10,
     );
+
+    sub validate_address {
+        my $self  = shift;
+        my $field = shift;
+
+        return if $field->has_errors;
+
+        $field->add_error('zip_error')
+            unless $field->subfield('zip')->value =~ /^\d+$/;
+    }
 }
 
 package main {
@@ -152,16 +172,19 @@ package main {
     $hfh->process($data);
 
     is_deeply( $fdp->result, $hfh->values,
-        'Form::Data::Processor "result()" equals to HTML::FormHandler "values()"' );
+        'Form::Data::Processor "result()" equals to HTML::FormHandler "values()"'
+    );
 
     cmpthese(
         -5,
         {
             'Form::Data::Processor' => sub {
-                die 'Form::Data::Processor: validate error' unless $fdp->process($data);
+                die 'Form::Data::Processor: validate error'
+                    unless $fdp->process($data);
             },
             'HTML::FormHandler' => sub {
-                die 'HTML::FormHandler: validate error' unless $hfh->process($data);
+                die 'HTML::FormHandler: validate error'
+                    unless $hfh->process($data);
             },
         }
     );
