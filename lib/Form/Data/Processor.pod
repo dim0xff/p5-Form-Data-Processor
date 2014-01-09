@@ -18,51 +18,44 @@ features as possible.
 
 Please look at benchmarks (C<benchmarks> folder in distro).
 
-On my machine "Intel(R) Core(TM) i5-2520M CPU @ 2.50GHz, 8GB, Arch Linux
-3.12.5-1-ARCH" it looks like:
+On my desktop "Intel(R) Core(TM)2 Duo CPU E4600  @ 2.40GHz,4GB, OpenSuSE, Linux 3.11.6-4-pae
+(e6d4a27) i686" it looks like:
 
     $> perl benchmarks/simple.pl
-                                   Rate Create HTML::FormHandler Create Form::Data::Processor
-    Create HTML::FormHandler     82.8/s                       --                         -83%
-    Create Form::Data::Processor  496/s                     499%                           --
-
+                                  Rate Create HTML::FormHandler Create Form::Data::Processor
+    Create HTML::FormHandler     101/s                       --                         -84%
+    Create Form::Data::Processor 622/s                     514%                           --
                            Rate Form::Data::Processor     HTML::FormHandler
-    Form::Data::Processor 316/s                    --                   -8%
-    HTML::FormHandler     345/s                    9%                    --
+    Form::Data::Processor 314/s                    --                  -15%
+    HTML::FormHandler     369/s                   18%                    --
 
     ----------------------------------------
 
     $> perl benchmarks/medium.pl
     1..1
                                    Rate Create HTML::FormHandler Create Form::Data::Processor
-    Create HTML::FormHandler     23.2/s                       --                         -43%
-    Create Form::Data::Processor 40.6/s                      75%                           --
-
+    Create HTML::FormHandler     29.4/s                       --                         -39%
+    Create Form::Data::Processor 47.9/s                      63%                           --
     ok 1 - Form::Data::Processor "result()" equals to HTML::FormHandler "values()"
-
                             Rate     HTML::FormHandler Form::Data::Processor
-    HTML::FormHandler     37.4/s                    --                  -90%
-    Form::Data::Processor  388/s                  937%                    --
+    HTML::FormHandler     49.3/s                    --                  -88%
+    Form::Data::Processor  408/s                  728%                    --
 
     ----------------------------------------
 
-    $> perl benchmarks/complex.pl 
+    $> perl benchmarks/complex.pl
     1..2
                                    Rate Create Form::Data::Processor Create HTML::FormHandler
-    Create Form::Data::Processor 5.69/s                           --                     -43%
-    Create HTML::FormHandler     10.0/s                          77%                       --
-
+    Create Form::Data::Processor 7.41/s                           --                     -39%
+    Create HTML::FormHandler     12.3/s                          65%                       --
     ok 1 - Form::Data::Processor "result()" equals to HTML::FormHandler "values()"
-
                                Rate    x1 HTML::FormHandler x1 Form::Data::Processor
-    x1 HTML::FormHandler     29.7/s                      --                     -88%
-    x1 Form::Data::Processor  242/s                    716%                       --
-
+    x1 HTML::FormHandler     39.5/s                      --                     -85%
+    x1 Form::Data::Processor  268/s                    578%                       --
     ok 2 - Form::Data::Processor "result()" equals to HTML::FormHandler "values()"
-
                                 Rate x32 HTML::FormHandler x32 Form::Data::Processor
-    x32 HTML::FormHandler     1.10/s                    --                      -95%
-    x32 Form::Data::Processor 23.4/s                 2034%                        --
+    x32 HTML::FormHandler     1.47/s                    --                      -95%
+    x32 Form::Data::Processor 27.9/s                 1800%                        --
 
 
 
