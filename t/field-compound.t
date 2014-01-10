@@ -145,6 +145,17 @@ package Form {
     }
 }
 
+package Form::External::OK {
+    use Form::Data::Processor::Moose;
+
+    extends 'Form';
+
+    sub validate_compound_compound_text_max {
+        return 1;
+    }
+}
+
+
 package main {
     my $form = Form->new();
 
@@ -282,6 +293,22 @@ package main {
 
         is( $form->field('compound.compound')->test_str,
             '12', 'Deep inheritance' );
+
+
+        my $form_ok = Form::External::OK->new;
+        ok(
+            $form_ok->process(
+                {
+                    compound => {
+                        text     => 'text',
+                        compound => {
+                            text_max => 'try',
+                        },
+                    }
+                }
+            ),
+            'Form::External::OK validated without errors'
+        );
     };
 
     subtest 'input_transform' => sub {
