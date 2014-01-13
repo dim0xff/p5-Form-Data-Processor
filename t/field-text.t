@@ -229,6 +229,44 @@ package main {
             ),
             'Form validated without errors, when required is disabled'
         );
+
+        $form->field('text_max')->set_default_value(
+            'disabled' => 0,
+            required   => 0,
+        );
+    };
+
+    subtest 'clear_empty' => sub {
+
+        for my $t (
+            {
+                title   => 'clear_empty',
+                default => {
+                    clear_empty => 1,
+                },
+                result => {
+                    text_required             => '0',
+                    text_required_notnullable => '0',
+                }
+            }
+            )
+        {
+            $form->field('text')->set_default_value( %{ $t->{default} } );
+
+            ok(
+                $form->process(
+                    {
+                        text                      => '',
+                        text_required             => '0',
+                        text_required_notnullable => ' 0 ',
+                    }
+                ),
+                'Form validated without errors'
+            );
+
+            is_deeply( $form->result, $t->{result},
+                'OK clear_empty - ' . $t->{title} );
+        }
     };
 
     done_testing();
