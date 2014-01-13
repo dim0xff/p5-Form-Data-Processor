@@ -95,7 +95,7 @@ around validate_required => sub {
     my $self = shift;
 
     return 0 unless $self->$orig();
-    return 0 unless $self->value;
+    return 0 if $self->is_empty( $self->value );
 
     return 1;
 };

@@ -58,6 +58,12 @@ has not_resettable => (
     default => 0,
 );
 
+has clear_empty => (
+    is      => 'rw',
+    isa     => 'Bool',
+    default => 0,
+);
+
 has required => (
     is      => 'rw',
     isa     => 'Bool',
@@ -233,7 +239,7 @@ sub populate_defaults {
     my $self = shift;
 
     $self->set_default_value( map { $_ => $self->$_ }
-            ( 'required', 'disabled', 'not_resettable', ) );
+            ( 'required', 'disabled', 'not_resettable', 'clear_empty', ) );
 }
 
 
@@ -265,9 +271,14 @@ sub init_input {
         $sub->( $self, \$value );
     }
 
+    return $self->clear_value if $self->clear_empty && $self->is_empty($value);
     return $self->set_value($value);
 }
 
+sub is_empty {
+    return 0 if defined( $_[1] ) && length( $_[1] );
+    return 1;
+}
 
 before validate => sub {
     shift->clear_errors;
@@ -507,6 +518,20 @@ Field could be validated in different ways: L<actions|/add_actions>, L<internal 
 or L<external validation|/EXTERNAL VALIDATION>. These ways could be mixed.
 
 =head1 ACCESSORS
+
+=head2 clear_empty
+
+=over 4
+
+=item Type: Bool
+
+=item Default: false
+
+=back
+
+When C<true>, then field input value will be cleared whet it is empty
+(is being checked via L</is_empty>).
+
 
 =head2 disabled
 
@@ -949,6 +974,22 @@ If $posted is FALSE and $value is not defined, then field value is being cleared
 Otherwise value will be set to $value.
 
 Also apply L<"init input actions"|/"Input initialization level action">.
+
+
+=head2 is_empty
+
+=over 4
+
+=item Arguments: ($value)
+
+=item Returns: 0|1
+
+=back
+
+By default returns C<0> when C<$value> is NOT empty (defined and length is positive).
+Otherwise returns C<1>.
+
+It could be overloaded in inherited classes.
 
 
 =head2 is_form
