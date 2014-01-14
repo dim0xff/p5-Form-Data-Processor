@@ -280,9 +280,6 @@ sub is_empty {
     return 1;
 }
 
-before validate => sub {
-    shift->clear_errors;
-};
 
 sub validate {
     my $self = shift;
@@ -1096,9 +1093,6 @@ Validating contains next steps:
 =back
 
 If required validation raises error, then validation process will be stopped.
-
-If you are gonna override this subroutine you have to know that it has hook
-C<before validate> which does L<Form::Data::Processor::Role::Errors/clear_errors>.
 
 
 =head2 validate_required
