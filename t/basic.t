@@ -108,32 +108,10 @@ package Form::TraitFor::Field3 {
     ];
 }
 
-package Form {
+package Form::Prev {
     use Form::Data::Processor::Moose;
 
     extends 'Form::Data::Processor::Form';
-
-    has ready_cnt => (
-        is      => 'rw',
-        isa     => 'Int',
-        traits  => ['Number'],
-        default => 0,
-        handles => {
-            add_ready_cnt => 'add',
-        }
-    );
-
-    has field_traits_check => (
-        is      => 'rw',
-        isa     => 'Int',
-        default => 0,
-    );
-
-    has '+field_traits' => (
-        default => sub {
-            ['Form::TraitFor::AllFields'];
-        }
-    );
 
     has_field field_1 => (
         type     => '+Form::Field1',
@@ -171,7 +149,49 @@ package Form {
         ],
     );
 
-    has_field field_5 => (        type => 'Text'    );
+    has_field field_5 => ( type => 'Text' );
+
+    has_field required => (
+        type      => 'Text',
+        required  => 1,
+        minlength => 10,
+    );
+}
+
+package Form {
+    use Form::Data::Processor::Moose;
+
+    extends 'Form::Prev';
+
+    has ready_cnt => (
+        is      => 'rw',
+        isa     => 'Int',
+        traits  => ['Number'],
+        default => 0,
+        handles => {
+            add_ready_cnt => 'add',
+        }
+    );
+
+
+    has field_traits_check => (
+        is      => 'rw',
+        isa     => 'Int',
+        default => 0,
+    );
+
+    has '+field_traits' => (
+        default => sub {
+            ['Form::TraitFor::AllFields'];
+        }
+    );
+
+    has_field '+required' => (
+        required  => 0,
+        disabled  => 1,
+        minlength => 100,
+    );
+
 
     before clear_form => sub {
         shift->field_traits_check(0);
@@ -202,7 +222,7 @@ package main {
     is( $form->ready_cnt,                   1, 'FDP::Form::ready ok' );
     is( $form->field('field_1')->ready_cnt, 1, 'FDP::Field::ready ok' );
 
-    is( @form_fields, 5, 'all_fields - OK, all fields for form returned' );
+    is( @form_fields, 6, 'all_fields - OK, all fields for form returned' );
     is( $form_fields[0]->name, 'field_1', 'OK, name for field is right' );
     is(
         $form_fields[0]->name,
@@ -360,21 +380,34 @@ package main {
     };
 
     subtest 'is_empty' => sub {
-        my $fld =   $form->field('field_5');
+        my $fld = $form->field('field_5');
         $fld->reset;
         $fld->clear_empty(1);
 
         $fld->init_input('   ');
-        is(!!$fld->is_empty, 1, 'Field is empty with self value');
-        is(!!$fld->is_empty(''), 1, 'Field is empty with provided value ""');
-        is(!!$fld->is_empty(undef), 1, 'Field is empty with provided value undef');
-        is(!!$fld->is_empty('value'), !!0, 'Field is empty with provided value "value"');
+        is( !!$fld->is_empty,     1, 'Field is empty with self value' );
+        is( !!$fld->is_empty(''), 1, 'Field is empty with provided value ""' );
+        is( !!$fld->is_empty(undef),
+            1, 'Field is empty with provided value undef' );
+        is( !!$fld->is_empty('value'),
+            !!0, 'Field is empty with provided value "value"' );
 
         $fld->init_input(' value ');
-        is(!!$fld->is_empty, !!0, 'Field is not empty with self value');
-        is(!!$fld->is_empty(''), 1, 'Field is empty with provided value ""');
-        is(!!$fld->is_empty(undef), 1, 'Field is empty with provided value undef');
-        is(!!$fld->is_empty('value'), !!0, 'Field is empty with provided value "value"');
+        is( !!$fld->is_empty, !!0, 'Field is not empty with self value' );
+        is( !!$fld->is_empty(''), 1, 'Field is empty with provided value ""' );
+        is( !!$fld->is_empty(undef),
+            1, 'Field is empty with provided value undef' );
+        is( !!$fld->is_empty('value'),
+            !!0, 'Field is empty with provided value "value"' );
+    };
+
+    subtest 'populate_defaults in inherited field' => sub {
+        is( $form->field('required')->get_default_value('required'),
+            0, 'Required' );
+        is( $form->field('required')->get_default_value('disabled'),
+            1, 'Disabled' );
+        is( $form->field('required')->get_default_value('minlength'),
+            100, 'minlength' );
     };
 
     done_testing();

@@ -21,7 +21,6 @@ sub BUILD {
     my $self       = shift;
     my $field_attr = shift;
 
-    $self->populate_defaults;
     $self->_build_apply_list;
     $self->add_actions( $field_attr->{apply} )
         if ref $field_attr->{apply} eq 'ARRAY';
@@ -188,7 +187,11 @@ sub _set_full_name {
     }
 }
 
-sub _before_ready { }
+sub _before_ready {
+    my $self = shift;
+    $self->populate_defaults;
+}
+
 sub ready         { }
 
 sub has_fields { return 0 }

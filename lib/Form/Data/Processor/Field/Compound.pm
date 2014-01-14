@@ -31,9 +31,9 @@ after _init_external_validators => sub {
     }
 };
 
-sub _before_ready {
+after _before_ready => sub {
     $_[0]->_ready_fields;
-}
+};
 
 sub _before_reset {
     return if $_[0]->not_resettable;

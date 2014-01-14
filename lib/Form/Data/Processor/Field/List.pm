@@ -50,14 +50,6 @@ sub BUILD {
         is_not_multiple  => 'Field does not take multiple values',
         max_input_length => 'Input exceeds max length',
     );
-
-    $self->set_default_value(
-        do_not_reload    => $self->do_not_reload,
-        multiple         => $self->multiple,
-        max_input_length => $self->max_input_length,
-        uniq_input       => $self->uniq_input,
-    );
-
 }
 
 has uniq_input => (
@@ -114,8 +106,15 @@ apply [
 ];
 
 # Set options builder when field is ready
-sub _before_ready {
+after _before_ready => sub {
     my $self = shift;
+
+    $self->set_default_value(
+        do_not_reload    => $self->do_not_reload,
+        multiple         => $self->multiple,
+        max_input_length => $self->max_input_length,
+        uniq_input       => $self->uniq_input,
+    );
 
     my $code = $self->form->can( 'options_' . $self->full_name )
         || $self->can('build_options');
@@ -123,7 +122,7 @@ sub _before_ready {
     $self->options_builder($code) if $code;
 
     $self->_build_options if $self->has_options_builder;
-}
+};
 
 # Options builder
 sub _build_options {

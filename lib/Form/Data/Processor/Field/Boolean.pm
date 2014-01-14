@@ -20,8 +20,6 @@ sub BUILD {
     my $self = shift;
 
     $self->set_error_message( required_input => 'Value is not provided', );
-
-    $self->set_default_value( required_input => $self->required_input, );
 }
 
 has required_input => (
@@ -29,6 +27,12 @@ has required_input => (
     isa     => 'Bool',
     default => 0,
 );
+
+after _before_ready => sub {
+    my $self = shift;
+
+    $self->set_default_value( required_input => $self->required_input, );
+};
 
 around validate => sub {
     my $orig = shift;
