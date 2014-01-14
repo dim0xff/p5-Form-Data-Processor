@@ -178,6 +178,18 @@ package Form {
     sub ready {
         shift->add_ready_cnt(1);
     }
+
+    sub validate_field_2 {
+        my $self  = shift;
+        my $field = shift;
+
+        $self->field('field_3')->add_error('255') if $field->value == 255;
+    }
+
+    sub dump_errors {
+        return { map { $_->full_name => [ $_->all_errors ] }
+                shift->all_error_fields };
+    }
 }
 
 package main {
@@ -268,7 +280,7 @@ package main {
     );
 
     is_deeply(
-        { map { $_->full_name => [ $_->all_errors ] } $form->all_error_fields },
+        $form->dump_errors,
         {
             field_2 => [
                 'Number is too small',
@@ -295,7 +307,7 @@ package main {
     );
 
     is_deeply(
-        { map { $_->full_name => [ $_->all_errors ] } $form->all_error_fields },
+        $form->dump_errors,
         { field_4 => ['Value is not allowed'] },
         'OK, returned proper error messages '
     );
@@ -326,6 +338,24 @@ package main {
     is( $form->field_traits_check, 4,
         'OK, field_traits for form works properly' );
 
+    subtest 'Validate field from field' => sub {
+        ok(
+            !$form->process(
+                {
+                    field_1 => 'field 1',
+                    field_2 => 255,
+                    field_3 => 8,
+                    field_4 => 12,
+                }
+            ),
+            'Form validated with errors'
+        );
+        is_deeply(
+            $form->dump_errors,
+            { field_3 => ['255'] },
+            'Next field has proper error'
+        );
+    };
 
     done_testing();
 }
