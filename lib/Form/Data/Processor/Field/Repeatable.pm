@@ -52,11 +52,6 @@ sub BUILD {
     $self->_build_fields;
 
     $self->set_error_message( max_input_length => 'Input exceeds max length', );
-
-    $self->set_default_value(
-        prebuild_subfields => $self->prebuild_subfields,
-        max_input_length   => $self->max_input_length,
-    );
 }
 
 after _init_external_validators => sub {
@@ -65,12 +60,17 @@ after _init_external_validators => sub {
     $self->contains->_init_external_validators if $self->has_contains;
 };
 
-sub _before_ready {
+after _before_ready => sub {
     my $self = shift;
+
+    $self->set_default_value(
+        prebuild_subfields => $self->prebuild_subfields,
+        max_input_length   => $self->max_input_length,
+    );
 
     $self->_ready_fields;
     $self->_build_contains;
-}
+};
 
 sub _before_reset {
     return if $_[0]->not_resettable;
@@ -95,6 +95,9 @@ sub _build_contains {
                 type => 'Compound',
             }
         );
+        $contains->_before_ready();
+        $contains->ready();
+
         $self->contains($contains);
 
         for my $field ( $self->all_fields ) {

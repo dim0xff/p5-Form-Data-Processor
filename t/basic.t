@@ -113,42 +113,6 @@ package Form::Prev {
 
     extends 'Form::Data::Processor::Form';
 
-    has_field required => (
-        type     => 'Text',
-        required => 1,
-    );
-}
-
-package Form {
-    use Form::Data::Processor::Moose;
-
-    extends 'Form::Prev';
-
-    has ready_cnt => (
-        is      => 'rw',
-        isa     => 'Int',
-        traits  => ['Number'],
-        default => 0,
-        handles => {
-            add_ready_cnt => 'add',
-        }
-    );
-
-
-    has field_traits_check => (
-        is      => 'rw',
-        isa     => 'Int',
-        default => 0,
-    );
-
-    has '+field_traits' => (
-        default => sub {
-            ['Form::TraitFor::AllFields'];
-        }
-    );
-
-    has_field '+required' => ( required => 0, );
-
     has_field field_1 => (
         type     => '+Form::Field1',
         required => 1,
@@ -186,6 +150,48 @@ package Form {
     );
 
     has_field field_5 => ( type => 'Text' );
+
+    has_field required => (
+        type      => 'Text',
+        required  => 1,
+        minlength => 10,
+    );
+}
+
+package Form {
+    use Form::Data::Processor::Moose;
+
+    extends 'Form::Prev';
+
+    has ready_cnt => (
+        is      => 'rw',
+        isa     => 'Int',
+        traits  => ['Number'],
+        default => 0,
+        handles => {
+            add_ready_cnt => 'add',
+        }
+    );
+
+
+    has field_traits_check => (
+        is      => 'rw',
+        isa     => 'Int',
+        default => 0,
+    );
+
+    has '+field_traits' => (
+        default => sub {
+            ['Form::TraitFor::AllFields'];
+        }
+    );
+
+    has_field '+required' => (
+        required  => 0,
+        disabled  => 1,
+        minlength => 100,
+    );
+
 
     before clear_form => sub {
         shift->field_traits_check(0);
@@ -393,6 +399,15 @@ package main {
             1, 'Field is empty with provided value undef' );
         is( !!$fld->is_empty('value'),
             !!0, 'Field is empty with provided value "value"' );
+    };
+
+    subtest 'populate_defaults in inherited field' => sub {
+        is( $form->field('required')->get_default_value('required'),
+            0, 'Required' );
+        is( $form->field('required')->get_default_value('disabled'),
+            1, 'Disabled' );
+        is( $form->field('required')->get_default_value('minlength'),
+            100, 'minlength' );
     };
 
     done_testing();

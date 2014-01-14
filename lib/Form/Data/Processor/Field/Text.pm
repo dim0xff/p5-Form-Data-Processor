@@ -24,12 +24,6 @@ sub BUILD {
         text_maxlength => 'Field is too long',
         text_minlength => 'Field is too short',
     );
-
-    $self->set_default_value(
-        not_nullable => $self->not_nullable,
-        maxlength    => $self->maxlength,
-        minlength    => $self->minlength,
-    );
 }
 
 
@@ -74,6 +68,16 @@ apply [
     },
 ];
 
+
+after _before_ready => sub {
+    my $self = shift;
+
+    $self->set_default_value(
+        not_nullable => $self->not_nullable,
+        maxlength    => $self->maxlength,
+        minlength    => $self->minlength,
+    );
+};
 
 around init_input => sub {
     my $orig = shift;
