@@ -276,7 +276,8 @@ sub init_input {
 }
 
 sub is_empty {
-    return 0 if defined( $_[1] ) && length( $_[1] );
+    return 0 if @_ == 1 && defined( $_[0]->value ) && length( $_[0]->value );
+    return 0 if @_ == 2 && defined( $_[1] ) && length( $_[1] );
     return 1;
 }
 
@@ -977,7 +978,7 @@ Also apply L<"init input actions"|/"Input initialization level action">.
 
 =over 4
 
-=item Arguments: ($value)
+=item Arguments: ($value?)
 
 =item Returns: 0|1
 
@@ -985,6 +986,8 @@ Also apply L<"init input actions"|/"Input initialization level action">.
 
 By default returns C<0> when C<$value> is NOT empty (defined and length is positive).
 Otherwise returns C<1>.
+
+When C<$value> is not provided, then check current field L</value>
 
 It could be overloaded in inherited classes.
 

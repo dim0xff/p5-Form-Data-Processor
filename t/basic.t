@@ -171,6 +171,8 @@ package Form {
         ],
     );
 
+    has_field field_5 => (        type => 'Text'    );
+
     before clear_form => sub {
         shift->field_traits_check(0);
     };
@@ -200,7 +202,7 @@ package main {
     is( $form->ready_cnt,                   1, 'FDP::Form::ready ok' );
     is( $form->field('field_1')->ready_cnt, 1, 'FDP::Field::ready ok' );
 
-    is( @form_fields, 4, 'all_fields - OK, all fields for form returned' );
+    is( @form_fields, 5, 'all_fields - OK, all fields for form returned' );
     is( $form_fields[0]->name, 'field_1', 'OK, name for field is right' );
     is(
         $form_fields[0]->name,
@@ -355,6 +357,24 @@ package main {
             { field_3 => ['255'] },
             'Next field has proper error'
         );
+    };
+
+    subtest 'is_empty' => sub {
+        my $fld =   $form->field('field_5');
+        $fld->reset;
+        $fld->clear_empty(1);
+
+        $fld->init_input('   ');
+        is(!!$fld->is_empty, 1, 'Field is empty with self value');
+        is(!!$fld->is_empty(''), 1, 'Field is empty with provided value ""');
+        is(!!$fld->is_empty(undef), 1, 'Field is empty with provided value undef');
+        is(!!$fld->is_empty('value'), !!0, 'Field is empty with provided value "value"');
+
+        $fld->init_input(' value ');
+        is(!!$fld->is_empty, !!0, 'Field is not empty with self value');
+        is(!!$fld->is_empty(''), 1, 'Field is empty with provided value ""');
+        is(!!$fld->is_empty(undef), 1, 'Field is empty with provided value undef');
+        is(!!$fld->is_empty('value'), !!0, 'Field is empty with provided value "value"');
     };
 
     done_testing();
