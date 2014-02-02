@@ -19,28 +19,26 @@ use List::MoreUtils qw(uniq);
 
 extends 'Form::Data::Processor::Field';
 
-sub _ensure_options {
-    my $options = shift;
 
-    for my $opt ( @{$options} ) {
-        confess 'Invalid option value' if ( ref($opt) || 'HASH' ) ne 'HASH';
+# Type checking and coercion for options list
+{
+    use Moose::Util::TypeConstraints;
+    subtype 'OptionsArrayRef', as 'ArrayRef[HashRef]', where {
+        my $val = $_;
+        !grep { !( exists $_->{value} ) } @{$val};
+    }, message {"Value is not provided for option"};
 
-        $opt = { value => $opt } unless ref $opt eq 'HASH';
+    coerce 'OptionsArrayRef', from 'ArrayRef', via {
+        my $options = $_;
+        for my $opt ( @{$options} ) {
+            confess 'Invalid option value' if ( ref($opt) || 'HASH' ) ne 'HASH';
 
-        confess 'Value is not provided for option' unless exists $opt->{value};
-    }
+            $opt = { value => $opt } unless ref $opt eq 'HASH';
+        }
+        return $options;
+    };
+    no Moose::Util::TypeConstraints;
 }
-
-around BUILDARGS => sub {
-    my $orig  = shift;
-    my $class = shift;
-
-    my $args = $class->$orig(@_);
-
-    _ensure_options( $args->{options} ) if ref $args->{options} eq 'ARRAY';
-
-    return $args;
-};
 
 sub BUILD {
     my $self = shift;
@@ -78,8 +76,9 @@ has max_input_length => (
 
 has options => (
     is      => 'rw',
-    isa     => 'ArrayRef[HashRef]',
+    isa     => 'OptionsArrayRef',
     trigger => \&_set_options_index,
+    coerce  => 1,
 );
 has options_builder => (
     is        => 'rw',
@@ -129,8 +128,6 @@ sub _build_options {
     my $self = shift;
 
     my @options = $self->options_builder->( $self->form, $self );
-
-    _ensure_options( \@options );
 
     $self->options( \@options );
 }

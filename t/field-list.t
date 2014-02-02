@@ -119,6 +119,20 @@ package Form {
     }
 }
 
+package Form::Ext {
+    use Form::Data::Processor::Moose;
+    extends 'Form';
+
+    has_field '+photos'       => ( options         => ['WITHOUT+PHOTOS'] );
+    has_field '+days_of_week' => ( options_builder => \&build_days );
+
+    sub build_days {
+        my @days = ( 'Friday', 'Saturday' );
+
+        return ( { value => 'Sunday', disabled => 1, }, @days );
+    }
+}
+
 package main {
     my $form = Form->new();
     my $now  = DateTime->now();
@@ -246,6 +260,46 @@ package main {
         $form->field('year')->set_default_value( do_not_reload => 0 );
         ok( $form->process($data), 'Form validated without errors' );
         is_deeply( $form->result, $result, 'Result is fine' );
+    };
+
+    subtest 'extending with new options' => sub {
+        $form = Form::Ext->new();
+
+        my $data = {
+            photos       => 'WITHOUT+PHOTOS',
+            days_of_week => ['Friday'],
+            year         => [ $now->year() ],
+            fruits       => 'kiwi',
+            comments     => [ undef, undef, undef, 'WITHOUT+COMMENTS' ],
+        };
+
+        my $result = {
+            photos       => ['WITHOUT+PHOTOS'],
+            days_of_week => ['Friday'],
+            year         => $now->year(),
+            fruits       => ['kiwi'],
+            comments     => 'WITHOUT+COMMENTS',
+        };
+
+        $form->year( $now->year );
+        $form->field('year')->set_default_value( do_not_reload => 0 );
+        ok( $form->process($data), 'Form validated without errors' );
+        is_deeply( $form->result, $result, 'Result is fine' );
+
+        is_deeply(
+            $form->field('photos')->options,
+            [ { value => 'WITHOUT+PHOTOS' } ],
+            'Field photos has right options'
+        );
+        is_deeply(
+            $form->field('days_of_week')->options,
+            [
+                { value => 'Sunday', disabled => 1 },
+                { value => 'Friday' },
+                { value => 'Saturday' },
+            ],
+            'Field days_of_week has right options'
+        );
     };
 
     done_testing();

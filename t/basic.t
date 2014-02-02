@@ -205,6 +205,7 @@ package Form {
         my $self  = shift;
         my $field = shift;
 
+        return unless $field->value;
         $self->field('field_3')->add_error('255') if $field->value == 255;
     }
 
