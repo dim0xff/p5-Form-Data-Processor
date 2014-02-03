@@ -192,12 +192,12 @@ sub _before_ready {
     $self->populate_defaults;
 }
 
-sub ready         { }
+sub ready { }
 
 sub has_fields { return 0 }
 sub is_form    { return 0 }
 
-sub _has_result { return $_[0]->has_value }
+sub _has_result { return !$_[0]->disabled && $_[0]->has_value }
 
 sub result {
     my $self = shift;

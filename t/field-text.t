@@ -237,7 +237,6 @@ package main {
     };
 
     subtest 'clear_empty' => sub {
-
         for my $t (
             {
                 title   => 'clear_empty',
@@ -268,6 +267,27 @@ package main {
                 'OK clear_empty - ' . $t->{title} );
         }
     };
+
+    ok(
+        $form->process(
+            {
+                text                      => '',
+                text_required             => '0',
+                text_required_notnullable => ' 0 ',
+            }
+        ),
+        'Form validated without errors'
+    );
+
+    $form->field('text_required')->disabled(1);
+    $form->field('text_required')->validate;
+    is_deeply(
+        $form->result,
+        {
+            text_required_notnullable => '0',
+        },
+        'Disabled value is not present in result'
+    );
 
     done_testing();
 }
