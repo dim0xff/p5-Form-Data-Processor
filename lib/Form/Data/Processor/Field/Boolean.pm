@@ -22,6 +22,12 @@ sub BUILD {
     $self->set_error_message( required_input => 'Value is not provided', );
 }
 
+has real_result => (
+    is      => 'rw',
+    isa     => 'Bool',
+    default => 0,
+);
+
 has required_input => (
     is      => 'rw',
     isa     => 'Bool',
@@ -31,7 +37,10 @@ has required_input => (
 after _before_ready => sub {
     my $self = shift;
 
-    $self->set_default_value( required_input => $self->required_input, );
+    $self->set_default_value(
+        required_input => $self->required_input,
+        real_result    => $self->real_result,
+    );
 };
 
 around validate => sub {
@@ -67,7 +76,10 @@ sub _has_result {
 }
 
 sub _result {
-    return ( shift->value ? 1 : 0 );
+    my $self = shift;
+
+    return $self->value if $self->real_result;
+    return ( $self->value ? 1 : 0 );
 }
 
 __PACKAGE__->meta->make_immutable;
@@ -86,9 +98,6 @@ Field sets own error messages:
 
     'required_input' => 'Value is not provided',
 
-If provided value is C<undef>, C<0>, C<''> (or other "empty" value), than this
-means than field L<Form::Data::Processor::Field/result> will be C<1> - true.
-Otherwise result will be C<0> - false.
 
 =head1 SYNOPSYS
 
@@ -109,6 +118,20 @@ Otherwise result will be C<0> - false.
 Other accessors can be found in L<Form::Data::Processor::Field/ACCESSORS>
 
 All local accessors will be resettable.
+
+=head2 real_result
+
+=over 4
+
+=item Type: Bool
+
+=item Default: false
+
+=back
+
+When C<false>, then field L<Form::Data::Processor::Field/result> will be C<0> or C<1>.
+Otherwise it returns provided value.
+
 
 =head2 required
 
