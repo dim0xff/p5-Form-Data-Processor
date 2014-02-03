@@ -2,6 +2,7 @@ Tests for Form::Data::Processor::Field::clear_empty
 Tests for Form::Data::Processor::Field::Repeatable
 Documentation
 
+Disabled fields should not be showen in form result
 FDP::Field::Boolean add real value
 Add FDP::Field::String
 Dont validate via actions if value is undef?
