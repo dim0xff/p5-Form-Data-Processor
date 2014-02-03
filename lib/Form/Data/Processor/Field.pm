@@ -429,7 +429,7 @@ sub add_actions {
                 $v_sub = sub {
                     my $self = shift;
 
-                    unless ( $self->value =~ $action->{check} ) {
+                    unless ( ( $self->value || '' ) =~ $action->{check} ) {
                         $self->add_error( $error_message, $self->value );
                     }
                 };
