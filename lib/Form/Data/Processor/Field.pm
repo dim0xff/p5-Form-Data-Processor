@@ -293,7 +293,7 @@ sub validate {
     return $self->add_error('required')
         if $self->required && !$self->validate_required();
 
-    return unless $self->has_value;
+    return unless $self->has_value && defined $self->value;
 
     for my $sub ( $self->all_validate_actions ) {
         $sub->($self);
@@ -742,7 +742,7 @@ Also actions could be dfined in roles or classes via C<apply> word:
 =head4 Input initialization level action
 
 These actions will be applied for user input on L</init_input> when field is not disabled
-and field input is posted (when field value was provided, even empty like C<''> or C<undef>).
+and field input value is defined.
 
 These actions could be defined via C<input_transform> key.
 Value for key is CodeRef, which accept two arguments: value and field reference.

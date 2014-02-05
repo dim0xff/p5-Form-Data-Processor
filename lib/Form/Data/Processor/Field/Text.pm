@@ -116,13 +116,11 @@ sub trim {
 
 sub validate_maxlength {
     return 1 unless $_[0]->has_maxlength;
-    return 1 if not defined $_[1] && $_[0]->maxlength;
     return ( ref( $_[1] ) || length( $_[1] ) <= $_[0]->maxlength );
 }
 
 sub validate_minlength {
     return 1 unless $_[0]->has_minlength;
-    return 0 if not defined $_[1] && $_[0]->minlength;
     return ( ref( $_[1] ) || length( $_[1] ) >= $_[0]->minlength );
 }
 

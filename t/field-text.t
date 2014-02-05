@@ -35,6 +35,7 @@ package Form {
     has_field text_min => (
         type      => 'Text',
         minlength => 10,
+        not_nullable => 1, 
     );
 
     has_field text_max => (
@@ -144,6 +145,8 @@ package main {
             ),
             'Form validated with errors'
         );
+
+
 
         is_deeply(
             $form->dump_errors,
