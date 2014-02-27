@@ -3,3 +3,6 @@ Tests for Form::Data::Processor::Field::Repeatable
 Documentation
 
 Add FDP::Field::String
+
+
+FDP::F::Boolean - не возвращать значение, если нет ввода
