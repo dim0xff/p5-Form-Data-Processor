@@ -54,6 +54,8 @@ package main {
     $form->field('required')->disabled(1);
     $form->field('required')->not_resettable(1);
 
+    $form->field('general')->set_default_value( force_result => 1 );
+
     ok(
         $form->process(
             {
@@ -75,6 +77,7 @@ package main {
 
     $form->field('required')->disabled(0);
     $form->field('required')->not_resettable(0);
+    $form->field('general')->set_default_value( force_result => 0 );
 
     for my $real ( 0, 1 ) {
         my $subtest = ( $real ? 'real_result' : 'result' );
@@ -156,12 +159,10 @@ package main {
                         input => [ 'a', 'b' ],
                     },
                     real_result => {
-                        general  => undef,
                         required => { a => 'b' },
-                        input    => [ 'a', 'b' ],
+                        input => [ 'a', 'b' ],
                     },
                     result => {
-                        general  => 0,
                         required => 1,
                         input    => 1,
                     }
@@ -184,6 +185,34 @@ package main {
             }
         };
     }
+
+    subtest 'force_result' => sub {
+        $form->field('general')->set_default_value( real_result => 0 );
+        $form->field('required')->set_default_value( real_result => 0 );
+        $form->field('input')->set_default_value( real_result => 0 );
+
+        for ( 0, 1 ) {
+            $form->field('general')->set_default_value( force_result => $_ );
+            ok(
+                $form->process(
+                    {
+                        required => { a => 'b' },
+                        input => [ 'a', 'b' ],
+                    }
+                ),
+                'Form validated without errors (' . $_ . ')'
+            );
+            is_deeply(
+                $form->result,
+                {
+                    ( $_ ? ( general => 0 ) : () ),
+                    required => 1,
+                    input    => 1,
+                },
+                'Form result is fine (' . $_ . ')'
+            );
+        }
+    };
 
     done_testing();
 }

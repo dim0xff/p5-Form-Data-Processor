@@ -22,6 +22,12 @@ sub BUILD {
     $self->set_error_message( required_input => 'Value is not provided', );
 }
 
+has force_result => (
+    is      => 'rw',
+    isa     => 'Bool',
+    default => 0,
+);
+
 has real_result => (
     is      => 'rw',
     isa     => 'Bool',
@@ -40,6 +46,7 @@ after _before_ready => sub {
     $self->set_default_value(
         required_input => $self->required_input,
         real_result    => $self->real_result,
+        force_result   => $self->force_result,
     );
 };
 
@@ -72,7 +79,12 @@ sub validate_required_input {
 }
 
 sub _has_result {
-    return shift->disabled ? 0 : 1;
+    my $self = shift;
+
+    return 0 if $self->disabled;
+    return 1 if $self->force_result;
+
+    return $self->has_value;
 }
 
 sub _result {
@@ -118,6 +130,21 @@ Field sets own error messages:
 Other accessors can be found in L<Form::Data::Processor::Field/ACCESSORS>
 
 All local accessors will be resettable.
+
+
+=head2 force_result
+
+=over 4
+
+=item Type: Bool
+
+=item Default: false
+
+=back
+
+When C<true>, then field has result when input value is not provided, and result is C<0>.
+Otherwise there is no result for this field, when input value is not provided.
+
 
 =head2 real_result
 
