@@ -29,19 +29,22 @@ On my desktop "Intel(R) Core(TM)2 Duo CPU E4600  @ 2.40GHz,4GB, OpenSuSE, Linux 
     Form::Data::Processor 314/s                    --                  -15%
     HTML::FormHandler     369/s                   18%                    --
 
-    ----------------------------------------
+    -----------------------------------------------------------------------------------------------------------
 
     $> perl benchmarks/medium.pl
-    1..1
-                                   Rate Create HTML::FormHandler Create Form::Data::Processor
-    Create HTML::FormHandler     29.4/s                       --                         -39%
-    Create Form::Data::Processor 47.9/s                      63%                           --
+    1..2
+                                    Rate Create HTML::FormHandler Create Form::Data::Processor Create PurePerl
+    Create HTML::FormHandler       23.3/s                       --                         -40%           -100%
+    Create Form::Data::Processor   38.9/s                      67%                           --           -100%
+    Create PurePerl              584593/s                 2512199%                     1502731%              --
     ok 1 - Form::Data::Processor "result()" equals to HTML::FormHandler "values()"
-                            Rate     HTML::FormHandler Form::Data::Processor
-    HTML::FormHandler     49.3/s                    --                  -88%
-    Form::Data::Processor  408/s                  728%                    --
+    ok 2 - Form::Data::Processor "result()" equals to PurePerl result
+                        Rate HTML::FormHandler Form::Data::Processor    PurePerl
+    HTML::FormHandler     37.9/s                --                  -90%        -94%
+    Form::Data::Processor  385/s              916%                    --        -38%
+    PurePerl               618/s             1531%                   61%          --
 
-    ----------------------------------------
+    ----------------------------------------------------------------------------------------------------------
 
     $> perl benchmarks/complex.pl
     1..2

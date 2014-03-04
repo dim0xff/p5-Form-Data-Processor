@@ -8,7 +8,7 @@ use FindBin;
 use lib ( "$FindBin::Bin/lib", "$FindBin::Bin/../lib" );
 
 use Benchmark qw(:all);
-use Test::More tests => 1;
+use Test::More tests => 2;
 
 use Moose::Util::TypeConstraints;
 
@@ -131,8 +131,114 @@ package HFH::Form {
     }
 }
 
+package PP::Form {
+    use Storable qw(dclone);
+
+    sub new {
+        return bless {}, shift;
+    }
+
+    sub result {
+        shift->{result};
+    }
+
+    sub _check_text {
+        return 0 if ref pop;
+        return 1;
+    }
+
+    sub _check_text_min {
+        my $length = pop || 0;
+        my $text = pop;
+        return 0 if length($text) < $length;
+
+        return 1;
+    }
+
+    sub _check_text_max {
+        my $length = pop || 0;
+        my $text = pop;
+        return 0 if length($text) > $length;
+
+        return 1;
+    }
+
+    sub _check_required {
+        my $data = pop;
+        return 0 if !defined($data) || $data eq '';
+        return 1;
+    }
+
+    sub _fix_text {
+        my $text = pop;
+        $$text =~ s/^\s+|\s+$//igs;
+    }
+
+    sub add_error {                             # Here should be error handling
+        die 'Error! ' . ( pop // '' );
+    }
+
+    sub process {
+        my $self = shift;
+        my $data = shift || {};
+
+        $data = dclone($data);
+
+        # Check addresses
+        my $addrs = $data->{addresses};
+        $self->add_error('Invalud addresses') unless ref $addrs eq 'ARRAY';
+
+        for my $addr ( @{$addrs} ) {
+            $self->add_error('Invalid address type')
+                unless grep { $addr->{type} eq $_ } 'BILLING', 'SHIPPING';
+
+            $self->_check_required( $addr->{type} )
+                or $self->add_error('Value is required for type');
+
+            $self->_check_required( $addr->{address} )
+                or $self->add_error('Value is required for address');
+
+            for ( 'zip', 'addr1', 'state', 'addr2', 'country' ) {
+                $self->_check_text( $addr->{address}{$_} )
+                    or $self->add_error( 'Invalid address ' . $_ );
+            }
+
+            for ( 'zip', 'addr1', 'state', 'country' ) {
+                $self->_check_required( $addr->{address}{$_} )
+                    or $self->add_error( 'Value is required for ' . $_ );
+            }
+
+            $self->add_error('Zip error')
+                unless $addr->{address}{zip} =~ /^\d+$/;
+
+            for ( 'zip', 'addr1', 'state', 'addr2', 'country' ) {
+                $self->_fix_text( \$addr->{address}{$_} );
+            }
+        }
+
+        # Check text fields
+        for ( 'text_required', 'text_max', 'text_max' ) {
+            $self->_check_text( $data->{$_} )
+                or $self->add_error( 'Invalid text ' . $_ );
+        }
+        $self->_check_required( $data->{'text_required'} )
+            or $self->add_error('Text is required');
+
+        $self->_check_text_min( $data->{text_min}, 10 )
+            or $self->add_error('Invalid min text length');
+        $self->_check_text_max( $data->{text_max}, 10 )
+            or $self->add_error('Invalid max text length');
+
+        for ( 'text_required', 'text_max', 'text_max' ) {
+            $self->_fix_text( \$data->{$_} );
+        }
+
+        $self->{result} = $data;
+    }
+}
+
 package main {
-    my ( $fdp, $hfh );
+    my ( $fdp, $hfh, $pp );
 
     cmpthese(
         -5,
@@ -144,6 +250,12 @@ package main {
             'Create HTML::FormHandler' => sub {
 
                 $hfh = HFH::Form->new();
+
+            },
+            'Create PurePerl' => sub {
+
+                $pp = PP::Form->new();
+
             },
         }
     );
@@ -170,10 +282,14 @@ package main {
 
     $fdp->process($data);
     $hfh->process($data);
+    $pp->process($data);
 
     is_deeply( $fdp->result, $hfh->values,
         'Form::Data::Processor "result()" equals to HTML::FormHandler "values()"'
     );
+
+    is_deeply( $fdp->result, $pp->result,
+        'Form::Data::Processor "result()" equals to PurePerl result' );
 
     cmpthese(
         -5,
@@ -185,6 +301,10 @@ package main {
             'HTML::FormHandler' => sub {
                 die 'HTML::FormHandler: validate error'
                     unless $hfh->process($data);
+            },
+            'PurePerl' => sub {
+                die 'PerePerl: validate error'
+                    unless $pp->process($data);
             },
         }
     );
