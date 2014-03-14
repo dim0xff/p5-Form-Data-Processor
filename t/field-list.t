@@ -262,6 +262,28 @@ package main {
         is_deeply( $form->result, $result, 'Result is fine' );
     };
 
+    subtest 'clear_empty' => sub {
+        my $f = $form->field('comments');
+
+        $f->init_input( undef, 1 );
+        ok( $f->has_value, 'OK, field has value on empty input' );
+
+        is( $f->clear_empty(1), 1,
+            'Now field shoudnt have value on undef input' );
+
+        $f->init_input( undef, 1 );
+        ok( !$f->has_value, 'OK, field doesnt have value on undef input' );
+
+        $f->init_input( [] );
+        ok( !$f->has_value, 'OK, field doesnt have value on empty input' );
+
+        $f->init_input( [ undef, undef, undef, undef ] );
+        ok( !$f->has_value,
+            'OK, field doesnt have value on [undef, undef, ...] input' );
+
+        $f->clear_empty(0);
+    };
+
     subtest 'extending with new options' => sub {
         $form = Form::Ext->new();
 
@@ -301,6 +323,7 @@ package main {
             'Field days_of_week has right options'
         );
     };
+
 
     done_testing();
 }
