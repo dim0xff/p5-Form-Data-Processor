@@ -143,6 +143,8 @@ sub init_input {
         $sub->( $self, \$value );
     }
 
+    return $self->clear_value if $self->clear_empty && $self->is_empty($value);
+
     if ( ref $value eq 'ARRAY' ) {
         my $input_length = scalar( @{$value} );
         $self->_set_input_length($input_length);
@@ -172,6 +174,21 @@ sub init_input {
         ]
     );
 }
+
+around is_empty => sub {
+    my $orig = shift;
+    my $self = shift;
+
+    return 1 if $self->$orig(@_);
+
+    # OK, there is some input, so we have value
+    my $value = @_ ? $_[0] : $self->value;
+
+    return 0 unless ref $value eq 'ARRAY';
+
+    # Seems it is ArrayRef. Look for defined value
+    return !( scalar( grep {defined} @{$value} ) );
+};
 
 around validate => sub {
     my $orig = shift;

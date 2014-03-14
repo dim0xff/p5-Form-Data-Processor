@@ -275,10 +275,12 @@ package main {
         ],
     };
 
-    for ( 1 .. 10 ) {
-        my $t0 = [gettimeofday];
-        $form->process($data);
-        diag tv_interval( $t0, [gettimeofday] );
+    if ( !$ENV{NO_BENCH} ) {
+        for ( 1 .. 10 ) {
+            my $t0 = [gettimeofday];
+            $form->process($data);
+            diag tv_interval( $t0, [gettimeofday] );
+        }
     }
 
     subtest 'external_validators' => sub {
@@ -355,6 +357,28 @@ package main {
         ok( $form->process($data), 'Form validated with errors' );
         is( $form->field('rep_2.0.text_min')->result,
             'X' x 15, 'Result for field is correct' );
+    };
+
+    subtest 'clear_empty' => sub {
+        my $f = $form->field('rep_3');
+
+        $f->init_input( undef, 1 );
+        ok( $f->has_value, 'OK, field has value on empty input' );
+
+        is( $f->clear_empty(1), 1,
+            'Now field shoudnt have value on undef input' );
+
+        $f->init_input( undef, 1 );
+        ok( !$f->has_value, 'OK, field doesnt have value on undef input' );
+
+        $f->init_input( [] );
+        ok( !$f->has_value, 'OK, field doesnt have value on empty input' );
+
+        $f->init_input( [ undef, undef, undef, undef ] );
+        ok( !$f->has_value,
+            'OK, field doesnt have value on [undef, undef, ...] input' );
+
+        $f->clear_empty(0);
     };
 
     done_testing();
