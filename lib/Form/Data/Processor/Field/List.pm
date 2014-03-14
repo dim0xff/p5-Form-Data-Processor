@@ -123,6 +123,21 @@ after _before_ready => sub {
     $self->_build_options if $self->has_options_builder;
 };
 
+around is_empty => sub {
+    my $orig = shift;
+    my $self = shift;
+
+    return 1 if $self->$orig(@_);
+
+    # OK, there is some input, so we have value
+    my $value = @_ ? $_[0] : $self->value;
+
+    return 0 unless ref $value eq 'ARRAY';
+
+    # Seems it is ArrayRef. Look for defined value
+    return !( scalar( grep {defined} @{$value} ) );
+};
+
 # Options builder
 sub _build_options {
     my $self = shift;
