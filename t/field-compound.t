@@ -338,5 +338,23 @@ package main {
             'X' x 15, 'Result for field is correct' );
     };
 
+    subtest 'clear_empty' => sub {
+        my $f = $form->field('compound');
+
+        $f->init_input( undef, 1 );
+        ok( $f->has_value, 'OK, field has value on empty input' );
+
+        is( $f->clear_empty(1), 1,
+            'Now field shoudnt have value on undef input' );
+
+        $f->init_input( undef, 1 );
+        ok( !$f->has_value, 'OK, field doesnt have value on undef input' );
+
+        $f->init_input( {} );
+        ok( !$f->has_value, 'OK, field doesnt have value on empty input' );
+
+        $f->clear_empty(0);
+    };
+
     done_testing();
 }

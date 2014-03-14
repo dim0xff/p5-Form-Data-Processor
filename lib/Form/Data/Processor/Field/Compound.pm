@@ -52,6 +52,8 @@ sub init_input {
         $sub->( $self, \$value );
     }
 
+    return $self->clear_value if $self->clear_empty && $self->is_empty($value);
+
     if ( ref $value eq 'HASH' ) {
         for my $field ( $self->all_fields ) {
             my $exists = exists $value->{ $field->name };
@@ -70,6 +72,21 @@ sub init_input {
         }
     );
 }
+
+around is_empty => sub {
+    my $orig = shift;
+    my $self = shift;
+
+    return 1 if $self->$orig(@_);
+
+    # OK, there is some input, so we have value
+    my $value = @_ ? $_[0] : $self->value;
+
+    return 0 unless ref $value eq 'HASH';
+
+    # Seems it is ArrayRef. Look for defined value
+    return !( scalar( keys %{$value} ) );
+};
 
 around validate => sub {
     my $orig = shift;
