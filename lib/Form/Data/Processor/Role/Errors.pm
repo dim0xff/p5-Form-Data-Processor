@@ -47,7 +47,8 @@ sub add_error {
 after _add_error => sub {
     my $self = shift;
 
-    $self->parent->has_fields_errors(1) if $self->can('parent');
+    $self->parent->has_fields_errors(1)
+        if $self->can('parent') && $self->has_parent;
 };
 
 1;
