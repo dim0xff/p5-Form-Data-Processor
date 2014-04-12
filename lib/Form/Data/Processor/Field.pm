@@ -1136,7 +1136,7 @@ Error messages builder.
 
 External validation is one of the ways to validate field.
 
-External validators is a subroutines, which are described in L</parent>. These subroutines
+External validators are subroutines, which are described in L</parent>(s). These subroutines
 should have name, which looks like C<validate_field_full_name>.
 
 Validation will be performed from "bottom" to "top".

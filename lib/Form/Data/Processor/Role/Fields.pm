@@ -51,6 +51,7 @@ has has_fields_errors => (
     default => 0,
     trigger => sub {
         my $self = shift;
+
         # $_[0] - new
         # $_[1] - old
 
@@ -345,7 +346,7 @@ sub validate_fields {
         $field->validate;
 
         for my $code ( $field->all_external_validators ) {
-            $code->( $self, $field );
+            $code->($field);
         }
     }
 }
@@ -416,7 +417,14 @@ sub _find_external_validators {
 
     # Search validator in current obj
     if ( my $code = $self->can($validator) ) {
-        push( @validators, $code );
+        push(
+            @validators,
+            sub {
+                my $field = shift;
+
+                $code->( $self, $field );
+            }
+        );
     }
 
     # Search validator in parent objects
