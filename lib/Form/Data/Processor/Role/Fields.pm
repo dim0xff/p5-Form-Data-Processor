@@ -226,11 +226,6 @@ sub subfield {
 sub _merge_updates {
     my ( $self, $field_attr, $class ) = @_;
 
-    my $field_updates;
-
-    unshift @{ $field_attr->{traits} }, @{ $self->form->field_traits }
-        if $self->form && $self->form->has_field_traits;
-
     return $field_attr;
 }
 

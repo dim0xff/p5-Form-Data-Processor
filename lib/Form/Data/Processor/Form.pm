@@ -51,6 +51,7 @@ sub BUILD {
 
 sub _before_ready { }
 sub ready         { }
+sub _after_ready  { }
 sub form          { return shift }
 sub is_form       { return 1 }
 
@@ -61,6 +62,7 @@ sub process {
     $self->setup_form(@_);
     $self->init_input( $self->params );
     $self->validate_fields;
+
     return $self->validated;
 }
 
@@ -90,6 +92,19 @@ sub setup_form {
 sub validated {
     return !( shift->has_errors );
 }
+
+around _merge_updates => sub {
+    my $orig = shift;
+    my $self = shift;
+
+    my $field_attr = $self->$orig(@_) || {};
+    $field_attr->{traits} = [] unless exists $field_attr->{traits};
+
+    unshift @{ $field_attr->{traits} }, @{ $self->field_traits }
+        if $self->has_field_traits;
+
+    return $field_attr;
+};
 
 __PACKAGE__->meta->make_immutable;
 
@@ -168,9 +183,9 @@ Array of traits, which will be applied for every field.
 
 Hash of parameters, which are provided by user.
 
-You can set it via L</setup_form>.
+Could be set via L</setup_form>.
 
-Also provide methods:
+Also provides methods:
 
 =over 1
 
@@ -251,7 +266,7 @@ Returns true, if form validated without errors via L</validated>.
 
 =head2 ready
 
-Method which normally should be called after all fields L<Form::Data::Processor::Field/ready>
+Method which normally should be called after all fields are L<Form::Data::Processor::Field/ready>
 
 By default it does nothing, but you can use it when extend form.
 
@@ -288,20 +303,21 @@ C<%arguments> is hash of form arguments, which will be initialized.
     );
 
 B<Notice>: there are no built-in ability to "expand" params to HashRef from data,
-where keys are defined with separators (like C<.> or C<[]>) like as it do HTML::FormHandler.
+where keys are defined with separators (like C<.> or C<[]>) like as it do L<HTML::FormHandler>.
 
-    # So you must to write your own expanding tool
+    # So you must to write your own expanding tool, when you need it
     # to prepare data from:
     {
         'field.name.1' => 'value',
     }
 
-    # to:
+    # into:
     {
         field => {
-            name => {
-                1 => 'value'
-            }
+            name => [
+                undef,
+                'value'
+            ]
         }
     }
 
@@ -313,6 +329,13 @@ where keys are defined with separators (like C<.> or C<[]>) like as it do HTML::
 
 =back
 
-Return if form doesn't have errors (via L<Form::Data::Processor::Role::Fields/has_errors>).
+Return true if form doesn't have errors (via L<Form::Data::Processor::Role::Fields/has_errors>).
+
+=cut
+
+
+=head1 AUTHOR
+
+Dmitry Latin <dim0xff@gmail.com>
 
 =cut
