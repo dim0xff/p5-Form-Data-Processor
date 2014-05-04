@@ -6,8 +6,6 @@ Form::Data::Processor::Form - base class for form
 
 =cut
 
-use utf8;
-
 use strict;
 use warnings;
 
