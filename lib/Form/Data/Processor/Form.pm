@@ -37,6 +37,17 @@ has params => (
     },
 );
 
+has field_name_space => (
+    is      => 'rw',
+    isa     => 'ArrayRef[Str]',
+    traits  => ['Array'],
+    lazy    => 1,
+    default => sub { [] },
+    handles => {
+        add_field_name_space => 'push',
+    },
+);
+
 sub BUILD {
     my $self = shift;
 
@@ -52,8 +63,8 @@ sub _before_ready { }
 sub ready         { }
 sub _after_ready  { }
 
-sub form          { return shift }
-sub is_form       { return 1 }
+sub form    { return shift }
+sub is_form { return 1 }
 
 sub process {
     my $self = shift;
@@ -163,6 +174,20 @@ does L<Form::Data::Processor::Role::Fields> and L<Form::Data::Processor::Role::E
     }
 
 =head1 ACCESSORS
+
+=head2 field_name_space
+
+=over 4
+
+=item Type: ArrayRef[Str
+
+=back
+
+Array of fields name spaces.
+
+It contains name spaces for searching fields classes, look L<Form::Data::Processor::Field/type>
+for more information.
+
 
 =head2 field_traits
 
