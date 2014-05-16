@@ -18,7 +18,7 @@ with 'Form::Data::Processor::Role::Fields',
 has field_traits => (
     is      => 'ro',
     traits  => ['Array'],
-    isa     => 'ArrayRef',
+    isa     => 'ArrayRef[Str]',
     default => sub { [] },
     handles => {
         has_field_traits => 'count',
@@ -47,9 +47,11 @@ sub BUILD {
     $self->ready;
 }
 
+# _before_ready() and _after_ready() - extending helpers
 sub _before_ready { }
 sub ready         { }
 sub _after_ready  { }
+
 sub form          { return shift }
 sub is_form       { return 1 }
 
@@ -91,6 +93,8 @@ sub validated {
     return !( shift->has_errors );
 }
 
+# Add traits into fields
+# via around hook Form::Data::Processor::Role::Fields/_merge_updates()
 around _merge_updates => sub {
     my $orig = shift;
     my $self = shift;
@@ -112,7 +116,7 @@ __END__
 
 =head1 DESCRIPTION
 
-It is base class for form which contains fields.
+This is a base class for form which contains fields.
 
 Your form should extend current class.
 
@@ -164,11 +168,11 @@ does L<Form::Data::Processor::Role::Fields> and L<Form::Data::Processor::Role::E
 
 =over 4
 
-=item Type: ArrayRef['Str']
+=item Type: ArrayRef[Str]
 
 =back
 
-Array of traits, which will be applied for every field.
+Array of trait names, which will be applied for every field.
 
 
 =head2 params
@@ -179,7 +183,7 @@ Array of traits, which will be applied for every field.
 
 =back
 
-Hash of parameters, which are provided by user.
+Hash of fields parameters, which are provided from user L<input|Form::Data::Processor::Field/init_input>.
 
 Could be set via L</setup_form>.
 
@@ -240,44 +244,27 @@ If arguments are provided, it will be placed to L</setup_form>.
 
 Returns true, if form validated without errors via L</validated>.
 
-    package My::Form
-    use Form::Data::Processor::Moose;
-    extends 'Form::Data::Processor::Form';
-
-    has attr1 => ( ... );
-    has attr2 => ( ... );
-    ...
-
-    # Later in your controller
+    # In your controller
     my $form = My::Form->new;
-
-    die 'Validation error' unless $form->process($ctx->params);
-    # or
-    die 'Validation error' unless
-        $form->process(
-            params => $ctx->params
-            attr1  => 'Attribute 1 value',
-            attr2  => 'Attribute 2 value',
-
-        );
     ...
+    die 'Validation error' unless $form->process(...);
 
 =head2 ready
 
 Method which normally should be called after all fields are L<Form::Data::Processor::Field/ready>
 
-By default it does nothing, but you can use it when extend form.
+By default it does nothing, but you can use it when extending form.
 
 
 =head2 setup_form
 
 =over 4
 
-=item Arguments: $params | %arguments
+=item Arguments: \%params | %arguments
 
 =back
 
-C<$params> is HashRef of user input, which will be placed to L</params>.
+C<$params> contains user input, which will be placed into L</params>.
 
 C<%arguments> is hash of form arguments, which will be initialized.
 
@@ -292,18 +279,22 @@ C<%arguments> is hash of form arguments, which will be initialized.
     # Later in your controller
     my $form = My::Form->new;
 
+    $form->attr1(...);
+    $form->attr2(...);
     $form->setup_form($params);
-    #or
+
+    # or
+
     $form->setup_form(
         params => $ctx->params
         attr1  => 'Attribute 1 value',
         attr2  => 'Attribute 2 value',
     );
 
-B<Notice>: there are no built-in ability to "expand" params to HashRef from data,
+B<Notice>: there are no built-in ability to "expand" params into HashRef,
 where keys are defined with separators (like C<.> or C<[]>) like as it do L<HTML::FormHandler>.
 
-    # So you must to write your own expanding tool, when you need it
+    # So you should to write your own expanding tool, when you need it
     # to prepare data from:
     {
         'field.name.1' => 'value',
