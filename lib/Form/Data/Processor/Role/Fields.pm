@@ -34,17 +34,6 @@ has index => (
     }
 );
 
-has field_name_space => (
-    is      => 'rw',
-    isa     => 'ArrayRef[Str]',
-    traits  => ['Array'],
-    lazy    => 1,
-    default => sub { [] },
-    handles => {
-        add_field_name_space => 'push',
-    },
-);
-
 has has_fields_errors => (
     is      => 'rw',
     isa     => 'Bool',
@@ -141,8 +130,7 @@ sub _make_field {
 sub _find_field_class {
     my ( $self, $type, $name ) = @_;
 
-    my $field_ns = $self->field_name_space
-        || ( $self->form ? $self->form->field_name_space : [] );
+    my $field_ns = $self->form ? $self->form->field_name_space : [];
 
     my @classes;
     push @classes, $type if $type =~ s/^\+//;
@@ -271,15 +259,6 @@ sub _update_or_create {
     return $field;
 }
 
-sub _ready_fields {
-    my $self = shift;
-
-    for my $field ( $self->all_fields ) {
-        $field->_before_ready;
-        $field->ready;
-    }
-}
-
 sub field_index {
     my ( $self, $name ) = @_;
     my $index = 0;
@@ -289,6 +268,15 @@ sub field_index {
     }
 
     return;
+}
+
+sub _ready_fields {
+    my $self = shift;
+
+    for my $field ( $self->all_fields ) {
+        $field->_before_ready;
+        $field->ready;
+    }
 }
 
 sub reset_fields {
