@@ -2,7 +2,7 @@ package Form::Data::Processor::Form;
 
 =head1 NAME
 
-Form::Data::Processor::Form - base class for form
+Form::Data::Processor::Form - base class for any form
 
 =cut
 
@@ -12,8 +12,10 @@ use warnings;
 use Moose;
 use namespace::autoclean;
 
-with 'Form::Data::Processor::Role::Fields',
-    'Form::Data::Processor::Role::Errors';
+with(
+    'Form::Data::Processor::Role::Fields',
+    'Form::Data::Processor::Role::Errors',
+);
 
 has field_traits => (
     is      => 'ro',
@@ -105,7 +107,7 @@ sub validated {
 }
 
 # Add traits into fields
-# via around hook Form::Data::Processor::Role::Fields/_merge_updates()
+# via 'around' hook Form::Data::Processor::Role::Fields/_merge_updates
 around _merge_updates => sub {
     my $orig = shift;
     my $self = shift;
@@ -125,38 +127,27 @@ __PACKAGE__->meta->make_immutable;
 
 __END__
 
-=head1 DESCRIPTION
-
-This is a base class for form which contains fields.
-
-Your form should extend current class.
-
-Every form, which is based on this class,
-does L<Form::Data::Processor::Role::Fields> and L<Form::Data::Processor::Role::Errors>.
-
 =head1 SYNOPSYS
 
     # Form definition
     package MyApp::Form::Customer;
 
     use Form::Data::Processor::Moose;
-    use namespace::autoclean;
-
     extends 'Form::Data::Processor::Form';
 
-    use Email::Valid;
     use Moose::Util::TypeConstraints;
+    use Email::Valid;
 
     subtype 'Email'
        => as 'Str'
        => where { !!(Email::Valid->address($_)) }
-       => message { "Your email address is not valid" };
+       => message { "Entered email address is not valid" };
 
 
     has_field 'name'    => ( type => 'Text', required => 1 );
     has_field 'email'   => ( type => 'Text', required => 1, apply => ['Email'] );
 
-    has_field 'address' => ( type => 'Copmound' );
+    has_field 'address'         => ( type => 'Copmound' );
     has_field 'address.city'    => ( type => 'Text' );
     has_field 'address.state'   => ( type => 'Select' );
     has_field 'address.address' => ( type => 'Text' );
@@ -166,12 +157,24 @@ does L<Form::Data::Processor::Role::Fields> and L<Form::Data::Processor::Role::E
 
     # Later in your user controller
     my $form = MyApp::Form::Customer->new;
-    if ($form->process($ctx->params)) {
+
+    if ( $form->process( $ctx->params ) ) {
         # Everything is fine
     }
     else {
         # error processing
     }
+
+
+=head1 DESCRIPTION
+
+This is a base class for form which contains fields.
+
+Your form should extend current class.
+
+Every form, which is based on this class,
+does L<Form::Data::Processor::Role::Fields> and L<Form::Data::Processor::Role::Errors>.
+
 
 =head1 ACCESSORS
 
@@ -179,7 +182,7 @@ does L<Form::Data::Processor::Role::Fields> and L<Form::Data::Processor::Role::E
 
 =over 4
 
-=item Type: ArrayRef[Str
+=item Type: ArrayRef[Str]
 
 =back
 
@@ -216,7 +219,7 @@ Also provides methods:
 
 =over 1
 
-=item set_param(param => value)
+=item set_param( param => value )
 
 =item get_param(param)
 
@@ -231,7 +234,8 @@ Also provides methods:
 
 =head2 clear_form
 
-Clear current form (L</clear_params>, L<Form::Data::Processor::Role::Errors/clear_errors> and L<Form::Data::Processor::Role::Fields/reset_fields>).
+Clear current form (L</clear_params>, L<Form::Data::Processor::Role::Errors/clear_errors>
+and L<Form::Data::Processor::Role::Fields/reset_fields>).
 
 
 =head2 form
@@ -262,7 +266,8 @@ Clear current form (L</clear_params>, L<Form::Data::Processor::Role::Errors/clea
 
 =back
 
-Process (L</clear_form>, L</setup_form>, L<Form::Data::Processor::Role::Fields/init_input> and L<Form::Data::Processor::Role::Fields/validate_fields>)
+Process (L</clear_form>, L</setup_form>, L<Form::Data::Processor::Role::Fields/init_input>
+and L<Form::Data::Processor::Role::Fields/validate_fields>)
 current form with provided parameters.
 
 If arguments are provided, it will be placed to L</setup_form>.
@@ -273,6 +278,7 @@ Returns true, if form validated without errors via L</validated>.
     my $form = My::Form->new;
     ...
     die 'Validation error' unless $form->process(...);
+
 
 =head2 ready
 
@@ -317,9 +323,10 @@ C<%arguments> is hash of form arguments, which will be initialized.
     );
 
 B<Notice>: there are no built-in ability to "expand" params into HashRef,
-where keys are defined with separators (like C<.> or C<[]>) like as it do L<HTML::FormHandler>.
+where keys are defined with separators (like C<.> or C<[]>)
+like as it L<HTML::FormHandler> does.
 
-    # So you should to write your own expanding tool, when you need it
+    # So you should to make your own expanding tool, when you need it
     # to prepare data from:
     {
         'field.name.1' => 'value',
