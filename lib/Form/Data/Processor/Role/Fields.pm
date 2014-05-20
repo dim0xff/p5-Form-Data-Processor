@@ -12,6 +12,12 @@ use namespace::autoclean;
 use Class::Load qw(load_optional_class);
 use Data::Clone ();
 
+requires 'form', 'has_errors', 'clear_errors', 'has_errors';
+
+#
+# ACCESSORS
+#
+
 has fields => (
     is      => 'rw',
     isa     => 'ArrayRef[Form::Data::Processor::Field]',
@@ -51,8 +57,7 @@ has has_fields_errors => (
         # $_[1] - old
 
         # Tell to parent when we have errors, so parent as well
-        $self->parent->has_fields_errors(1)
-            if $_[0] && !$_[1] && $self->can('parent');
+        eval { $self->parent->has_fields_errors(1) } if $_[0] && !$_[1];
     }
 );
 
@@ -67,6 +72,150 @@ has field_name_space => (
     },
 );
 
+
+#
+# METHODS
+#
+
+sub field {
+    my ( $self, $name, $f ) = @_;
+
+    return undef unless defined $name;
+
+    return ( $f || $self )->field_from_index($name)
+        if ( $f || $self )->field_in_index($name);
+
+    if ( $name =~ /\./ ) {
+        my @names = split /\./, $name;
+        $f ||= $self->form || $self;
+
+        for my $fname (@names) {
+            $f = $f->field($fname) or return;
+        }
+
+        return $f;
+    }
+
+    return;
+}
+
+
+sub subfield {
+    my ( $self, $name ) = @_;
+
+    return $self->field( $name, $self );
+}
+
+
+sub reset_fields {
+    my $self = shift;
+
+    for my $field ( $self->all_fields ) {
+        if ( !$field->not_resettable ) {
+            $field->_before_reset;
+            $field->reset;
+            $field->_after_reset;
+        }
+
+        $field->clear_value if $field->has_value;
+    }
+}
+
+
+after clear_errors => sub {
+    shift->clear_fields_errors();
+};
+
+
+sub clear_fields_errors {
+    my $self = shift;
+
+    return unless $self->has_fields_errors;
+
+    $self->has_fields_errors(0);
+
+    for my $field ( $self->all_fields ) {
+        $field->clear_errors;
+    }
+}
+
+sub init_input {
+    my ( $self, $params ) = @_;
+
+    confess 'Input params must be a HashRef' unless ref $params eq 'HASH';
+
+    for my $field ( $self->all_fields ) {
+        my $field_name = $field->name;
+        $field->init_input( $params->{$field_name},
+            exists( $params->{$field_name} ) );
+    }
+}
+
+sub validate_fields {
+    my $self = shift;
+
+    for my $field ( $self->all_fields ) {
+        next if $field->disabled;
+
+        $field->validate;
+
+        for my $code ( $field->all_external_validators ) {
+            $code->($field);
+        }
+    }
+}
+
+around has_errors => sub {
+    my $orig = shift;
+    my $self = shift;
+
+    return 1 if $self->has_fields_errors;
+    return $self->$orig;
+};
+
+sub error_fields {
+    my $self = shift;
+
+    return ( map {$_} grep { $_->has_errors } $self->all_fields );
+}
+
+sub all_error_fields {
+    my $self = shift;
+
+    return (
+        grep { $_->errors_count } map {
+            (
+                $_,
+                $_->DOES('Form::Data::Processor::Role::Fields')
+                ? $_->all_error_fields
+                : ()
+            );
+        } $self->all_fields
+    );
+}
+
+sub values {
+    my $self = shift;
+
+    return {
+        map { $_->name => $_->value }
+        grep { $_->has_value } $self->all_fields
+    };
+}
+
+sub result {
+    my $self = shift;
+
+    return undef if $self->has_fields_errors;
+
+    return {
+        map { $_->name => $_->_result }
+        grep { $_->_has_result } $self->all_fields
+    };
+}
+
+
+# Private methods
 
 # Fields builder
 sub _build_fields {
@@ -158,7 +307,7 @@ sub _find_field_class {
     my ( $self, $type, $name ) = @_;
 
     my $field_ns
-        = $self->has_form
+        = $self->form
         ? $self->form->field_name_space
         : $self->field_name_space;
 
@@ -183,7 +332,7 @@ sub _find_field_class {
 
 
 # Field parent finder
-# Return parent field (not form) or undef if there are no parent field
+# Return parent field (field, not form) or undef if there are no parent field
 sub _find_parent {
     my ( $self, $field_attr ) = @_;
 
@@ -205,7 +354,7 @@ sub _find_parent {
             confess 'Could not find parent for field ' . $field_attr->{name};
         }
     }
-    elsif ( !( $self->has_form && $self == $self->form ) ) {
+    elsif ( !( $self->form && $self == $self->form ) ) {
         $parent = $self;
     }
 
@@ -216,36 +365,6 @@ sub _find_parent {
 }
 
 
-sub field {
-    my ( $self, $name, $f ) = @_;
-
-    return undef unless defined $name;
-
-    return ( $f || $self )->index->{$name}
-        if exists( ( $f || $self )->index->{$name} );
-
-    if ( $name =~ /\./ ) {
-        my @names = split /\./, $name;
-        $f ||= $self->form || $self;
-
-        for my $fname (@names) {
-            $f = $f->field($fname) or return;
-        }
-
-        return $f;
-    }
-
-    return;
-}
-
-
-sub subfield {
-    my ( $self, $name ) = @_;
-
-    return $self->field( $name, $self );
-}
-
-
 sub _update_or_create {
     my ( $self, $parent, $field_attr, $class, $do_update ) = @_;
 
@@ -253,7 +372,7 @@ sub _update_or_create {
     $field_attr->{parent} = $parent;
     $field_attr->{form} = $self->form if $self->form;
 
-    my $index = $parent->field_index( $field_attr->{name} );
+    my $index = $parent->_field_index( $field_attr->{name} );
     my $field;
 
     if ( defined $index ) {
@@ -285,7 +404,7 @@ sub _update_or_create {
     return $field;
 }
 
-sub field_index {
+sub _field_index {
     my ( $self, $name ) = @_;
     my $index = 0;
     for my $field ( $self->all_fields ) {
@@ -306,113 +425,6 @@ sub _ready_fields {
     }
 }
 
-
-sub reset_fields {
-    my $self = shift;
-
-    for my $field ( $self->all_fields ) {
-        $field->_before_reset;
-        $field->reset unless $field->not_resettable;
-        $field->_after_reset;
-
-        $field->clear_value if $field->has_value;
-    }
-}
-
-
-after clear_errors => sub {
-    shift->clear_fields_errors();
-};
-
-
-sub clear_fields_errors {
-    my $self = shift;
-
-    return unless $self->has_fields_errors;
-
-    $self->has_fields_errors(0);
-
-    for my $field ( $self->all_fields ) {
-        $field->clear_errors;
-    }
-}
-
-sub init_input {
-    my $self = shift;
-    my $params = shift || {};
-
-    confess 'Input params must be HashRef' unless ref $params eq 'HASH';
-
-    for my $field ( $self->all_fields ) {
-        my $exists = exists $params->{ $field->name };
-        $field->init_input( $params->{ $field->name }, $exists );
-    }
-}
-
-sub validate_fields {
-    my $self = shift;
-
-    my %values;
-    for my $field ( $self->all_fields ) {
-        next if $field->disabled;
-
-        $field->validate;
-
-        for my $code ( $field->all_external_validators ) {
-            $code->($field);
-        }
-    }
-}
-
-around has_errors => sub {
-    my $orig = shift;
-    my $self = shift;
-
-    return 1 if $self->has_fields_errors;
-    return $self->$orig;
-};
-
-sub error_fields {
-    my $self = shift;
-
-    return ( map {$_} grep { $_->has_errors } $self->all_fields );
-}
-
-sub all_error_fields {
-    my $self = shift;
-
-    return (
-        grep { $_->errors_count } map {
-            (
-                $_,
-                $_->DOES('Form::Data::Processor::Role::Fields')
-                ? $_->all_error_fields
-                : ()
-            );
-        } $self->all_fields
-    );
-}
-
-sub values {
-    my $self = shift;
-
-    return {
-        map { $_->name => $_->value }
-        grep { $_->has_value } $self->all_fields
-    };
-}
-
-sub result {
-    my $self = shift;
-
-    return undef if $self->has_errors;
-
-    return {
-        map { $_->name => $_->_result }
-        grep { $_->_has_result } $self->all_fields
-    };
-}
-
 sub _find_external_validators {
     my $self  = shift;
     my $field = shift;
@@ -421,7 +433,7 @@ sub _find_external_validators {
 
     ( my $validator = $field->full_name ) =~ s/\./_/g;
 
-    unless ( $self->is_form ) {
+    if ( $self->can('full_name') ) {
         ( my $full_name = $self->full_name ) =~ s/\./_/g;
         $validator =~ s/^\Q$full_name\E_//;
     }
@@ -448,4 +460,287 @@ sub _find_external_validators {
     return @validators;
 }
 
+
 1;
+
+__END__
+
+
+=head1 DESCRIPTION
+
+This role provide basic functionality for form/field which has own fields.
+
+See L<accessors|/ACCESSORS> and L<methods|/METHODS> which role provides.
+
+Actually this role should be used with L<Form::Data::Processor::Role::Errors>,
+or class should provide the same methods as C<Form::Data::Processor::Role::Errors>.
+
+
+=head1 ACCESSORS
+
+=head2 field_name_space
+
+=over 4
+
+=item Type: ArrayRef[Str]
+
+=back
+
+Array of fields name spaces.
+
+It contains name spaces for searching fields classes, look L<Form::Data::Processor::Field/type>
+for more information. By default only C<Form::Data::ProcessorX::Field>
+and C<Form::Data::Processor::Field> name spaces are being used.
+
+Provides method C<add_field_name_space> for adding new field name space.
+
+    package My::Form;
+    extends 'Form::Data::Processor::Form';
+
+    has +field_name_space => (
+        default => sub { ['My::Form::Field'] }
+    );
+
+    # Tries to load My::Form::Field::TheFoo and success
+    has_field foo => ( type => 'TheFoo' );
+
+    # 1. tries to load My::Form::Field::Text                and FAIL
+    # 2. tries to load Form::Data::ProcessorX::Field::Text  and FAIL
+    # 3. tries to load Form::Data::Processor::Field::Text   and success
+    has_field bar => ( type => 'Text' );
+    ...
+
+
+=head2 fields
+
+=over 4
+
+=item Type: ArrayRef[Form::Data::Processor::Field]
+
+=back
+
+Array of subfield for current object (form or field
+which does Form::Data::Processor::Role::Fields).
+
+Also provides methods:
+
+=over 1
+
+=item all_fields
+
+=item clear_field
+
+=item add_field(field)
+
+=item num_fields
+
+=item has_fields
+
+=item set_field_at( index => field )
+
+=back
+
+
+=head2 has_fields_errors
+
+=over 4
+
+=item Type: Bool
+
+=back
+
+Indicate that at least one subfield has error. Once it has C<true> value  the parent's
+has_fields_errors becomes true too.
+
+
+=head2 index
+
+=over 4
+
+=item Type: HashRef[Form::Data::Processor::Field]
+
+=back
+
+Hash of subfield for current object (form or field
+which does C<Form::Data::Processor::Role::Fields>). Hash keys are fields name.
+Using for quick access to field.
+
+B<Notice:> each new field B<must> be manually added into index.
+
+Also provides methods:
+
+=over 1
+
+=item add_to_index(name => field)
+
+=item field_from_index(name)
+
+Get field by name from index
+
+=item field_in_index(name)
+
+Does field exists in index?
+
+=item clear_index
+
+=back
+
+
+=head1 METHODS
+
+=head2 all_error_fields
+
+=over 4
+
+=item Return: @fields
+
+=back
+
+Return all subfields (with subfields with subfields etc.) with errors.
+
+
+=head2 clear_fields_errors
+
+Turn L</has_fields_errors> value info C<false> and do
+L<Form::Data::Processor::Role::Errors/clear_errors> for each subfield.
+
+Object does L<Form::Data::Processor::Role::Errors> as well as does
+C<Form::Data::Processor::Role::Fields>. It has some hook: after
+L<Form::Data::Processor::Role::Errors/clear_errors> do C<clear_fields_errors>.
+
+
+=head2 error_fields
+
+=over 4
+
+=item Return: @fields
+
+=back
+
+Return all subfields with errors.
+
+
+=head2 field
+
+=over 4
+
+=item Arguments: $full_name, $field?
+
+=item Return: Form::Data::Processor::Field
+
+=back
+
+Tries to find field by field's C<$full_name> inside C<$field> (when provided), or inside form.
+
+    package My::Form;
+    ...
+    has_field 'foo'     => (...);
+    has_field 'foo.bar' => (...);
+
+    ...
+    # And later in your code
+    my $form = My::Form->new(...);
+    $form->field('foo');                # 'foo'
+    $form->field('foo.bar');            # 'foo.bar'
+    $form->field('foo')->field('bar');  # 'foo.bar'
+    $form->field('bar');                # undef
+
+
+=head2 init_input
+
+=over 4
+
+=item Arguments: \%params
+
+=back
+
+Initiate input value for each subfield. So for each subfield it does
+
+    $sufbield->init_input(
+        $params->{$subfield->name},
+        exists($params->{$subfield})
+    );
+
+
+=head2 reset_fields
+
+Do L<reset|Form::Data::Processor::Field/reset> and
+"L<clearing value|Form::Data::Processor::Field/clear_value>" for each subfield.
+
+
+=head2 result
+
+=over 4
+
+=item Return: \%field_result|undef
+
+=back
+
+Return C<undef> when "L<has errors|/has_fields_errors>".
+
+Return "L<result|Form::Data::Processor::Field/result> for subfields:
+
+    {
+        field_name => field_result,
+        ...
+    }
+
+
+=head2 subfield
+
+=over 4
+
+=item Arguments: $name
+
+=item Return: Form::Data::Processor::Field
+
+=back
+
+Shortcut for C<$self->field($name, $self)>
+
+    package My::Form;
+    ...
+    has_field 'foo'         => (...);
+    has_field 'foo.bar'     => (...);
+    has_field 'foo.bar.baz' => (...);
+
+    ...
+    # And later in your code
+    my $form = My::Form->new(...);
+    $form->subfield('foo');                     # 'foo'
+    $form->field('foo')->subfield('bar');       # 'foo.bar'
+    $form->field('foo.bar')->subfield('baz');   # 'foo.bar.baz'
+    $form->field('foo')->subfield('bar.baz');   # 'foo.bar.baz'
+    $form->field('foo')->field('bar.baz');      # undef
+
+
+=head2 validate_fields
+
+For each not L<Form::Data::Processor::Field/disabled> subfield does
+
+    $subfield->validate();
+
+End else does subfield "L<external validation|Form::Data::Processor::Field/EXTERNAL VALIDATION>".
+
+
+=head2 values
+
+=over 4
+
+=item Return: \%field_values
+
+=back
+
+Return "L<values|Form::Data::Processor::Field/value> for subfields:
+
+    {
+        field_name => field_value,
+        ...
+    }
+
+
+=head1 AUTHOR
+
+Dmitry Latin <dim0xff@gmail.com>
+
+=cut
