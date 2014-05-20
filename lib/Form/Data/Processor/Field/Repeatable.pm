@@ -73,7 +73,6 @@ after _before_ready => sub {
 };
 
 sub _before_reset {
-    return if $_[0]->not_resettable;
     $_[0]->reset_fields;
 }
 
