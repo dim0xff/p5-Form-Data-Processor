@@ -9,10 +9,8 @@ Form::Data::Processor::Form - base class for any form
 use Moose;
 use namespace::autoclean;
 
-with(
-    'Form::Data::Processor::Role::Fields',
-    'Form::Data::Processor::Role::Errors',
-);
+with 'Form::Data::Processor::Role::Errors';
+with 'Form::Data::Processor::Role::Fields';
 
 has field_traits => (
     is      => 'ro',
@@ -260,7 +258,7 @@ current form with provided parameters.
 
 If arguments are provided, it will be placed to L</setup_form>.
 
-Returns true, if form validated without errors via L</validated>.
+Returns C<true>, if form validated without errors via L</validated>.
 
     # In your controller
     my $form = My::Form->new;
@@ -338,7 +336,7 @@ like as it L<HTML::FormHandler> does.
 
 =back
 
-Return true if form doesn't have errors (via L<Form::Data::Processor::Role::Fields/has_errors>).
+Return C<true> if form doesn't have errors (via L<Form::Data::Processor::Role::Fields/has_errors>).
 
 =cut
 
