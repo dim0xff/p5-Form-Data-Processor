@@ -1,10 +1,16 @@
 package Form::Data::Processor::Role::Fields;
 
+=head1 NAME
+
+Form::Data::Processor::Role::Fields - role for forms and fields.
+
+=cut
+
 use Moose::Role;
 use namespace::autoclean;
 
 use Class::Load qw(load_optional_class);
-use Data::Clone;
+use Data::Clone ();
 
 has fields => (
     is      => 'rw',
@@ -50,11 +56,24 @@ has has_fields_errors => (
     }
 );
 
+has field_name_space => (
+    is      => 'rw',
+    isa     => 'ArrayRef[Str]',
+    traits  => ['Array'],
+    lazy    => 1,
+    default => sub { [] },
+    handles => {
+        add_field_name_space => 'push',
+    },
+);
+
+
 # Fields builder
 sub _build_fields {
     my $self       = shift;
     my $field_list = [];
 
+    # Look for fields definition in every parent role and class
     for my $sc ( reverse $self->meta->linearized_isa ) {
         my $meta = $sc->meta;
 
@@ -76,8 +95,6 @@ sub _build_fields {
     }
 
     $self->_process_field_array( $field_list, 0 ) if @{$field_list};
-
-    return unless $self->has_fields;
 }
 
 
@@ -89,10 +106,15 @@ sub _process_field_array {
     my $num_fields   = @{$fields};
     my $num_dots     = 0;
     my $count_fields = 0;
+
+    # Will create fields with subfields with subfields with...
     while ( $count_fields < $num_fields ) {
         for my $field ( @{$fields} ) {
             my $count = ( $field->{name} =~ tr/\.// );
+
+            # ... but the parent field must be created first
             next unless $count == $num_dots;
+
             $self->_make_field($field);
             $count_fields++;
         }
@@ -100,24 +122,27 @@ sub _process_field_array {
     }
 }
 
+
+# Field maker
 sub _make_field {
     my ( $self, $field_attr ) = @_;
 
-    my $type = $field_attr->{type} ||= 'Text';
+    my $type = $field_attr->{type} ||= 'Text';  # FDP::Field::Text by default
     my $name = $field_attr->{name};
 
+
+    # +field_name means that some field attributes should be overwritten
     my $do_update;
     if ( $name =~ /^\+(.*)/ ) {
         $field_attr->{name} = $name = $1;
         $do_update = 1;
     }
 
+    # Look class by type
     my $class = $self->_find_field_class( $type, $name );
 
+    # Look parent for field, by default form is a parent
     my $parent = $self->_find_parent($field_attr) || $self->form;
-
-    $field_attr = $self->_merge_updates( $field_attr, $class )
-        unless $do_update;
 
     my $field
         = $self->_update_or_create( $parent, $field_attr, $class, $do_update );
@@ -127,18 +152,23 @@ sub _make_field {
     return $field;
 }
 
+
+# Field class finder
 sub _find_field_class {
     my ( $self, $type, $name ) = @_;
 
-    my $field_ns = $self->form ? $self->form->field_name_space : [];
+    my $field_ns
+        = $self->has_form
+        ? $self->form->field_name_space
+        : $self->field_name_space;
 
     my @classes;
     push @classes, $type if $type =~ s/^\+//;
 
     for my $ns (
         @{$field_ns},
+        'Form::Data::ProcessorX::Field',
         'Form::Data::Processor::Field',
-        'Form::Data::ProcessorX::Field'
         )
     {
         push @classes, $ns . '::' . $type;
@@ -151,17 +181,20 @@ sub _find_field_class {
     confess "Could not load field class '$type' for field '$name'";
 }
 
+
+# Field parent finder
+# Return parent field (not form) or undef if there are no parent field
 sub _find_parent {
     my ( $self, $field_attr ) = @_;
 
     my $parent;
-    if ( $field_attr->{name} =~ /\./ ) {
-        my @names       = split /\./, $field_attr->{name};
-        my $simple_name = pop @names;
-        my $parent_name = join '.', @names;
 
-        $parent = $self->field( $parent_name, undef, $self );
-        if ($parent) {
+    if ( $field_attr->{name} =~ /\./ ) {
+        my @names       = split( /\./, $field_attr->{name} );
+        my $simple_name = pop(@names);
+        my $parent_name = join( '.', @names );
+
+        if ( $parent = $self->field( $parent_name, undef, $self ) ) {
             confess "Parent field '$parent_name' can't contain fields for '"
                 . $field_attr->{name} . "'"
                 unless $parent->DOES('Form::Data::Processor::Role::Fields');
@@ -172,7 +205,7 @@ sub _find_parent {
             confess 'Could not find parent for field ' . $field_attr->{name};
         }
     }
-    elsif ( !( $self->form && $self == $self->form ) ) {
+    elsif ( !( $self->has_form && $self == $self->form ) ) {
         $parent = $self;
     }
 
@@ -182,8 +215,9 @@ sub _find_parent {
     return $parent;
 }
 
+
 sub field {
-    my ( $self, $name, $die, $f ) = @_;
+    my ( $self, $name, $f ) = @_;
 
     return undef unless defined $name;
 
@@ -193,29 +227,24 @@ sub field {
     if ( $name =~ /\./ ) {
         my @names = split /\./, $name;
         $f ||= $self->form || $self;
+
         for my $fname (@names) {
-            $f = $f->field($fname);
-            return unless $f;
+            $f = $f->field($fname) or return;
         }
+
         return $f;
     }
 
-    return unless $die;
-
-    confess "Field '$name' not found in '$self'";
+    return;
 }
+
 
 sub subfield {
-    my ( $self, $name, $die ) = @_;
+    my ( $self, $name ) = @_;
 
-    return $self->field( $name, $die, $self );
+    return $self->field( $name, $self );
 }
 
-sub _merge_updates {
-    my ( $self, $field_attr, $class ) = @_;
-
-    return $field_attr;
-}
 
 sub _update_or_create {
     my ( $self, $parent, $field_attr, $class, $do_update ) = @_;
@@ -227,21 +256,18 @@ sub _update_or_create {
     my $index = $parent->field_index( $field_attr->{name} );
     my $field;
 
-
     if ( defined $index ) {
         if ($do_update) {
             $field = $parent->field( $field_attr->{name} )
-                or confess 'Field to update for '
-                . $field_attr->{name}
-                . ' not found';
+                or confess "Field to update for $field_attr->{name} not found";
 
             for my $key ( keys %{$field_attr} ) {
                 next
-                    if $key eq 'name'
-                    || $key eq 'form'
-                    || $key eq 'parent'
-                    || $key eq 'full_name'
-                    || $key eq 'type';
+                    if $key eq 'name'           # These
+                    || $key eq 'form'           # field
+                    || $key eq 'parent'         # attributes
+                    || $key eq 'full_name'      # can not be
+                    || $key eq 'type';          # changed
 
                 $field->$key( $field_attr->{$key} ) if $field->can($key);
             }
@@ -270,6 +296,7 @@ sub field_index {
     return;
 }
 
+
 sub _ready_fields {
     my $self = shift;
 
@@ -278,6 +305,7 @@ sub _ready_fields {
         $field->ready;
     }
 }
+
 
 sub reset_fields {
     my $self = shift;
@@ -291,9 +319,11 @@ sub reset_fields {
     }
 }
 
+
 after clear_errors => sub {
     shift->clear_fields_errors();
 };
+
 
 sub clear_fields_errors {
     my $self = shift;

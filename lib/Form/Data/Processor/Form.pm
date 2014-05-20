@@ -36,17 +36,6 @@ has params => (
     },
 );
 
-has field_name_space => (
-    is      => 'rw',
-    isa     => 'ArrayRef[Str]',
-    traits  => ['Array'],
-    lazy    => 1,
-    default => sub { [] },
-    handles => {
-        add_field_name_space => 'push',
-    },
-);
-
 sub BUILD {
     my $self = shift;
 
@@ -62,8 +51,9 @@ sub _before_ready { }
 sub ready         { }
 sub _after_ready  { }
 
-sub form    { return shift }
-sub is_form { return 1 }
+sub form     { return shift }
+sub is_form  { return 1 }
+sub has_form { return 1 }
 
 sub process {
     my $self = shift;
@@ -85,8 +75,7 @@ sub clear_form {
 }
 
 sub setup_form {
-    my $self = shift;
-    my @args = @_;
+    my ( $self, @args ) = @_;
 
     if ( @args == 1 ) {
         $self->params( $args[0] );
@@ -104,18 +93,20 @@ sub validated {
 }
 
 # Add traits into fields
-# via 'around' hook Form::Data::Processor::Role::Fields/_merge_updates
-around _merge_updates => sub {
-    my $orig = shift;
-    my $self = shift;
+# via 'around' hook Form::Data::Processor::Role::Fields/_update_or_create
+around _update_or_create => sub {
+    my ( $orig, $self, $parent, $field_attr, $class, $do_update ) = @_;
 
-    my $field_attr = $self->$orig(@_) || {};
-    $field_attr->{traits} = [] unless exists $field_attr->{traits};
+    # Traits could be added only for new fields
+    unless ($do_update) {
+        $field_attr->{traits} = [] unless exists $field_attr->{traits};
 
-    unshift @{ $field_attr->{traits} }, @{ $self->field_traits }
-        if $self->has_field_traits;
+        unshift @{ $field_attr->{traits} }, @{ $self->field_traits }
+            if $self->has_field_traits;
+    }
 
-    return $field_attr;
+    return $self->$orig( $parent, $field_attr, $class, $do_update );
+
 };
 
 __PACKAGE__->meta->make_immutable;
@@ -197,7 +188,7 @@ for more information.
 
 =back
 
-Array of trait names, which will be applied for every field.
+Array of trait names, which will be applied for every new field.
 
 
 =head2 params
