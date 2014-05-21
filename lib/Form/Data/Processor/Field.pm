@@ -488,7 +488,7 @@ sub _build_apply_list {
 
 
 # Default error messages
-sub _build_error_messages {
+sub build_error_messages {
     return {
         error_occurred => 'Error occurred',
         invalid        => 'Field is invalid',
@@ -915,6 +915,27 @@ Default error message is 'error_occurred'.
 
 =back
 
+
+=head2 build_error_messages
+
+=over 4
+
+=item Return: HashRef
+
+    {
+        error_occurred => 'Error occurred',
+        invalid        => 'Field is invalid',
+        not_match      => 'Value does not match',
+        not_allowed    => 'Value is not allowed',
+        required       => 'Field is required',
+        wrong_value    => 'Wrong value',
+    }
+
+=back
+
+Error messages builder.
+
+
 =head2 clone
 
 =over 4
@@ -1111,26 +1132,6 @@ B<Notice:> validation actions are applied only when field has defined value.
 When field is L</required> check if field has defined value.
 
 Return C<1> on success and C<0> when fail.
-
-
-=head2 _build_error_messages
-
-=over 4
-
-=item Return: HashRef
-
-    {
-        error_occurred => 'Error occurred',
-        invalid        => 'Field is invalid',
-        not_match      => 'Value does not match',
-        not_allowed    => 'Value is not allowed',
-        required       => 'Field is required',
-        wrong_value    => 'Wrong value',
-    }
-
-=back
-
-Error messages builder.
 
 
 =head1 EXTERNAL VALIDATION

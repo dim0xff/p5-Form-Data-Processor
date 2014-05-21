@@ -183,7 +183,7 @@ sub all_error_fields {
     my $self = shift;
 
     return (
-        grep { $_->errors_count } map {
+        grep { $_->num_errors } map {
             (
                 $_,
                 $_->DOES('Form::Data::Processor::Role::Fields')
