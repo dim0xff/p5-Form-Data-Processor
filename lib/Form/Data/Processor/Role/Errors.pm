@@ -42,7 +42,7 @@ sub build_error_messages { {} }
 sub add_error {
     my $self = shift;
 
-    return unless @_;
+    return unless $_[0];
 
     return $self->_add_error( $self->get_error_message( $_[0] ) || $_[0] );
 }
