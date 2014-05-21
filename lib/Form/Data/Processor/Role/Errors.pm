@@ -143,15 +143,18 @@ Also provides methods:
 
 =over 4
 
-=item Arguments: $error
+=item Arguments: $error, $value?
 
 =item Return: $added_error_message
 
 =back
 
-Add an error for field or form. If C<$error> exists in L</error_messages>, 
+Add an error for field or form. If C<$error> exists in L</error_messages>,
 than error message will be added, otherwise C<$error> will be added to
 L</errors> as is.
+
+C<$value> is value, which raise error message. By the way this value is
+not used by default, but you can use it by overwriting method.
 
 B<Notice:> added error messages won't be changed after you change
 field error message.
