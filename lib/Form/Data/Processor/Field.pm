@@ -507,6 +507,33 @@ __PACKAGE__->meta->make_immutable;
 
 __END__
 
+=head1 SYNOPSYS
+
+    package My::Form::TraitFor::Field::Ref;
+    use Form::Data::Processor::Moose::Role;
+
+    has could_be_ref => ( is => rw, isa => 'Bool', default => 1);
+
+    1;
+
+
+    package My::Form::Field;
+    use Form::Data::Processor::Moose;
+    extends 'Form::Data::Processor::Field';
+    with 'My::Form::TraitFor::Field::Ref';
+
+    around validate => sub {
+        my $orig = shift;
+        my $self = shift;
+
+        $self->$orig(@_);
+        return if $self->could_be_ref || $self->has_errors || !$self->has_value;
+
+        $self->add_error('Could not be reference') if ref $self->value;
+    };
+
+    1;
+
 =head1 DESCRIPTION
 
 This is a base class for every field, and it provides basic options and methods
