@@ -6,25 +6,11 @@ Form::Data::Processor::Field - base class for each field
 
 =cut
 
-use strict;
-use warnings;
-
 use Form::Data::Processor::Moose;
 use namespace::autoclean;
 
 with 'MooseX::Traits', 'Form::Data::Processor::Role::Errors';
 
-
-sub BUILD {
-    my $self       = shift;
-    my $field_attr = shift;
-
-    $self->_build_apply_list;
-    $self->add_actions( $field_attr->{apply} )
-        if ref $field_attr->{apply} eq 'ARRAY';
-
-    $self->_init_external_validators();
-}
 
 #
 # ACCESSORS
@@ -104,8 +90,8 @@ has _defaults => (
         set_default_value    => 'set',
         get_default_value    => 'get',
         all_default_values   => 'kv',
-        has_default_values   => 'count',
         clear_default_values => 'clear',
+        has_default_values   => 'count',
     }
 );
 
@@ -115,10 +101,10 @@ has _validate_actions => (
     traits  => ['Array'],
     default => sub { [] },
     handles => {
-        _add_validate_action   => 'push',
-        has_validate_actions   => 'count',
+        add_validate_action    => 'push',
         all_validate_actions   => 'elements',
         clear_validate_actions => 'clear',
+        has_validate_actions   => 'count',
     }
 );
 
@@ -128,10 +114,10 @@ has _init_input_actions => (
     traits  => ['Array'],
     default => sub { [] },
     handles => {
-        _add_init_input_action   => 'push',
-        has_init_input_actions   => 'count',
+        add_init_input_action    => 'push',
         all_init_input_actions   => 'elements',
         clear_init_input_actions => 'clear',
+        has_init_input_actions   => 'count',
     }
 );
 
@@ -143,8 +129,8 @@ has _external_validators => (
     handles => {
         add_external_validator    => 'push',
         all_external_validators   => 'elements',
-        num_external_validators   => 'count',
         clear_external_validators => 'clear',
+        num_external_validators   => 'count',
     },
 );
 
@@ -152,13 +138,27 @@ has _external_validators => (
 # METHODS
 #
 
+sub BUILD {
+    my ( $self, $field_attr ) = @_;
+
+    $self->_build_apply_list;
+    $self->add_actions( $field_attr->{apply} )
+        if ref $field_attr->{apply} eq 'ARRAY';
+
+    $self->_init_external_validators();
+}
+
+
 sub has_fields { return 0 }                     # By default field doesn't have subfields
 sub is_form    { return 0 }                     # Field is not form
 
 
-sub _before_ready { $_[0]->populate_defaults }
-sub ready         { }
-sub _after_ready  { }
+# About _before_ready and _after_ready see Form::Data::Processor::Form comments
+sub _before_ready { $_[0]->populate_defaults; }
+
+sub ready        { }
+sub _after_ready { }
+
 
 sub populate_defaults {
     my $self = shift;
@@ -168,20 +168,21 @@ sub populate_defaults {
 }
 
 
-sub _has_result { return !$_[0]->disabled && $_[0]->has_value }
+sub has_result { return !$_[0]->disabled && $_[0]->has_value }
+
 sub _result { return $_[0]->value }
 
 sub result {
     my $self = shift;
 
-    return undef if $self->has_errors;
+    return if $self->has_errors;
 
     return $self->_result;
 }
 
 
 sub _before_reset { }
-sub _after_reset { }
+sub _after_reset  { }
 
 sub reset {
     my $self = shift;
@@ -196,23 +197,23 @@ sub reset {
 
 
 sub init_input {
-    my $self   = shift;
-    my $value  = shift;
-    my $posted = shift;
+    my ( $self, $value, $posted ) = @_;
 
-    return $self->clear_value if $self->disabled;
-    return $self->clear_value unless $posted || defined($value);
+    return if $self->disabled;
+    return unless $posted || defined($value);
 
     for my $sub ( $self->all_init_input_actions ) {
         $sub->( $self, \$value );
     }
 
     return $self->clear_value if $self->clear_empty && $self->is_empty($value);
+
     return $self->set_value($value);
 }
 
+
 sub is_empty {
-    return 0 if @_ == 1 && defined( $_[0]->value ) && length( $_[0]->value );
+    return 0 if @_ == 1 && length( $_[0]->value // '' ) > 0;
     return 0 if @_ == 2 && defined( $_[1] ) && length( $_[1] );
     return 1;
 }
@@ -233,16 +234,15 @@ sub validate {
     }
 }
 
+
 sub validate_required {
     my $self = shift;
 
     return 1 unless $self->required;
-
-    return 0 unless $self->has_value;
-    return 0 unless defined $self->value;
-
+    return 0 unless $self->has_value && defined $self->value;
     return 1;
 }
+
 
 sub clone {
     my $self   = shift;
@@ -275,8 +275,7 @@ sub clone {
 
 
 sub add_actions {
-    my $self    = shift;
-    my $actions = shift;
+    my ( $self, $actions ) = @_;
 
     for my $action ( @{$actions} ) {
         if ( !ref $action || ref $action eq 'MooseX::Types::TypeDecorator' ) {
@@ -406,11 +405,13 @@ sub add_actions {
             };
         }
 
-        $self->_add_validate_action($v_sub)   if $v_sub;
-        $self->_add_init_input_action($i_sub) if $i_sub;
+        $self->add_validate_action($v_sub)   if $v_sub;
+        $self->add_init_input_action($i_sub) if $i_sub;
     }
 }
 
+
+# Private methods
 
 # Build list of external validators for field
 sub _init_external_validators {
@@ -511,12 +512,16 @@ __END__
 This is a base class for every field, and it provides basic options and methods
 to operate with field: initialization and validation.
 
-If you would like to make your own field class, you can done it by extending current class.
+If you would like to make your own field class, you can done it
+by extending current class.
 
-Every field, which is based on this class, does L<MooseX::Traits> and L<Form::Data::Processor::Role::Errors>.
+Every field, which is based on this class, does L<MooseX::Traits>
+and L<Form::Data::Processor::Role::Errors>.
 
-Field could be validated in different ways: L<actions|/add_actions>, L<internal validation|/validate>
-or "L<external validation|/EXTERNAL VALIDATION>". These ways could be mixed.
+Field could be validated in different ways: L<actions|/add_actions>,
+L<internal validation|/validate> or "L<external validation|/EXTERNAL VALIDATION>".
+These ways could be mixed.
+
 
 =head1 ACCESSORS
 
@@ -560,7 +565,7 @@ on this field.
 
 Form element. It has clearer C<clear_form> and predicator C<has_form>.
 
-B<Notice:> Normally is being set by FDP internals.
+B<Notice:> Normally is being set by Form::Data::Processor internals.
 
 
 =head2 full_name
@@ -586,7 +591,8 @@ Full name is automatically changed when you change L</parent> or L</name>.
     $form->field('address.street')->full_name;
     ...
 
-B<Notice:> Normally is being set by FDP internals.
+B<Notice:> Normally is being set by Form::Data::Processor internals.
+
 
 =head2 name
 
@@ -611,11 +617,14 @@ Field name.
 
 =back
 
-Indicate if field will not be reseted to default values when L</reset> is called.
-Look L</populate_defaults> for more information about "default values".
+Indicate if field will not be reseted to default values when L</reset>
+is called. Look L</populate_defaults> for more information about
+"default values".
 
-Probably, you can a little bit speedup L<clearing|Form::Data::Processor::Form/clear_form> form,
-when field is not resettable.
+Probably, you can a little bit speedup
+L<clearing|Form::Data::Processor::Form/clear_form> form, when field
+is not resettable.
+
 
 =head2 parent
 
@@ -625,10 +634,11 @@ when field is not resettable.
 
 =back
 
-Parent element (could be FDP::Field or FDP::Form, could be checked via C<parent-E<gt>is_form>).
+Parent element (could be Form::Data::Processor::Field
+or Form::Data::Processor::Form, could be checked via C<parent-E<gt>is_form>).
 It has predicator C<has_parent>.
 
-B<Notice:> Normally is being set by FDP internals.
+B<Notice:> normally is being set by Form::Data::Processor internals.
 
 
 =head2 required
@@ -643,7 +653,8 @@ B<Notice:> Normally is being set by FDP internals.
 
 Indicate if field is required.
 
-"Required" means that field must have value on L</init_input>, otherwise validation will fail.
+"Required" means that field must have value on L</init_input>, otherwise
+validation will fail.
 
 
 =head2 type
@@ -667,20 +678,23 @@ Example:
     has_field 'field_long' ( type => '+My::Form::Field::Long::Type');
     ...
 
-When short notation is used, then FDP tries to find
-internal package (C<Form::Data::Processor::Field::>),
+When short notation is used, then Form::Data::Processor tries to find
 extension package (C<Form::Data::ProcessorX::Field::>),
-or package with provided field name space (which is provided by L<Form::Data::Processor::Form/field_name_space>).
+internal package (C<Form::Data::Processor::Field::>),
+or package with provided field name space (which is provided by
+L<Form::Data::Processor::Form/field_name_space>).
 
-When long notation is used, then FDP tries to find package, which corresponds to package name provided in
-field L</type> (without start '+').
+When long notation is used, then Form::Data::Processor tries to find package,
+which corresponds to package name provided in field L</type>
+(without start '+').
 
 
 =head2 value
 
-Current field value. It has writer C<set_value>, clearer C<clear_value> and predicator C<has_value>
+Current field value. It has writer C<set_value>, clearer C<clear_value>
+and predicator C<has_value>
 
-B<Notice:> Normally is being set by FDP internals.
+B<Notice:> normally is being set by Form::Data::Processor internals.
 
 
 =head1 METHODS
@@ -705,7 +719,8 @@ Actions will be applied in order which them were defined.
 
 Each action must be defined in own HashRef.
 
-Also actions could be assigned for fields and fields roles via special attribute C<apply>:
+Also actions could be assigned for fields and fields roles via special
+attribute C<apply>:
 
     has_field name => (
         type     => 'Text',
@@ -735,15 +750,24 @@ Also actions could be defined in roles or classes via C<apply> word:
 
 =head4 Input initialization level action
 
-These actions will be applied for user input on L</init_input>.
+These actions will be applied for user input on L</init_input> and should be
+defined via C<input_transform> key. Value for key is CodeRef, which accept two
+arguments: value and field reference. B<Returned> value will be assigned to
+field value.
 
-These actions could be defined via C<input_transform> key.
-Value for key is CodeRef, which accept two arguments: value and field reference.
-B<Returned> value will be assigned to field value.
+Input initialization level actions also provide next methods:
 
-Input initialization level actions provide next methods for checking, getting
-and clearing all actions: C<has_init_input_actions>, C<all_init_input_actions>
-and C<clear_init_input_actions>.
+=over 1
+
+=item add_init_input_action( { ... } )
+
+=item all_init_input_actions
+
+=item clear_init_input_actions
+
+=item has_init_input_actions
+
+=back
 
     {
         input_transform => sub {
@@ -766,12 +790,11 @@ For example, you want to make text upper case:
         ],
     );
 
-You have to know, that there are B<no error raised> if any error occurred
-while subroutine was executed. Actually execution is performed inside C<eval>
-block, so you could try to catch C<$@> after L</init_input>.
-
-Also you have to know, that value inside input_transform subroutine is still
-B<NOT> validated. So you probably have to check it before transform.
+You have to know, that value inside input_transform subroutine is still B<NOT>
+validated. So you probably have to check it before transform. Also there are
+B<no error raised> if any error occurs while subroutine was executed. Actually
+execution is performed inside C<eval> block, so you could try to catch C<$@>
+after L</init_input>.
 
 
 =head4 Validation level action
@@ -779,13 +802,23 @@ B<NOT> validated. So you probably have to check it before transform.
 These actions will be applied B<before>
 "L<external validation|/EXTERNAL VALIDATION>".
 
-For each validation action could be provided custom error message.
-Message could be provided via C<message> key.
-If it is not provided, then default error message will be used.
+For each validation action could be provided custom error message. Message
+could be provided via C<message> key. If it is not provided, then default error
+message will be used.
 
-Validation level actions provide next methods for checking, getting
-and clearing all actions: C<has_validate_actions>, C<all_validate_actions>
-and C<clear_validate_actions>.
+Validation level actions also provide next methods:
+
+=over 1
+
+=item add_validate_actions( { ... } )
+
+=item all_validate_actions
+
+=item clear_validate_actions
+
+=item has_validate_actions
+
+=back
 
 There are several types of validation actions:
 
@@ -796,8 +829,8 @@ There are several types of validation actions:
 You could define moose type or use existing moose types for validation.
 If message not provided, then moose validation error message will be used.
 
-Coercion will be used if it is possible and field value will be set to
-coerced value.
+Coercion will be used if it is possible and field value will be set to coerced
+value.
 
     # Moose type
     apply [
@@ -833,10 +866,10 @@ coerced value.
 =item 2. check
 
 You could provide your own checks for values.
-For any check you could provide you error message via C<message> key.
+For any check you could provide your error message via C<message> key.
 If message is not provided, then default error message will be used.
 
-There are three check types:
+There are three C<check> types:
 
 =over 2
 
@@ -847,7 +880,7 @@ Subroutine should accept 2 arguments: field value and field reference.
 Subroutine should return C<false> value if validation is failed, otherwise
 it should return C<true> value.
 
-Default error message is 'wrong_value'.
+Default error message is 'C<wrong_value>'.
 
     has_field 'text_gt' => (
         apply => [
@@ -875,7 +908,11 @@ Default error message is 'C<not_match>'.
 =item 2.3 ArrayRef
 
 Array should contain allowed value.
-If field value is not equal any of provided values then validation is unsuccessful.
+If field value is not equal any of provided values then validation is
+unsuccessful.
+
+B<Notice:> that this checking only works with "plain" values, that means that
+you can't validate references with ArrayRef checks.
 
 Default error message is 'C<not_allowed>'.
 
@@ -892,14 +929,13 @@ Default error message is 'C<not_allowed>'.
 =item 3. transform
 
 Subroutine which modifies user input before further validations.
-
 Subroutine accepts two arguments: field value and field reference.
-
 Returned value will be set for field value.
 
-If error is occurred (eg. via C<die>), then error message will be added to field.
+If error is occurred (eg. via C<die>), then error message will be added
+to the field.
 
-Default error message is 'error_occurred'.
+Default error message is 'C<error_occurred>'.
 
     has_field 'dividable_by_two' => (
         apply => [
@@ -933,7 +969,7 @@ Default error message is 'error_occurred'.
 
 =back
 
-Error messages builder.
+Default error messages builder.
 
 
 =head2 clone
@@ -951,10 +987,10 @@ Return clone of current field.
 Cloned fields have proper L</parent> reference. If field has subfields, then
 subfields will be cloned too.
 
-When you need to set custom attributes for clone, then it could be passed through
-C<%replacement>. But it has B<limitation>: replacement will be passed to subfields
-too (so replacement could be provided only for attributes which exist
-in field and in its subfields and so on).
+When you need to set custom attributes for clone, then it could be passed
+through C<%replacement>. But it has B<limitation>: replacement will be passed
+to subfields too (so replacement could be provided only for attributes which
+exists in field and in its subfields and so on).
 
     $field->disabled(0);
 
@@ -975,11 +1011,24 @@ in field and in its subfields and so on).
 Indicate if field can contains fields. By default field doesn't have subfields.
 
 
+=head2 has_result
+
+=over 4
+
+=item Return: 0 | 1
+
+=back
+
+If field has result, then return C<1> otherwise return C<0>.
+
+Field has result when it is not L</disabled> and "L<has value|/value>"
+
+
 =head2 init_input
 
 =over 4
 
-=item Arguments: ($value, $posted?)
+=item Arguments: $value, $posted?
 
 =item Return: undef | field value
 
@@ -987,30 +1036,28 @@ Indicate if field can contains fields. By default field doesn't have subfields.
 
 Initialize fields value with user input.
 
-If field is L</disabled>, then just clear value.
+When field is L</disabled>, or when C<$posted> is C<false> and C<$value> is not
+defined, then it does nothing. Otherwise fields value will be set to C<$value>, when
+"L<not empty|/is_empty>".
 
-If $posted is FALSE and $value is not defined, then field value is being cleared.
-Otherwise value will be set to $value.
-
-Also apply "L<init input actions|/Input initialization level action>".
+Also apply "L<init input actions|/Input initialization level action>" before
+L<empty|/is_empty> checking.
 
 
 =head2 is_empty
 
 =over 4
 
-=item Arguments: ($value?)
+=item Arguments: $value?
 
-=item Return: 0|1
+=item Return: 0 | 1
 
 =back
 
-Returns C<0> when C<$value> is NOT empty (defined and length is positive).
+Returns C<0> when C<$value> is not empty (defined and length is positive).
 Otherwise returns C<1>.
 
 When C<$value> is not provided, then check current field L</value>
-
-It could be overloaded in inherited classes.
 
 
 =head2 is_form
@@ -1026,10 +1073,14 @@ Indicate if it is not a form. Useful when check if parent is form or field.
 
 =head2 populate_defaults
 
-Set default values (field will reset to default values on L</reset>
+Set default attributes (field will reset to default values on L</reset>
 if it is not L</not_resettable>).
 
-It will set next attributes:
+Default attributes is a HashRef:
+
+    attribute => default value
+
+By default only these attributes will be reseted:
 
 =over 1
 
@@ -1043,47 +1094,40 @@ It will set next attributes:
 
 =back
 
-Default values is a HashRef:
+Also provide next methods:
 
-    attribute => default value
+=over 1
 
-=head3 Useful methods for default values
+=item set_default_value( attr => 'value' )
 
-=head4 set_default_value
+=item get_default_value('attr')
 
-    $field->set_default_value(attr1 => val1, attr2 => val2, ...)
-
-=head4 get_default_value
-
-    $field->get_default_value('attr_name')
-
-=head4 all_default_values
+=item all_default_values
 
     for my $pair ($field->all_default_values) {
         my $attr  = $pair->[0];
         my $value = $pair->[1];
     }
 
-=head4 has_default_values
+=item has_default_values
 
-    my $count = $field->has_default_values;
+=item clear_default_values
 
-=head4 clear_default_values
-
-Clearing default values
+=back
 
 
 =head2 ready
 
-Method which normally should be called for each field after all fields for parent are ready.
+Method which normally should be called for each subfield after all fields for
+L</parent> are ready.
 
 By default it does nothing, but you can use it when extend fields.
 
 
 =head2 reset
 
-Reset field to default values if possible.
-Resetting is possible when field is not L</not_resettable>.
+Reset field attributes to default values if possible.
+Resetting is not possible when field is L</not_resettable>.
 
 
 =head2 result
@@ -1094,7 +1138,7 @@ Resetting is possible when field is not L</not_resettable>.
 
 =back
 
-If field has errors, then it returns undef.
+If field has errors, then it returns C<undef>.
 
 
 =head2 validate
@@ -1111,12 +1155,10 @@ Disabled fields are not being validated and validation stops if field disabled
 
 =item 2. Check L</required>
 
-If field s required and doesn't have value then field validation stops with
-'required' error.
+If field is required and "L<doesn't have value|/validate_required>" then field
+validation stops with 'C<required>' error.
 
 =item 3. Apply validation L<actions|/add_actions>
-
-B<Notice:> validation actions are applied only when field has defined value.
 
 =back
 
@@ -1139,7 +1181,8 @@ Return C<1> on success and C<0> when fail.
 External validation is one of the ways to validate field.
 
 External validators are subroutines, which are described in L</parent>(s).
-These subroutines should have name, which looks like 'C<validate_field_full_name>'.
+These subroutines should have name, which looks like
+'C<validate_field_full_name>'.
 
 Validation will be performed "inside out", which means that if you have
 external validators for subfield in parent field and in form, then first
@@ -1177,9 +1220,6 @@ validation will be from parent field and only then - from form.
 
         # External validation for field country
         sub validate_country {
-            my $self  = shift;
-            my $field = shift;
-
             # Validate user country field
             ...
         }
@@ -1199,9 +1239,6 @@ validation will be from parent field and only then - from form.
         }
 
         sub zip_correspond_to_country {
-            my $self = shift;
-
-            # Do correspond check
             ...
         }
     }

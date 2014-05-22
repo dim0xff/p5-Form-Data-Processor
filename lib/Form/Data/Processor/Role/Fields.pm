@@ -210,7 +210,7 @@ sub result {
 
     return {
         map { $_->name => $_->_result }
-        grep { $_->_has_result } $self->all_fields
+        grep { $_->has_result } $self->all_fields
     };
 }
 
