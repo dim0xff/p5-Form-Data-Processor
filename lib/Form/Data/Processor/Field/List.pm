@@ -6,10 +6,7 @@ Form::Data::Processor::Field::List - field with selectable values
 
 =cut
 
-use utf8;
-
-use strict;
-use warnings;
+use feature 'current_sub';
 
 use Form::Data::Processor::Moose;
 use namespace::autoclean;
@@ -20,35 +17,36 @@ use List::MoreUtils qw(uniq);
 extends 'Form::Data::Processor::Field';
 
 
+#<<<
 # Type checking and coercion for options list
 {
     use Moose::Util::TypeConstraints;
-    subtype 'OptionsArrayRef', as 'ArrayRef[HashRef]', where {
-        my $val = $_;
-        !grep { !( exists $_->{value} ) } @{$val};
-    }, message {"Value is not provided for option"};
 
-    coerce 'OptionsArrayRef', from 'ArrayRef', via {
-        my $options = $_;
-        for my $opt ( @{$options} ) {
-            confess 'Invalid option value' if ( ref($opt) || 'HASH' ) ne 'HASH';
+    subtype 'OptionsArrayRef',
+        as 'ArrayRef[HashRef]',
+        where {
+            my $val = $_;
 
-            $opt = { value => $opt } unless ref $opt eq 'HASH';
-        }
-        return $options;
-    };
+            # Look if some option doesn't have 'value' attribute
+            return !grep( { !( exists $_->{value} ) } @{$val} );
+        },
+        message { "Value is not provided for option" };
+
+    coerce 'OptionsArrayRef',
+        from 'ArrayRef',
+        via {
+            my $options = $_;
+            for my $opt ( @{$options} ) {
+                confess 'Invalid option value' if ( ref($opt) || 'HASH' ) ne 'HASH';
+
+                $opt = { value => $opt } if ref $opt ne 'HASH';
+            }
+            return $options;
+        };
+
     no Moose::Util::TypeConstraints;
 }
-
-sub BUILD {
-    my $self = shift;
-
-    $self->set_error_message(
-        disabled_value   => 'Value is disabled',
-        is_not_multiple  => 'Field does not take multiple values',
-        max_input_length => 'Input exceeds max length',
-    );
-}
+#>>>
 
 has uniq_input => (
     is      => 'rw',
@@ -60,12 +58,6 @@ has multiple => (
     is      => 'rw',
     isa     => 'Bool',
     default => 1,
-);
-
-has do_not_reload => (
-    is      => 'rw',
-    isa     => 'Bool',
-    default => 0,
 );
 
 has max_input_length => (
@@ -80,6 +72,7 @@ has options => (
     trigger => \&_set_options_index,
     coerce  => 1,
 );
+
 has options_builder => (
     is        => 'rw',
     isa       => 'CodeRef',
@@ -87,6 +80,11 @@ has options_builder => (
     clearer   => 'clear_opions_builder',
 );
 
+has do_not_reload => (
+    is      => 'rw',
+    isa     => 'Bool',
+    default => 0,
+);
 
 has _options_index => (
     is      => 'rw',
@@ -104,6 +102,18 @@ apply [
     },
 ];
 
+
+sub BUILD {
+    my $self = shift;
+
+    $self->set_error_message(
+        disabled_value   => 'Value is disabled',
+        is_not_multiple  => 'Field does not take multiple values',
+        max_input_length => 'Input exceeds max length',
+    );
+}
+
+
 # Set options builder when field is ready
 after _before_ready => sub {
     my $self = shift;
@@ -115,13 +125,43 @@ after _before_ready => sub {
         uniq_input       => $self->uniq_input,
     );
 
-    my $code = $self->form->can( 'options_' . $self->full_name )
-        || $self->can('build_options');
-
+    my $code = $self->_find_options_builder() || $self->can('build_options');
     $self->options_builder($code) if $code;
 
     $self->_build_options if $self->has_options_builder;
 };
+
+
+sub _find_options_builder {
+    my $self = shift;
+
+    my $sub = sub {
+        my ( $self, $field ) = @_;
+
+        my $code;
+        $code = __SUB__->( $self->parent, $field ) if $self->can('parent');
+
+        if ( !$code ) {
+            my $full_name = $field->full_name;
+
+            if ( $self->can('full_name') ) {
+                my $self_name = $self->full_name;
+                $full_name =~ s/^\Q${self_name}\E\.//;
+            }
+
+            $full_name =~ s/\./_/g;
+            return unless $full_name;
+
+            $code = $self->can( 'options_' . $full_name );
+        }
+
+        return sub { $code->( $self, pop ) }
+            if $code;
+    };
+
+    return $sub->( $self->parent, $self );
+}
+
 
 around is_empty => sub {
     my $orig = shift;

@@ -15,6 +15,17 @@ use Time::HiRes qw(gettimeofday tv_interval);
 
 use Moose::Util::TypeConstraints;
 
+package Form::Field::CheckList {
+    use Form::Data::Processor::Moose;
+    extends 'Form::Data::Processor::Field::Compound';
+
+    has_field list => ( type => 'List' );
+
+    sub options_list {
+        return ( 'First', 'Second' );
+    }
+}
+
 package Form::TraitFor::Field::List {
     use Form::Data::Processor::Moose::Role;
 
@@ -87,6 +98,9 @@ package Form {
         traits => ['Form::TraitFor::Field::List'],
     );
 
+    # With parent options builder
+    has_field checklist => ( type => '+Form::Field::CheckList' );
+
 
     sub build_days {
         my @days = (
@@ -130,6 +144,10 @@ package Form::Ext {
         my @days = ( 'Friday', 'Saturday' );
 
         return ( { value => 'Sunday', disabled => 1, }, @days );
+    }
+
+    sub options_checklist_list {
+        return ('Third');
     }
 }
 
@@ -285,7 +303,7 @@ package main {
     };
 
     subtest 'extending with new options' => sub {
-        $form = Form::Ext->new();
+        my $form = Form::Ext->new();
 
         my $data = {
             photos       => 'WITHOUT+PHOTOS',
@@ -324,6 +342,20 @@ package main {
         );
     };
 
+    subtest 'Parent options build' => sub {
+        is_deeply(
+            $form->field('checklist.list')->options,
+            [ { value => 'First' }, { value => 'Second' }, ],
+            'options builder in parent field found'
+        );
+
+        my $form = Form::Ext->new();
+        is_deeply(
+            $form->field('checklist.list')->options,
+            [ { value => 'Third' } ],
+            'options builder in parent form found'
+        );
+    };
 
     done_testing();
 }
