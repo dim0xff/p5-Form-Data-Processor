@@ -154,6 +154,10 @@ sub is_form    { return 0 }                     # Field is not form
 
 
 # About _before_ready and _after_ready see Form::Data::Processor::Form comments
+#
+# ! default attribute values MUST be set in _before_ready
+# ! otherwise it won't corresponds to inherited redefined values
+
 sub _before_ready { $_[0]->populate_defaults; }
 
 sub ready        { }

@@ -24,14 +24,14 @@ has real_result => (
 );
 
 
-sub BUILD {
+after _before_ready => sub {
     my $self = shift;
 
     $self->set_default_value(
         real_result  => $self->real_result,
         force_result => $self->force_result,
     );
-}
+};
 
 
 around validate_required => sub {
