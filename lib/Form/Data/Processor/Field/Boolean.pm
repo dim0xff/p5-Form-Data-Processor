@@ -78,7 +78,7 @@ sub validate_required_input {
     return 0;
 }
 
-sub _has_result {
+sub has_result {
     my $self = shift;
 
     return 0 if $self->disabled;
