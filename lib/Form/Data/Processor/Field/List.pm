@@ -142,17 +142,16 @@ sub _find_options_builder {
         $code = __SUB__->( $self->parent, $field ) if $self->can('parent');
 
         if ( !$code ) {
-            my $full_name = $field->full_name;
+            my $builder = $field->full_name;
 
             if ( $self->can('full_name') ) {
-                my $self_name = $self->full_name;
-                $full_name =~ s/^\Q${self_name}\E\.//;
+                my $full_name = $self->full_name;
+                $builder =~ s/^\Q$full_name\E\.//;
             }
 
-            $full_name =~ s/\./_/g;
-            return unless $full_name;
+            $builder =~ s/\./_/g;
 
-            $code = $self->can( 'options_' . $full_name );
+            $code = $self->can("options_$builder");
         }
 
         return sub { $code->( $self, pop ) }
