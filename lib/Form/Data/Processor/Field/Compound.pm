@@ -131,7 +131,7 @@ and does L<Form::Data::Processor::Role::Fields>.
 
 When input value is not HashRef, then it raises error C<invalid>.
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
     ...
     # In form definition

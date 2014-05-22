@@ -36,7 +36,7 @@ sub apply {
 
 __END__
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
     package Form::My;
 

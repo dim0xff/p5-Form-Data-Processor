@@ -256,7 +256,7 @@ Field sets own error message:
 
     'max_input_length' => 'Input exceeds max length'
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
     package My::Form {
         use 'Form::Data::Processor::Moose';

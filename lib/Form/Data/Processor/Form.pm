@@ -119,7 +119,7 @@ __PACKAGE__->meta->make_immutable;
 
 __END__
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
     # Form definition
     package MyApp::Form::Customer;

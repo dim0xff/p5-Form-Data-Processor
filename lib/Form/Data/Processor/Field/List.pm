@@ -257,7 +257,7 @@ Field sets own error messages:
 It could be L</multiple> (and then L<Form::Data::Processor::Field/result> will be ArrayRef) or
 single (and then result will be a selected value).
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
     package My::Form::Search;
     use Form::Data::Processor::Moose;

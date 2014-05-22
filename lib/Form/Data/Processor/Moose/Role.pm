@@ -36,7 +36,7 @@ sub apply {
 
 __END__
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
     # Form definition
     package Form::With::SomeFields;

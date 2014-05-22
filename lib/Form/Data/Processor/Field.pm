@@ -511,7 +511,7 @@ __PACKAGE__->meta->make_immutable;
 
 __END__
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
     package My::Form::TraitFor::Field::Ref;
     use Form::Data::Processor::Moose::Role;
