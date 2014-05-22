@@ -830,7 +830,7 @@ after L</init_input>.
 
 =head4 Validation level action
 
-These actions will be applied B<before>
+These actions will be applied for defined field values B<before>
 "L<external validation|/EXTERNAL VALIDATION>".
 
 For each validation action could be provided custom error message. Message
