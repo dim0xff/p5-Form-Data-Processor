@@ -44,7 +44,13 @@ sub BUILD {
     $self->ready;
 }
 
+
 # _before_ready() and _after_ready() - extending helpers
+# If you gonna provide extensions for FDP you can use before, around, after
+# for these helpers.
+# But don't use these hooks for ready(), progreammer could create his own ready()
+# while extending form and your hooks won't work
+
 sub _before_ready { }
 sub ready         { }
 sub _after_ready  { }
