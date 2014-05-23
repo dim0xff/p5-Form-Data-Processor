@@ -208,6 +208,10 @@ package main {
             'Maxlength: OK, right error messages'
         );
 
+        $form->field('days_of_week')->set_default_value(max_input_length => 0);
+        ok( $form->process($data), 'Form validated without errors (max_input_length = 0)' );
+        $form->field('days_of_week')->set_default_value(max_input_length => 32);
+
 
         # Uniq input
         $form->field('days_of_week')->set_default_value( uniq_input => 1 );
