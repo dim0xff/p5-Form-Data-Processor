@@ -316,12 +316,8 @@ It could be L</multiple> (and then L<Form::Data::Processor::Field/result> will
 be ArrayRef without undef values) or single (and then result will be a selected
 value).
 
+B<Notice:> all current attributes are resettable.
 
-=head1 ATTRIBUTES
-
-Other attributes can be found in L<Form::Data::Processor::Field/ATTRIBUTES>
-
-B<Notice:> all current attributes will be resettable.
 
 =attr do_not_reload
 

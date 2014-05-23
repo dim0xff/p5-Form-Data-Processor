@@ -319,12 +319,6 @@ Field sets own error message:
     'max_input_length' => 'Input exceeds max length'
 
 
-=head1 ATTRIBUTES
-
-Other attributes can be found in L<Form::Data::Processor::Field/ATTRIBUTES>
-
-B<Notice:> attribute C<max_input_length> will be resettable.
-
 =attr max_input_length
 
 =over 4
@@ -342,6 +336,8 @@ B<Notice:> when you set it to zero and try to validate huge number of values,
 then huge amount of memory will be used, because of subfields is going to be
 pre-cached for next validation. So probably you need to limit number of
 validation values.
+
+B<Notice:> current attribute is resettable.
 
 
 =attr prebuild_subfields

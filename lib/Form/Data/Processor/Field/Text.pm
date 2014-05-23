@@ -160,12 +160,7 @@ Field sets own error messages:
 Error C<text_invalid> will be raised when field value is not look like text
 (actually when value is reference).
 
-
-=head1 ATTRIBUTES
-
-Other attributes can be found in L<Form::Data::Processor::Field/ATTRIBUTES>
-
-B<Notice:> all current attributes will be resettable.
+B<Notice:> all current attributes are resettable.
 
 
 =attr not_nullable
