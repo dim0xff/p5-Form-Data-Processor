@@ -6,11 +6,6 @@ Form::Data::Processor::Field::Compound - field with subfields
 
 =cut
 
-use utf8;
-
-use strict;
-use warnings;
-
 use Form::Data::Processor::Moose;
 use namespace::autoclean;
 
@@ -20,8 +15,13 @@ with 'Form::Data::Processor::Role::Fields';
 
 sub BUILD {
     my $self = shift;
+
     $self->_build_fields;
 }
+
+after _before_ready => sub { $_[0]->_ready_fields };
+
+after _before_reset => sub { $_[0]->reset_fields };
 
 after _init_external_validators => sub {
     my $self = shift;
@@ -31,21 +31,22 @@ after _init_external_validators => sub {
     }
 };
 
-after _before_ready => sub {
-    $_[0]->_ready_fields;
+before clear_value => sub {
+    my $self = shift;
+
+    # Clear values for subfields
+    for my $field ( $self->all_fields ) {
+        $field->clear_value if $field->has_value;
+    }
 };
 
-sub _before_reset {
-    $_[0]->reset_fields;
-}
 
 sub init_input {
-    my $self   = shift;
-    my $value  = shift;
-    my $posted = shift;
+    my ( $self, $value, $posted ) = @_;
 
-    return $self->clear_value if $self->disabled;
-    return $self->clear_value unless $posted || $value;
+    # Default init_input logic
+    return if $self->disabled;
+    return unless $posted || $value;
 
     for my $sub ( $self->all_init_input_actions ) {
         $sub->( $self, \$value );
@@ -53,16 +54,22 @@ sub init_input {
 
     return $self->clear_value if $self->clear_empty && $self->is_empty($value);
 
-    if ( ref $value eq 'HASH' ) {
-        for my $field ( $self->all_fields ) {
-            my $exists = exists $value->{ $field->name };
 
-            $field->init_input( $value->{ $field->name }, $exists );
+    # Specified for Compound field logic
+    if ( ref $value eq 'HASH' ) {
+
+        # init_input for all subfields
+        for my $subfield ( $self->all_fields ) {
+            my $subfield_name = $subfield->name;
+
+            $subfield->init_input( $value->{$subfield_name},
+                exists( $value->{$subfield_name} ) );
         }
     }
     else {
         return $self->set_value($value);
     }
+
 
     return $self->set_value(
         {
@@ -71,6 +78,7 @@ sub init_input {
         }
     );
 }
+
 
 around is_empty => sub {
     my $orig = shift;
@@ -83,30 +91,26 @@ around is_empty => sub {
 
     return 0 unless ref $value eq 'HASH';
 
-    # Seems it is ArrayRef. Look for defined value
-    return !( scalar( keys %{$value} ) );
+    # Seems it is HashRef. Value is not empty if Hash contains keys
+    return !( keys %{$value} );
 };
+
 
 around validate => sub {
     my $orig = shift;
     my $self = shift;
 
     $self->$orig(@_);
-    return if $self->has_errors;
-    return unless $self->has_value;
+
+    return if $self->has_errors || !$self->has_value;
+
     return $self->add_error( 'invalid', $self->value )
         if ref $self->value ne 'HASH';
 
+    # Validate subfields
     $self->validate_fields;
 };
 
-before clear_value => sub {
-    my $self = shift;
-
-    for my $field ( $self->all_fields ) {
-        $field->clear_value if $field->has_value;
-    }
-};
 
 sub _result {
     return {
@@ -120,16 +124,6 @@ __PACKAGE__->meta->make_immutable;
 1;
 
 __END__
-
-=head1 DESCRIPTION
-
-This field validates compound data (HASH), where keys are subfields,
-and their values are values for correspond subfield.
-
-This field is directly inherited from L<Form::Data::Processor::Field>
-and does L<Form::Data::Processor::Role::Fields>.
-
-When input value is not HashRef, then it raises error C<invalid>.
 
 =head1 SYNOPSIS
 
@@ -160,5 +154,15 @@ When input value is not HashRef, then it raises error C<invalid>.
             }
         }
     );
+
+=head1 DESCRIPTION
+
+This field validates compound data (HASH), where keys are subfields,
+and their values are values for correspond subfield.
+
+This field is directly inherited from L<Form::Data::Processor::Field>
+and does L<Form::Data::Processor::Role::Fields>.
+
+When input value is not HashRef, then it raises error C<invalid>.
 
 =cut
