@@ -58,6 +58,8 @@ after _init_external_validators => sub {
 after _before_ready => sub {
     my $self = shift;
 
+    $self->set_default_value( max_input_length => $self->max_input_length );
+
     $self->_ready_fields;
     $self->_build_contains;
 };
@@ -324,6 +326,8 @@ Field sets own error message:
 =head1 ACCESSORS
 
 Other accessors can be found in L<Form::Data::Processor::Field/ACCESSORS>
+
+B<Notice:> accessor C<max_input_length> will be resettable.
 
 =head2 max_input_length
 
