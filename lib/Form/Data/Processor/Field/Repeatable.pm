@@ -323,11 +323,11 @@ Field sets own error message:
     'max_input_length' => 'Input exceeds max length'
 
 
-=head1 ACCESSORS
+=head1 ATTRIBUTES
 
-Other accessors can be found in L<Form::Data::Processor::Field/ACCESSORS>
+Other attributes can be found in L<Form::Data::Processor::Field/ATTRIBUTES>
 
-B<Notice:> accessor C<max_input_length> will be resettable.
+B<Notice:> attribute C<max_input_length> will be resettable.
 
 =head2 max_input_length
 

@@ -73,10 +73,10 @@ This role provide basic functionality for form/field error handling.
 Any L<forms|Form::Data::Processor::Form> and L<fields|Form::Data::Processor::Field>
 do this role.
 
-See L<accessors|/ACCESSORS> and L<methods|/METHODS> which role provides.
+See L<attributes|/ATTRIBUTES> and L<methods|/METHODS> which role provides.
 
 
-=head1 ACCESSORS
+=head1 ATTRIBUTES
 
 =head2 errors
 

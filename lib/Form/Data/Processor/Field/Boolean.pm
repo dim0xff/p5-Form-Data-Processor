@@ -90,11 +90,11 @@ This field represent boolean data.
 This field is directly inherited from L<Form::Data::Processor::Field>.
 
 
-=head1 ACCESSORS
+=head1 ATTRIBUTES
 
-Other accessors can be found in L<Form::Data::Processor::Field/ACCESSORS>
+Other attributes can be found in L<Form::Data::Processor::Field/ATTRIBUTES>
 
-B<Notice:> all current accessors will be resettable.
+B<Notice:> all current attributes will be resettable.
 
 
 =head2 force_result

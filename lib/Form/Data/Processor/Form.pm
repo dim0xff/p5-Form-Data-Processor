@@ -170,7 +170,7 @@ Every form, which is based on this class,
 does L<Form::Data::Processor::Role::Fields> and L<Form::Data::Processor::Role::Errors>.
 
 
-=head1 ACCESSORS
+=head1 ATTRIBUTES
 
 =head2 field_name_space
 

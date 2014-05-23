@@ -15,7 +15,7 @@ use Data::Clone ();
 requires 'form', 'has_errors', 'clear_errors', 'has_errors';
 
 #
-# ACCESSORS
+# ATTRIBUTES
 #
 
 has fields => (
@@ -435,13 +435,13 @@ __END__
 
 This role provide basic functionality for form/field which has own fields.
 
-See L<accessors|/ACCESSORS> and L<methods|/METHODS> which role provides.
+See L<attributes|/ATTRIBUTES> and L<methods|/METHODS> which role provides.
 
 Actually this role should be used with L<Form::Data::Processor::Role::Errors>,
 or class should provide the same methods as C<Form::Data::Processor::Role::Errors>.
 
 
-=head1 ACCESSORS
+=head1 ATTRIBUTES
 
 =head2 field_name_space
 

@@ -165,11 +165,11 @@ Error C<text_invalid> will be raised when field value is not look like text
 (actually when value is reference).
 
 
-=head1 ACCESSORS
+=head1 ATTRIBUTES
 
-Other accessors can be found in L<Form::Data::Processor::Field/ACCESSORS>
+Other attributes can be found in L<Form::Data::Processor::Field/ATTRIBUTES>
 
-B<Notice:> all current accessors will be resettable.
+B<Notice:> all current attributes will be resettable.
 
 
 =head2 not_nullable

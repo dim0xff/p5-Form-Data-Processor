@@ -16,7 +16,7 @@ with 'MooseX::Traits', 'Form::Data::Processor::Role::Errors';
 
 
 #
-# ACCESSORS
+# ATTRIBUTES
 #
 
 has name => (
@@ -596,7 +596,7 @@ L<internal validation|/validate> or "L<external validation|/EXTERNAL VALIDATION>
 These ways could be mixed.
 
 
-=head1 ACCESSORS
+=head1 ATTRIBUTES
 
 =head2 clear_empty
 

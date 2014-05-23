@@ -321,11 +321,11 @@ be ArrayRef without undef values) or single (and then result will be a selected
 value).
 
 
-=head1 ACCESSORS
+=head1 ATTRIBUTES
 
-Other accessors can be found in L<Form::Data::Processor::Field/ACCESSORS>
+Other attributes can be found in L<Form::Data::Processor::Field/ATTRIBUTES>
 
-B<Notice:> all current accessors will be resettable.
+B<Notice:> all current attributes will be resettable.
 
 =head2 do_not_reload
 
