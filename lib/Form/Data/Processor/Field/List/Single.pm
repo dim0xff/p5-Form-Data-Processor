@@ -6,17 +6,12 @@ Form::Data::Processor::Field::List::Single - field with just one selectable valu
 
 =cut
 
-use utf8;
-
-use strict;
-use warnings;
-
 use Form::Data::Processor::Moose;
 use namespace::autoclean;
 
 extends 'Form::Data::Processor::Field::List';
 
-has '+multiple' => ( default => 0, );
+has '+multiple' => ( default => 0 );
 
 __PACKAGE__->meta->make_immutable;
 
@@ -31,19 +26,22 @@ and set L<Form::Data::Processor::Field::List/multiple> into C<false>.
 
 So it is just a shortcut
 
-    # Next two declarations are the same
-
     # You can use...
     has_field rating => (
-        type    => 'List::Single', 
-        options => [ 1..5 ], 
+        type    => 'List::Single',
+        options => [ 1..5 ],
     );
 
     # ...instead of
     has_field rating => (
-        type     => 'List', 
-        multiple => 0, 
-        options  => [ 1..5 ], 
+        type     => 'List',
+        multiple => 0,
+        options  => [ 1..5 ],
     );
+
+
+=head1 AUTHOR
+
+Dmitry Latin <dim0xff@gmail.com>
 
 =cut
