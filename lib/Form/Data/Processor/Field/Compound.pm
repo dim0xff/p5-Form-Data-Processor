@@ -1,10 +1,6 @@
 package Form::Data::Processor::Field::Compound;
 
-=head1 NAME
-
-Form::Data::Processor::Field::Compound - field with subfields
-
-=cut
+# ABSTRACT: field with subfields
 
 use Form::Data::Processor::Moose;
 use namespace::autoclean;
@@ -164,10 +160,5 @@ This field is directly inherited from L<Form::Data::Processor::Field>
 and does L<Form::Data::Processor::Role::Fields>.
 
 When input value is not HashRef, then it raises error C<invalid>.
-
-
-=head1 AUTHOR
-
-Dmitry Latin <dim0xff@gmail.com>
 
 =cut

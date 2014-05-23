@@ -1,10 +1,6 @@
 package Form::Data::Processor::Field::Boolean;
 
-=head1 NAME
-
-Form::Data::Processor::Field::Boolean - boolean field
-
-=cut
+# ABSTRACT: boolean field
 
 use Form::Data::Processor::Moose;
 use namespace::autoclean;
@@ -97,7 +93,7 @@ Other attributes can be found in L<Form::Data::Processor::Field/ATTRIBUTES>
 B<Notice:> all current attributes will be resettable.
 
 
-=head2 force_result
+=attr force_result
 
 =over 4
 
@@ -112,7 +108,7 @@ is C<0>. Otherwise there is no result for this field, when input value is not
 provided.
 
 
-=head2 real_result
+=attr real_result
 
 =over 4
 
@@ -126,14 +122,9 @@ When C<false>, then field L<Form::Data::Processor::Field/result> will be C<0>
 or C<1>. Otherwise it returns provided value.
 
 
-=head2 required
+=attr required
 
 Field value should not be empty (C<undef>, C<0>, C<''> etc.). Also see
 L<Form::Data::Processor::Field/required>.
-
-
-=head1 AUTHOR
-
-Dmitry Latin <dim0xff@gmail.com>
 
 =cut

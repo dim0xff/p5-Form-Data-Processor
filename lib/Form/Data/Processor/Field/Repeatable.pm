@@ -1,10 +1,6 @@
 package Form::Data::Processor::Field::Repeatable;
 
-=head1 NAME
-
-Form::Data::Processor::Field::Repeatable - repeatable fields just like array
-
-=cut
+# ABSTRACT: repeatable fields just like array
 
 use Form::Data::Processor::Moose;
 use namespace::autoclean;
@@ -329,7 +325,7 @@ Other attributes can be found in L<Form::Data::Processor::Field/ATTRIBUTES>
 
 B<Notice:> attribute C<max_input_length> will be resettable.
 
-=head2 max_input_length
+=attr max_input_length
 
 =over 4
 
@@ -348,7 +344,7 @@ pre-cached for next validation. So probably you need to limit number of
 validation values.
 
 
-=head2 prebuild_subfields
+=attr prebuild_subfields
 
 =over 4
 
@@ -363,10 +359,5 @@ L<Form::Data::Processor::Field/ready>.
 
 If you will set it to zero, then any required subfield will be created
 on demand.
-
-
-=head1 AUTHOR
-
-Dmitry Latin <dim0xff@gmail.com>
 
 =cut

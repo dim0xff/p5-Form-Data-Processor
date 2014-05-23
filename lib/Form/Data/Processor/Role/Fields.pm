@@ -1,10 +1,6 @@
 package Form::Data::Processor::Role::Fields;
 
-=head1 NAME
-
-Form::Data::Processor::Role::Fields - role for forms and fields.
-
-=cut
+# ABSTRACT: role for forms and fields.
 
 use Moose::Role;
 use namespace::autoclean;
@@ -441,9 +437,7 @@ Actually this role should be used with L<Form::Data::Processor::Role::Errors>,
 or class should provide the same methods as C<Form::Data::Processor::Role::Errors>.
 
 
-=head1 ATTRIBUTES
-
-=head2 field_name_space
+=attr field_name_space
 
 =over 4
 
@@ -476,7 +470,7 @@ Provides method C<add_field_name_space> for adding new field name space.
     ...
 
 
-=head2 fields
+=attr fields
 
 =over 4
 
@@ -506,7 +500,7 @@ Also provides methods:
 =back
 
 
-=head2 has_fields_errors
+=attr has_fields_errors
 
 =over 4
 
@@ -518,7 +512,7 @@ Indicate that at least one subfield has error. Once it has C<true> value  the pa
 has_fields_errors becomes true too.
 
 
-=head2 index
+=attr index
 
 =over 4
 
@@ -551,9 +545,7 @@ Does field exists in index?
 =back
 
 
-=head1 METHODS
-
-=head2 all_error_fields
+=method all_error_fields
 
 =over 4
 
@@ -564,7 +556,7 @@ Does field exists in index?
 Return all subfields (with subfields with subfields etc.) with errors.
 
 
-=head2 clear_fields_errors
+=method clear_fields_errors
 
 Turn L</has_fields_errors> value info C<false> and do
 L<Form::Data::Processor::Role::Errors/clear_errors> for each subfield.
@@ -574,7 +566,7 @@ C<Form::Data::Processor::Role::Fields>. It has some hook: after
 L<Form::Data::Processor::Role::Errors/clear_errors> do C<clear_fields_errors>.
 
 
-=head2 error_fields
+=method error_fields
 
 =over 4
 
@@ -585,7 +577,7 @@ L<Form::Data::Processor::Role::Errors/clear_errors> do C<clear_fields_errors>.
 Return all subfields with errors.
 
 
-=head2 field
+=method field
 
 =over 4
 
@@ -611,7 +603,7 @@ Tries to find field by field's C<$full_name> inside C<$field> (when provided), o
     $form->field('bar');                # undef
 
 
-=head2 init_input
+=method init_input
 
 =over 4
 
@@ -627,13 +619,13 @@ Initiate input value for each subfield. So for each subfield it does
     );
 
 
-=head2 reset_fields
+=method reset_fields
 
 Do L<reset|Form::Data::Processor::Field/reset> and
 "L<clearing value|Form::Data::Processor::Field/clear_value>" for each subfield.
 
 
-=head2 result
+=method result
 
 =over 4
 
@@ -651,7 +643,7 @@ Return "L<result|Form::Data::Processor::Field/result> for subfields:
     }
 
 
-=head2 subfield
+=method subfield
 
 =over 4
 
@@ -679,7 +671,7 @@ Shortcut for C<$self->field($name, $self)>
     $form->field('foo')->field('bar.baz');      # undef
 
 
-=head2 validate_fields
+=method validate_fields
 
 For each not L<Form::Data::Processor::Field/disabled> subfield does
 
@@ -688,7 +680,7 @@ For each not L<Form::Data::Processor::Field/disabled> subfield does
 End else does subfield "L<external validation|Form::Data::Processor::Field/EXTERNAL VALIDATION>".
 
 
-=head2 values
+=method values
 
 =over 4
 
@@ -703,9 +695,5 @@ Return "L<values|Form::Data::Processor::Field/value> for subfields:
         ...
     }
 
-
-=head1 AUTHOR
-
-Dmitry Latin <dim0xff@gmail.com>
 
 =cut

@@ -1,10 +1,6 @@
 package Form::Data::Processor::Moose::Role;
 
-=head1 NAME
-
-Form::Data::Processor::Moose::Role - add C<has_field> and C<apply> keywords into roles.
-
-=cut
+# ABSTRACT: add C<has_field> and C<apply> keywords into roles.
 
 use Moose::Role ();
 use Moose::Exporter;
@@ -63,9 +59,5 @@ __END__
     ...
 
     1;
-
-=head1 AUTHOR
-
-Dmitry Latin <dim0xff@gmail.com>
 
 =cut

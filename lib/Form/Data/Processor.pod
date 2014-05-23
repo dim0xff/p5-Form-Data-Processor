@@ -1,6 +1,5 @@
-=head1 NAME
-
-Form::Data::Processor - yet another form data processor
+# PODNAME: Form::Data::Processor
+# ABSTRACT: Yet another form data processor
 
 
 =head1 DESCRIPTION
@@ -79,9 +78,5 @@ On my desktop "Intel(R) Core(TM)2 Duo CPU E4600  @ 2.40GHz,4GB, OpenSuSE, Linux 
 
 L<HTML::FormHandler> - form validator and renderer.
 
-
-=head1 AUTHOR
-
-Dmitry Latin <dim0xff@gmail.com>
 
 =cut

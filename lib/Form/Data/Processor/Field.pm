@@ -1,10 +1,6 @@
 package Form::Data::Processor::Field;
 
-=head1 NAME
-
-Form::Data::Processor::Field - base class for each field
-
-=cut
+# ABSTRACT: base class for each field
 
 use feature 'current_sub';
 
@@ -596,9 +592,8 @@ L<internal validation|/validate> or "L<external validation|/EXTERNAL VALIDATION>
 These ways could be mixed.
 
 
-=head1 ATTRIBUTES
 
-=head2 clear_empty
+=attr clear_empty
 
 =over 4
 
@@ -612,7 +607,7 @@ When C<true>, then field input value will be cleared when it is empty
 (is being checked via L</is_empty>`).
 
 
-=head2 disabled
+=attr disabled
 
 =over 4
 
@@ -628,7 +623,7 @@ When field is disabled, then there are no any validation or input initialization
 on this field.
 
 
-=head2 form
+=attr form
 
 =over 4
 
@@ -641,7 +636,7 @@ Form element. It has clearer C<clear_form> and predicator C<has_form>.
 B<Notice:> Normally is being set by Form::Data::Processor internals.
 
 
-=head2 full_name
+=attr full_name
 
 =over 4
 
@@ -667,7 +662,7 @@ Full name is automatically changed when you change L</parent> or L</name>.
 B<Notice:> Normally is being set by Form::Data::Processor internals.
 
 
-=head2 name
+=attr name
 
 =over 4
 
@@ -680,7 +675,7 @@ B<Notice:> Normally is being set by Form::Data::Processor internals.
 Field name.
 
 
-=head2 not_resettable
+=attr not_resettable
 
 =over 4
 
@@ -699,7 +694,7 @@ L<clearing|Form::Data::Processor::Form/clear_form> form, when field
 is not resettable.
 
 
-=head2 parent
+=attr parent
 
 =over 4
 
@@ -714,7 +709,7 @@ It has predicator C<has_parent>.
 B<Notice:> normally is being set by Form::Data::Processor internals.
 
 
-=head2 required
+=attr required
 
 =over 4
 
@@ -730,7 +725,7 @@ Indicate if field is required.
 validation will fail.
 
 
-=head2 type
+=attr type
 
 =over 4
 
@@ -762,7 +757,7 @@ which corresponds to package name provided in field L</type>
 (without start '+').
 
 
-=head2 value
+=attr value
 
 Current field value. It has writer C<set_value>, clearer C<clear_value>
 and predicator C<has_value>
@@ -770,9 +765,7 @@ and predicator C<has_value>
 B<Notice:> normally is being set by Form::Data::Processor internals.
 
 
-=head1 METHODS
-
-=head2 add_actions
+=method add_actions
 
 =over 4
 
@@ -1025,7 +1018,7 @@ Default error message is C<error_occurred>.
 =back
 
 
-=head2 build_error_messages
+=method build_error_messages
 
 =over 4
 
@@ -1045,7 +1038,7 @@ Default error message is C<error_occurred>.
 Default error messages builder.
 
 
-=head2 clone
+=method clone
 
 =over 4
 
@@ -1073,7 +1066,7 @@ exists in field and in its subfields and so on).
     is($clone->disabled, 1, 'but clone is');
 
 
-=head2 has_fields
+=method has_fields
 
 =over 4
 
@@ -1084,7 +1077,7 @@ exists in field and in its subfields and so on).
 Indicate if field can contains fields. By default field doesn't have subfields.
 
 
-=head2 has_result
+=method has_result
 
 =over 4
 
@@ -1097,7 +1090,7 @@ If field has result, then return C<1> otherwise return C<0>.
 Field has result when it is not L</disabled> and "L<has value|/value>"
 
 
-=head2 init_input
+=method init_input
 
 =over 4
 
@@ -1117,7 +1110,7 @@ Also apply "L<init input actions|/Input initialization level action>" before
 L<empty|/is_empty> checking.
 
 
-=head2 is_empty
+=method is_empty
 
 =over 4
 
@@ -1133,7 +1126,7 @@ Otherwise returns C<1>.
 When C<$value> is not provided, then check current field L</value>
 
 
-=head2 is_form
+=method is_form
 
 =over 4
 
@@ -1144,7 +1137,7 @@ When C<$value> is not provided, then check current field L</value>
 Indicate if it is not a form. Useful when check if parent is form or field.
 
 
-=head2 populate_defaults
+=method populate_defaults
 
 Set default attributes (field will reset to default values on L</reset>
 if it is not L</not_resettable>).
@@ -1189,7 +1182,7 @@ Also provide next methods:
 =back
 
 
-=head2 ready
+=method ready
 
 Method which normally should be called for each subfield after all fields for
 L</parent> are ready.
@@ -1197,13 +1190,13 @@ L</parent> are ready.
 By default it does nothing, but you can use it when extend fields.
 
 
-=head2 reset
+=method reset
 
 Reset field attributes to default values if possible.
 Resetting is not possible when field is L</not_resettable>.
 
 
-=head2 result
+=method result
 
 =over 4
 
@@ -1214,7 +1207,7 @@ Resetting is not possible when field is L</not_resettable>.
 If field has errors, then it returns C<undef>.
 
 
-=head2 validate
+=method validate
 
 Validate input value.
 
@@ -1236,7 +1229,7 @@ validation stops with C<required> error.
 =back
 
 
-=head2 validate_required
+=method validate_required
 
 =over 4
 
@@ -1346,10 +1339,5 @@ validation will be from parent field and only then - from form.
 =item L<Form::Data::Processor::Field::Text>
 
 =back
-
-
-=head1 AUTHOR
-
-Dmitry Latin <dim0xff@gmail.com>
 
 =cut

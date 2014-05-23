@@ -1,8 +1,9 @@
 package                                         # hide from PAUSE
     Form::Data::Processor::Meta::Role;
 
-# field list and apply list holder in
-# Form::Data::Processor::Moose::Role meta
+# ABSTRACT: field list and apply list holder
+
+# For Form::Data::Processor::Moose::Role meta
 # and Form::Data::Processor::Moose meta
 
 use Moose::Role;
