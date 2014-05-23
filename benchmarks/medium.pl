@@ -170,7 +170,8 @@ package PP::Form {
 
     sub _fix_text {
         my $text = pop;
-        $$text =~ s/^\s+|\s+$//igs;
+        $$text =~ s/^\s+//;
+        $$text =~ s/\s+$//;
     }
 
     sub add_error {                             # Here should be error handling
@@ -185,7 +186,7 @@ package PP::Form {
 
         # Check addresses
         my $addrs = $data->{addresses};
-        $self->add_error('Invalud addresses') unless ref $addrs eq 'ARRAY';
+        $self->add_error('Invalid addresses') unless ref $addrs eq 'ARRAY';
 
         for my $addr ( @{$addrs} ) {
             $self->add_error('Invalid address type')
