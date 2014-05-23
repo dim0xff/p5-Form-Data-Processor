@@ -6,8 +6,11 @@ Form::Data::Processor::Field - base class for each field
 
 =cut
 
+use feature 'current_sub';
+
 use Form::Data::Processor::Moose;
 use namespace::autoclean;
+
 
 with 'MooseX::Traits', 'Form::Data::Processor::Role::Errors';
 
@@ -425,8 +428,47 @@ sub _init_external_validators {
 
     $self->clear_external_validators;
 
-    $self->add_external_validator(
-        $self->parent->_find_external_validators($self) );
+    $self->add_external_validator( $self->_find_external_validators() );
+}
+
+sub _find_external_validators {
+    my $self = shift;
+
+    my $sub = sub {
+        my ($self, $field)  = @_;
+
+        my @validators;
+
+        ( my $validator = $field->full_name ) =~ s/\./_/g;
+
+        if ( $self->can('full_name') ) {
+            ( my $full_name = $self->full_name ) =~ s/\./_/g;
+            $validator =~ s/^\Q$full_name\E_//;
+        }
+
+        $validator = 'validate_' . $validator;
+
+        # Search validator in current obj
+        if ( my $code = $self->can($validator) ) {
+            push(
+                @validators,
+                sub {
+                    my $field = shift;
+
+                    $code->( $self, $field );
+                }
+            );
+        }
+
+        # Search validator in parent objects
+        if ( $self->can('parent') ) {
+            push( @validators, __SUB__->( $self->parent, $field ) );
+        }
+
+        return @validators;
+    };
+
+    return $sub->( $self->parent, $self );
 }
 
 

@@ -425,42 +425,6 @@ sub _ready_fields {
     }
 }
 
-sub _find_external_validators {
-    my $self  = shift;
-    my $field = shift;
-
-    my @validators;
-
-    ( my $validator = $field->full_name ) =~ s/\./_/g;
-
-    if ( $self->can('full_name') ) {
-        ( my $full_name = $self->full_name ) =~ s/\./_/g;
-        $validator =~ s/^\Q$full_name\E_//;
-    }
-
-    $validator = 'validate_' . $validator;
-
-    # Search validator in current obj
-    if ( my $code = $self->can($validator) ) {
-        push(
-            @validators,
-            sub {
-                my $field = shift;
-
-                $code->( $self, $field );
-            }
-        );
-    }
-
-    # Search validator in parent objects
-    if ( $self->can('parent') ) {
-        push( @validators, $self->parent->_find_external_validators($field) );
-    }
-
-    return @validators;
-}
-
-
 1;
 
 __END__
