@@ -422,6 +422,7 @@ sub _ready_fields {
     for my $field ( $self->all_fields ) {
         $field->_before_ready;
         $field->ready;
+        $field->_after_ready;
     }
 }
 

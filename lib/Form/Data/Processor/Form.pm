@@ -40,8 +40,10 @@ sub BUILD {
     $self->_build_fields;
 
     $self->_ready_fields;
+
     $self->_before_ready;
     $self->ready;
+    $self->_after_ready;
 }
 
 
