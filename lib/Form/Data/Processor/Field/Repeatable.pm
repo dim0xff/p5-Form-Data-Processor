@@ -6,19 +6,13 @@ Form::Data::Processor::Field::Repeatable - repeatable fields just like array
 
 =cut
 
-use utf8;
-
-use strict;
-use warnings;
-
 use Form::Data::Processor::Moose;
 use namespace::autoclean;
-
-use MooseX::Types::Common::Numeric qw(PositiveOrZeroInt);
 
 extends 'Form::Data::Processor::Field';
 
 with 'Form::Data::Processor::Role::Fields';
+
 
 has contains => (
     is        => 'rw',
@@ -28,19 +22,19 @@ has contains => (
 
 has prebuild_subfields => (
     is      => 'rw',
-    isa     => PositiveOrZeroInt,
+    isa     => 'Int',
     default => 4,
 );
 
 has max_input_length => (
     is      => 'rw',
-    isa     => PositiveOrZeroInt,
+    isa     => 'Int',
     default => 32,
 );
 
 has input_length => (
     is       => 'ro',
-    isa      => PositiveOrZeroInt,
+    isa      => 'Int',
     default  => 0,
     init_arg => 0,
     writer   => '_set_input_length',
@@ -49,9 +43,10 @@ has input_length => (
 
 sub BUILD {
     my $self = shift;
+
     $self->_build_fields;
 
-    $self->set_error_message( max_input_length => 'Input exceeds max length', );
+    $self->set_error_message( max_input_length => 'Input exceeds max length' );
 }
 
 after _init_external_validators => sub {
@@ -63,80 +58,27 @@ after _init_external_validators => sub {
 after _before_ready => sub {
     my $self = shift;
 
-    $self->set_default_value(
-        prebuild_subfields => $self->prebuild_subfields,
-        max_input_length   => $self->max_input_length,
-    );
-
     $self->_ready_fields;
     $self->_build_contains;
 };
 
-sub _before_reset {
-    $_[0]->reset_fields;
-}
+after _before_reset => sub { $_[0]->reset_fields };
 
-
-sub _build_contains {
+before clear_value => sub {
     my $self = shift;
 
-    if (   $self->num_fields
-        && $self->subfield('contains')
-        && $self->subfield('contains')
-        ->DOES('Form::Data::Processor::Role::Fields') )
-    {
-        $self->contains( $self->subfield('contains') );
+    for my $field ( $self->all_fields ) {
+        $field->clear_value if $field->has_value;
     }
-    else {
-        my $contains = $self->_make_field(
-            {
-                name => 'contains',
-                type => 'Compound',
-            }
-        );
-        $contains->_before_ready();
-        $contains->ready();
+};
 
-        $self->contains($contains);
-
-        for my $field ( $self->all_fields ) {
-            next if $field->name eq 'contains';
-
-            $contains->add_field($field);
-            $field->parent($contains);
-        }
-    }
-
-    $self->clear_fields;
-    $self->clear_index;
-
-    $self->contains->name('');
-    $self->contains->_init_external_validators;
-
-    confess 'Repeatable does not contain fields' unless $self->has_contains;
-
-    $self->_add_repeatable_subfield for ( 1 .. $self->prebuild_subfields );
-}
-
-sub _add_repeatable_subfield {
-    my $self = shift;
-
-    my $clone = $self->contains->clone();
-
-    $clone->parent($self);
-    $clone->name( $self->num_fields );
-
-    $self->add_to_index( $clone->name => $clone );
-    $self->add_field($clone);
-}
 
 sub init_input {
-    my $self   = shift;
-    my $value  = shift;
-    my $posted = shift;
+    my ( $self, $value, $posted ) = @_;
 
-    return $self->clear_value if $self->disabled;
-    return $self->clear_value unless $posted || $value;
+    # Default init_input logic
+    return if $self->disabled;
+    return unless $posted || $value;
 
     for my $sub ( $self->all_init_input_actions ) {
         $sub->( $self, \$value );
@@ -144,20 +86,23 @@ sub init_input {
 
     return $self->clear_value if $self->clear_empty && $self->is_empty($value);
 
+    # Specified for Compound field logic
     if ( ref $value eq 'ARRAY' ) {
-        my $input_length = scalar( @{$value} );
-        $self->_set_input_length($input_length);
+        $self->_set_input_length( my $input_length = @{$value} );
 
         return $self->set_value($value)
             if $self->max_input_length
             && $input_length > $self->max_input_length;
 
+        # There are more elements provided than we expect
+        # Lets create additional subfields
         if ( $input_length > $self->num_fields ) {
             for my $idx ( $self->num_fields .. $input_length ) {
                 $self->_add_repeatable_subfield;
             }
         }
 
+        # Init input for repeatable subfields
         for my $idx ( 0 .. ( $input_length - 1 ) ) {
             $self->fields->[$idx]->init_input( $value->[$idx], 1 );
         }
@@ -186,7 +131,7 @@ around is_empty => sub {
     return 0 unless ref $value eq 'ARRAY';
 
     # Seems it is ArrayRef. Look for defined value
-    return !( scalar( grep {defined} @{$value} ) );
+    return !( grep {defined} @{$value} );
 };
 
 around validate => sub {
@@ -195,8 +140,8 @@ around validate => sub {
 
     $self->$orig(@_);
 
-    return if $self->has_errors;
-    return unless $self->has_value;
+    return if $self->has_errors || !$self->has_value;
+
     return $self->add_error( 'invalid', $self->value )
         if ref $self->value ne 'ARRAY';
 
@@ -207,13 +152,6 @@ around validate => sub {
     $self->validate_fields;
 };
 
-before clear_value => sub {
-    my $self = shift;
-
-    for my $field ( $self->all_fields ) {
-        $field->clear_value if $field->has_value;
-    }
-};
 
 sub _result {
     my $self = shift;
@@ -225,36 +163,74 @@ sub _result {
     ];
 }
 
+# Field has subfield 'contains'.
+# Each array subfield is based on 'contains'. So when you change some shared
+# attributes in 'contains' these attributes also is being changed in array
+# subfields.
+sub _build_contains {
+    my $self = shift;
+
+    # Subfield 'contains' is defined explicitly
+    if (   $self->num_fields
+        && $self->subfield('contains')
+        && $self->subfield('contains')
+        ->DOES('Form::Data::Processor::Role::Fields') )
+    {
+        $self->contains( $self->subfield('contains') );
+    }
+    else {
+        # Subfield 'contains' is defined implicitly
+        # Create field 'contains'
+        my $contains = $self->_make_field(
+            {
+                name => 'contains',
+                type => 'Compound',
+            }
+        );
+        $contains->_before_ready();
+        $contains->ready();
+        $contains->_after_ready();
+
+        for my $field ( $self->all_fields ) {
+            next if $field->name eq 'contains';
+
+            $contains->add_field($field);
+            $field->parent($contains);
+        }
+
+        $self->contains($contains);
+
+    }
+
+    $self->clear_fields;
+    $self->clear_index;
+
+    $self->contains->name('');
+    $self->contains->_init_external_validators;
+
+    confess 'Repeatable does not contain fields' unless $self->has_contains;
+
+    $self->_add_repeatable_subfield for ( 1 .. $self->prebuild_subfields );
+}
+
+sub _add_repeatable_subfield {
+    my $self = shift;
+
+    my $clone = $self->contains->clone();
+
+    $clone->parent($self);
+    $clone->name( $self->num_fields );
+
+    $self->add_to_index( $clone->name => $clone );
+    $self->add_field($clone);
+}
+
 
 __PACKAGE__->meta->make_immutable;
 
 1;
 
 __END__
-
-=head1 DESCRIPTION
-
-This field validates repeatable data (ARRAY),
-where every element is a subfield.
-
-This field is directly inherited from L<Form::Data::Processor::Field>
-and does L<Form::Data::Processor::Role::Fields>.
-
-When input value is not ArrayRef, then it raises error C<invalid>.
-
-To increase validation speed Repeatable creates and stores subfields
-to validate it in future. For example you try to validate 10 values,
-then Repeatable will create needed 6 subfields (by default Repeatable
-already has 4 subfields on building time). Next time, when you try
-to validate 7 values Repeatable will reuse created subfields.
-
-Subfields creation is heavy process, when you validate data. So probably
-you need to limit number of validation values via L</max_input_length>
-and set L</prebuild_subfields> to optimal.
-
-Field sets own error message:
-
-    'max_input_length' => 'Input exceeds max length'
 
 =head1 SYNOPSIS
 
@@ -268,34 +244,18 @@ Field sets own error message:
             max_input_length   => 128,
         );
 
-        has_field 'options.option_id' => (
-            type     => 'Number',
-            required => 1,
-        );
-
-        has_field 'options.value' => (
-            type     => 'Text',
-            required => 1,
-        );
+        has_field 'options.option_id' => ( type => 'Number', required => 1 );
+        has_field 'options.value'     => ( type => 'Text',   required => 1 );
     }
 
 
-
     # Or if you have your own Options field
-
     package My::Form::Field::Options {
         use Form::Data::Processor::Moose;
         extends 'Form::Data::Processor::Field::Compound';
 
-        has_field 'option_id' => (
-            type     => 'Number',
-            required => 1,
-        );
-
-        has_field 'value' => (
-            type     => 'Text',
-            required => 1,
-        );
+        has_field 'option_id' => ( type => 'Number', required => 1 );
+        has_field 'value'     => ( type => 'Text',   required => 1 );
     }
 
     package My::Form {
@@ -321,7 +281,7 @@ Field sets own error message:
     my $form = My::Form->new;
 
     $form->process(
-        params => {
+        {
             options => [
                 {
                     option_id => 2,
@@ -336,28 +296,52 @@ Field sets own error message:
     );
 
 
+=head1 DESCRIPTION
+
+This field validates repeatable data (ARRAY).
+
+This field is directly inherited from L<Form::Data::Processor::Field>
+and does L<Form::Data::Processor::Role::Fields>.
+
+When input value is not ArrayRef, then it raises error 'C<invalid>'.
+
+To increase validation speed C<Repeatable> creates and stores subfields
+to validate it in future. For example, you try to validate 10 values,
+then C<Repeatable> will create needed 6 subfields (by default C<Repeatable>
+already has 4 L<prebuild|/prebuild_subfields> subfields on creation).
+Next time, hen you try to validate 7 values Repeatable will reuse created
+subfields.
+
+Subfields creation is heavy, when you validate data. So probably you need
+to limit number of validation values via L</max_input_length>
+and set L</prebuild_subfields> to optimal.
+
+Field sets own error message:
+
+    'max_input_length' => 'Input exceeds max length'
+
+
 =head1 ACCESSORS
 
 Other accessors can be found in L<Form::Data::Processor::Field/ACCESSORS>
-
-All local accessors will be resettable.
 
 =head2 max_input_length
 
 =over 4
 
-=item Type: Positive or zero Int
+=item Type: Int
 
 =item Default: 32
 
 =back
 
-It answers the question "how many input values Repeatable could validate?". Zero means 
-no limit.
+It answers the question "how many input values Repeatable could validate?".
+Zero means no limit.
 
-B<WARNING>: when you set it to zero and try to validate huge number of values,
-then huge amount of memory will be used, because of precaching of subfields for validation.
-So probably you need to limit number of validation values.
+B<Notice:> when you set it to zero and try to validate huge number of values,
+then huge amount of memory will be used, because of subfields is going to be
+pre-cached for next validation. So probably you need to limit number of
+validation values.
 
 
 =head2 prebuild_subfields
@@ -370,10 +354,15 @@ So probably you need to limit number of validation values.
 
 =back
 
-How many subfields will be created when field is L<Form::Data::Processor::Field/ready>.
+How many subfields will be created when field is
+L<Form::Data::Processor::Field/ready>.
 
-If you will set it to zero, then any required subfield will be created as needed.
+If you will set it to zero, then any required subfield will be created
+on demand.
 
 
-
+=head1 AUTHOR
+    
+Dmitry Latin <dim0xff@gmail.com>
+    
 =cut
