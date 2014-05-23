@@ -197,7 +197,7 @@ input value is empty, then field value will be set as C<undef>.
 =back
 
 When defined and field value length is exceed C<maxlength>, then error
-'C<text_maxlength>' raised.
+C<text_maxlength> raised.
 
 Also provided clearer C<clear_maxlength> and predicator C<has_maxlength>.
 
@@ -211,7 +211,7 @@ Also provided clearer C<clear_maxlength> and predicator C<has_maxlength>.
 =back
 
 When defined and field value length is less than C<minlength>, then error
-'C<text_minlength>' raised.
+C<text_minlength> raised.
 
 Also provided clearer C<clear_minlength> and predicator C<has_minlength>.
 

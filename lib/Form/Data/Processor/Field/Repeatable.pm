@@ -303,7 +303,7 @@ This field validates repeatable data (ARRAY).
 This field is directly inherited from L<Form::Data::Processor::Field>
 and does L<Form::Data::Processor::Role::Fields>.
 
-When input value is not ArrayRef, then it raises error 'C<invalid>'.
+When input value is not ArrayRef, then it raises error C<invalid>.
 
 To increase validation speed C<Repeatable> creates and stores subfields
 to validate it in future. For example, you try to validate 10 values,

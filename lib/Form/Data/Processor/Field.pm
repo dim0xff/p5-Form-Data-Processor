@@ -953,7 +953,7 @@ Subroutine should accept 2 arguments: field value and field reference.
 Subroutine should return C<false> value if validation is failed, otherwise
 it should return C<true> value.
 
-Default error message is 'C<wrong_value>'.
+Default error message is C<wrong_value>.
 
     has_field 'text_gt' => (
         apply => [
@@ -968,7 +968,7 @@ Default error message is 'C<wrong_value>'.
 
 Validation is success if regexp will match field value.
 
-Default error message is 'C<not_match>'.
+Default error message is C<not_match>.
 
     has_field 'two_digits' => (
         apply => [
@@ -987,7 +987,7 @@ unsuccessful.
 B<Notice:> that this checking only works with "plain" values, that means that
 you can't validate references with ArrayRef checks.
 
-Default error message is 'C<not_allowed>'.
+Default error message is C<not_allowed>.
 
     has_field 'size' => (
         apply => [
@@ -1008,7 +1008,7 @@ Returned value will be set for field value.
 If error is occurred (eg. via C<die>), then error message will be added
 to the field.
 
-Default error message is 'C<error_occurred>'.
+Default error message is C<error_occurred>.
 
     has_field 'dividable_by_two' => (
         apply => [
@@ -1229,7 +1229,7 @@ Disabled fields are not being validated and validation stops if field disabled
 =item 2. Check L</required>
 
 If field is required and "L<doesn't have value|/validate_required>" then field
-validation stops with 'C<required>' error.
+validation stops with C<required> error.
 
 =item 3. Apply validation L<actions|/add_actions>
 
@@ -1255,7 +1255,7 @@ External validation is one of the ways to validate field.
 
 External validators are subroutines, which are described in L</parent>(s).
 These subroutines should have name, which looks like
-'C<validate_field_full_name>'.
+C<validate_field_full_name>.
 
 Validation will be performed "inside out", which means that if you have
 external validators for subfield in parent field and in form, then first
@@ -1329,6 +1329,23 @@ validation will be from parent field and only then - from form.
             ...
         }
     }
+
+
+=head1 SEE ALSO
+
+=over 1
+
+=item L<Form::Data::Processor::Field::Boolean>
+
+=item L<Form::Data::Processor::Field::Compound>
+
+=item L<Form::Data::Processor::Field::List>
+
+=item L<Form::Data::Processor::Field::Repeatable>
+
+=item L<Form::Data::Processor::Field::Text>
+
+=back
 
 
 =head1 AUTHOR

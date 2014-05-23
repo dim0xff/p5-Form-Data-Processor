@@ -418,7 +418,7 @@ Could be set in different ways.
         ],
     );
 
-=head3 From a field class 'build_options' method
+=head3 From a field class C<build_options> method
 
 It will set L</options_builder>.
 
@@ -493,6 +493,15 @@ be rebuilt before using (see L</do_not_reload>).
 Field has input L<action|Form::Data::Processor::Field/Input initialization level action>,
 which removes duplicated and undefined input values, when there are more
 than one input value.
+
+
+=head1 SEE ALSO
+
+=over 1
+
+=item L<Form::Data::Processor::Field::List::Single>
+
+=back
 
 
 =head1 AUTHOR

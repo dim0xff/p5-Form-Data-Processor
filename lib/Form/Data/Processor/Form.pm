@@ -349,6 +349,15 @@ Return C<true> if form doesn't have errors (via L<Form::Data::Processor::Role::F
 =cut
 
 
+=head1 SEE ALSO
+
+=over 1
+
+=item L<Form::Data::Processor::Field>
+
+=back
+
+
 =head1 AUTHOR
 
 Dmitry Latin <dim0xff@gmail.com>
