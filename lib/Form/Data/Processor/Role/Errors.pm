@@ -1,10 +1,6 @@
 package Form::Data::Processor::Role::Errors;
 
-=head1 NAME
-
-Form::Data::Processor::Role::Errors - role for form and fields error handling.
-
-=cut
+# ABSTRACT: role for form and fields error handling.
 
 use Moose::Role;
 use namespace::autoclean;
@@ -76,9 +72,7 @@ do this role.
 See L<attributes|/ATTRIBUTES> and L<methods|/METHODS> which role provides.
 
 
-=head1 ATTRIBUTES
-
-=head2 errors
+=attr errors
 
 =over 4
 
@@ -101,7 +95,7 @@ Also provides methods:
 =back
 
 
-=head2 error_messages
+=attr error_messages
 
 =over 4
 
@@ -137,9 +131,7 @@ Also provides methods:
 =back
 
 
-=head1 METHODS
-
-=head2 add_error
+=method add_error
 
 =over 4
 
@@ -188,7 +180,7 @@ field error message.
     # $field->errors->[2] ne 'Must be a number';
     # $field->errors->[2] eq 'Take a number';
 
-=head2 all_errors
+=method all_errors
 
 =over 4
 
@@ -212,10 +204,5 @@ Return all form/field unique errors.
     # $field_errors[1] eq 'Must be a number';
     # $field_errors[2] eq 'Take a number';
     # $field_errors[3] eq 'Field is required';
-
-
-=head1 AUTHOR
-
-Dmitry Latin <dim0xff@gmail.com>
 
 =cut

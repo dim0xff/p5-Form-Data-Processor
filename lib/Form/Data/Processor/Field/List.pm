@@ -1,10 +1,6 @@
 package Form::Data::Processor::Field::List;
 
-=head1 NAME
-
-Form::Data::Processor::Field::List - field with selectable values
-
-=cut
+# ABSTRACT: field with selectable values
 
 use feature 'current_sub';
 
@@ -327,7 +323,7 @@ Other attributes can be found in L<Form::Data::Processor::Field/ATTRIBUTES>
 
 B<Notice:> all current attributes will be resettable.
 
-=head2 do_not_reload
+=attr do_not_reload
 
 =over 4
 
@@ -343,7 +339,7 @@ are being rebuilt every time, when this field is L<Form::Data::Processor::Field/
 If you don't want this rebuilding set C<do_not_reload> to C<true>.
 
 
-=head2 max_input_length
+=attr max_input_length
 
 =over 4
 
@@ -363,7 +359,7 @@ When input length is greater than C<max_input_length>, then error
 C<max_input_length> will be added to field.
 
 
-=head2 multiple
+=attr multiple
 
 =over 4
 
@@ -379,7 +375,7 @@ When is C<false> and multiple values is being validated, then error
 C<is_not_multiple> will be added to field.
 
 
-=head2 options
+=attr options
 
 =over 4
 
@@ -461,7 +457,7 @@ several methods in form, in base form and in parent field, then method from
 form will be used.
 
 
-=head2 options_builder
+=attr options_builder
 
 =over 4
 
@@ -491,7 +487,7 @@ be rebuilt before using (see L</do_not_reload>).
     }
 
 
-=head2 uniq_input
+=attr uniq_input
 
 =over 4
 
@@ -513,10 +509,5 @@ than one input value.
 =item L<Form::Data::Processor::Field::List::Single>
 
 =back
-
-
-=head1 AUTHOR
-
-Dmitry Latin <dim0xff@gmail.com>
 
 =cut

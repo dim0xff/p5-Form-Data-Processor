@@ -1,10 +1,5 @@
 package  Form::Data::Processor::Moose;
-
-=head1 NAME
-
-Form::Data::Processor::Moose - add C<has_field> and C<apply> keywords into fields and forms classes.
-
-=cut
+# ABSTRACT: add C<has_field> and C<apply> keywords into fields and forms classes.
 
 use Moose ();
 use Moose::Exporter;
@@ -51,10 +46,5 @@ __END__
     ];
 
     1;
-
-
-=head1 AUTHOR
-
-Dmitry Latin <dim0xff@gmail.com>
 
 =cut

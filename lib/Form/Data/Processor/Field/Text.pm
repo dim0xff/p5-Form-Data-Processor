@@ -1,10 +1,6 @@
 package Form::Data::Processor::Field::Text;
 
-=head1 NAME
-
-Form::Data::Processor::Field::Text - text field
-
-=cut
+# ABSTRACT: text field
 
 use Form::Data::Processor::Moose;
 use namespace::autoclean;
@@ -172,7 +168,7 @@ Other attributes can be found in L<Form::Data::Processor::Field/ATTRIBUTES>
 B<Notice:> all current attributes will be resettable.
 
 
-=head2 not_nullable
+=attr not_nullable
 
 =over 4
 
@@ -188,7 +184,7 @@ When C<true>, then value is set as is. Otherwise (value is nullable), when
 input value is empty, then field value will be set as C<undef>.
 
 
-=head2 maxlength
+=attr maxlength
 
 =over 4
 
@@ -202,7 +198,7 @@ C<text_maxlength> raised.
 Also provided clearer C<clear_maxlength> and predicator C<has_maxlength>.
 
 
-=head2 minlength
+=attr minlength
 
 =over 4
 
@@ -216,9 +212,7 @@ C<text_minlength> raised.
 Also provided clearer C<clear_minlength> and predicator C<has_minlength>.
 
 
-=head1 METHODS
-
-=head2 trim
+=method trim
 
 =over 4
 
@@ -231,7 +225,7 @@ Also provided clearer C<clear_minlength> and predicator C<has_minlength>.
 By default it is using in C<input_transform> action.
 
 
-=head2 validate_maxlength
+=method validate_maxlength
 
 =over 4
 
@@ -244,7 +238,7 @@ By default it is using in C<input_transform> action.
 Validate if value exceed L</maxlength>.
 
 
-=head2 validate_minlength
+=method validate_minlength
 
 =over 4
 
@@ -272,10 +266,5 @@ Field has default actions:
 =item L</validate_minlength>
 
 =back
-
-
-=head1 AUTHOR
-
-Dmitry Latin <dim0xff@gmail.com>
 
 =cut

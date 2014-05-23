@@ -1,10 +1,6 @@
 package Form::Data::Processor::Form;
 
-=head1 NAME
-
-Form::Data::Processor::Form - base class for any form
-
-=cut
+# ABSTRACT: base class for any form
 
 use Moose;
 use namespace::autoclean;
@@ -170,9 +166,7 @@ Every form, which is based on this class,
 does L<Form::Data::Processor::Role::Fields> and L<Form::Data::Processor::Role::Errors>.
 
 
-=head1 ATTRIBUTES
-
-=head2 field_name_space
+=attr field_name_space
 
 =over 4
 
@@ -186,7 +180,7 @@ It contains name spaces for searching fields classes, look L<Form::Data::Process
 for more information.
 
 
-=head2 field_traits
+=attr field_traits
 
 =over 4
 
@@ -197,7 +191,7 @@ for more information.
 Array of trait names, which will be applied for every new field.
 
 
-=head2 params
+=attr params
 
 =over 4
 
@@ -224,15 +218,13 @@ Also provides methods:
 =back
 
 
-=head1 METHODS
-
-=head2 clear_form
+=method clear_form
 
 Clear current form (L</clear_params>, L<Form::Data::Processor::Role::Errors/clear_errors>
 and L<Form::Data::Processor::Role::Fields/reset_fields>).
 
 
-=head2 form
+=method form
 
 =over 4
 
@@ -241,7 +233,7 @@ and L<Form::Data::Processor::Role::Fields/reset_fields>).
 =back
 
 
-=head2 is_form
+=method is_form
 
 =over 4
 
@@ -250,7 +242,7 @@ and L<Form::Data::Processor::Role::Fields/reset_fields>).
 =back
 
 
-=head2 process
+=method process
 
 =over 4
 
@@ -274,14 +266,14 @@ Returns C<true>, if form validated without errors via L</validated>.
     die 'Validation error' unless $form->process(...);
 
 
-=head2 ready
+=method ready
 
 Method which normally should be called after all fields are L<Form::Data::Processor::Field/ready>
 
 By default it does nothing, but you can use it when extending form.
 
 
-=head2 setup_form
+=method setup_form
 
 =over 4
 
@@ -336,7 +328,7 @@ like as it L<HTML::FormHandler> does.
         }
     }
 
-=head2 validated
+=method validated
 
 =over 4
 
@@ -356,10 +348,5 @@ Return C<true> if form doesn't have errors (via L<Form::Data::Processor::Role::F
 =item L<Form::Data::Processor::Field>
 
 =back
-
-
-=head1 AUTHOR
-
-Dmitry Latin <dim0xff@gmail.com>
 
 =cut

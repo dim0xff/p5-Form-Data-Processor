@@ -1,10 +1,6 @@
 package Form::Data::Processor::Field::List::Single;
 
-=head1 NAME
-
-Form::Data::Processor::Field::List::Single - field with just one selectable value
-
-=cut
+# ABSTRACT: field with just one selectable value
 
 use Form::Data::Processor::Moose;
 use namespace::autoclean;
@@ -38,10 +34,5 @@ So it is just a shortcut
         multiple => 0,
         options  => [ 1..5 ],
     );
-
-
-=head1 AUTHOR
-
-Dmitry Latin <dim0xff@gmail.com>
 
 =cut
