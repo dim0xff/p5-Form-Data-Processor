@@ -11,7 +11,6 @@ use feature 'current_sub';
 use Form::Data::Processor::Moose;
 use namespace::autoclean;
 
-use MooseX::Types::Common::Numeric qw(PositiveOrZeroInt);
 use List::MoreUtils qw(uniq);
 
 extends 'Form::Data::Processor::Field';
@@ -62,7 +61,7 @@ has multiple => (
 
 has max_input_length => (
     is      => 'rw',
-    isa     => PositiveOrZeroInt,
+    isa     => 'Int',
     default => 10_000,
 );
 
@@ -125,16 +124,112 @@ after _before_ready => sub {
         uniq_input       => $self->uniq_input,
     );
 
-    my $code = $self->_find_options_builder() || $self->can('build_options');
+    my $code = $self->_find_options_builders() || $self->can('build_options');
     $self->options_builder($code) if $code;
 
     $self->_build_options if $self->has_options_builder;
 };
 
 
-sub _find_options_builder {
+after _after_reset => sub {
     my $self = shift;
 
+    # Reload options if needed after reset
+    $self->_build_options()
+        if !$self->do_not_reload && $self->has_options_builder;
+};
+
+
+around is_empty => sub {
+    my $orig = shift;
+    my $self = shift;
+
+    return 1 if $self->$orig(@_);
+
+    # OK, there is some input, so we have value
+    my $value = @_ ? $_[0] : $self->value;
+
+    return 0 unless ref $value eq 'ARRAY';
+
+    # Seems it is ArrayRef. Look for defined value
+    return !grep( {defined} @{$value} );
+};
+
+
+around validate => sub {
+    my $orig = shift;
+    my $self = shift;
+
+    $self->$orig();
+
+    return if $self->has_errors || !$self->has_value;
+
+    my $values = ref $self->value ? $self->value : [ $self->value ];
+
+    # Value must be ArrayRef
+    return $self->add_error( 'invalid', $values )
+        unless ref $values eq 'ARRAY';
+
+    # Check input length
+    return $self->add_error( 'max_input_length', $values )
+        if $self->max_input_length && @{$values} > $self->max_input_length;
+
+    # If is not multiple and more than one value
+    return $self->add_error( 'is_not_multiple', $values )
+        if !$self->multiple && @{$values} > 1;
+
+    # If no errors, then check each value
+EACH_VALUE:
+    for my $value ( @{$values} ) {
+        next unless defined $value;             # skip not defined
+
+        if ( ref $value ) {
+            $self->add_error( 'wrong_value', $value );
+            next EACH_VALUE;
+        }
+
+        if ( my $option = $self->_options_index->{$value} ) {
+            $self->add_error( 'disabled_value', $value )
+                if $option->{disabled};
+        }
+        else {
+            $self->add_error( 'not_allowed', $value );
+        }
+    }
+};
+
+
+around validate_required => sub {
+    my $orig = shift;
+    my $self = shift;
+
+    return 0 unless $self->$orig();
+    return 0
+        if ref $self->value eq 'ARRAY'
+        && !grep( {defined} @{ $self->value } );
+
+    return 1;
+};
+
+
+sub _result {
+    my $self = shift;
+
+    my $value = $self->value;
+
+    if ( $self->multiple ) {
+        return ref $value ? $value : [ defined $value ? $value : () ];
+    }
+    else {
+        return ref $value ? $value->[0] : $value;
+    }
+}
+
+
+sub _find_options_builders {
+    my $self = shift;
+
+    # Recursive search for options builder
     my $sub = sub {
         my ( $self, $field ) = @_;
 
@@ -161,23 +256,7 @@ sub _find_options_builder {
     return $sub->( $self->parent, $self );
 }
 
-
-around is_empty => sub {
-    my $orig = shift;
-    my $self = shift;
-
-    return 1 if $self->$orig(@_);
-
-    # OK, there is some input, so we have value
-    my $value = @_ ? $_[0] : $self->value;
-
-    return 0 unless ref $value eq 'ARRAY';
-
-    # Seems it is ArrayRef. Look for defined value
-    return !( scalar( grep {defined} @{$value} ) );
-};
-
-# Options builder
+# Populate options via options_builder
 sub _build_options {
     my $self = shift;
 
@@ -186,20 +265,13 @@ sub _build_options {
     $self->options( \@options );
 }
 
-# Reload options if needed after reset
-sub _after_reset {
-    my $self = shift;
-
-    return if $self->do_not_reload;
-
-    $self->_build_options() if $self->has_options_builder;
-}
-
+# Options index:  { option value => option }
 sub _set_options_index {
     my $self    = shift;
     my $options = shift;
 
     $self->_options_index( {} );
+
 
     for my $idx ( 0 .. $#{$options} ) {
         $self->_options_index->{ $options->[$idx]{value} }
@@ -208,93 +280,11 @@ sub _set_options_index {
 }
 
 
-around validate => sub {
-    my $orig = shift;
-    my $self = shift;
-
-    $self->$orig();
-
-    return if $self->has_errors;
-    return unless $self->has_value;
-
-    my $values = ref $self->value ? $self->value : [ $self->value ];
-
-    # Value must be ArrayRef
-    return $self->add_error( 'invalid', $values )
-        unless ref $values eq 'ARRAY';
-
-    # Check input length
-    return $self->add_error( 'max_input_length', $values )
-        if @{$values} > $self->max_input_length;
-
-    # If is not multiple and more than one value
-    return $self->add_error( 'is_not_multiple', $values )
-        if !$self->multiple && @{$values} > 1;
-
-    # If no errors, then check each value
-    for my $value ( @{$values} ) {
-        next unless defined $value;
-
-        if ( ref $value ) {
-            $self->add_error( 'wrong_value', $value );
-            next;
-        }
-
-        if ( my $option = $self->_options_index->{$value} ) {
-            $self->add_error( 'disabled_value', $value )
-                if $option->{disabled};
-        }
-        else {
-            $self->add_error( 'not_allowed', $value );
-        }
-    }
-};
-
-around validate_required => sub {
-    my $orig = shift;
-    my $self = shift;
-
-    return 0 unless $self->$orig();
-    return 0
-        if ref $self->value eq 'ARRAY' && !grep {defined} @{ $self->value };
-
-    return 1;
-};
-
-sub _result {
-    my $self = shift;
-
-    ( my $value = $self->value );
-
-    if ( $self->multiple ) {
-        return ref $value ? $value : [ defined $value ? $value : () ];
-    }
-    else {
-        return ref $value ? $value->[0] : $value;
-    }
-}
-
 __PACKAGE__->meta->make_immutable;
 
 1;
 
 __END__
-
-=head1 DESCRIPTION
-
-This field represent data which could be selected from list.
-
-This field is directly inherited from L<Form::Data::Processor::Field>.
-
-Field sets own error messages:
-
-    'required_input'   => 'Value is not provided',
-    'disabled_value'   => 'Value is disabled',
-    'is_not_multiple'  => 'Field does not take multiple values',
-    'max_input_length' => 'Input exceeds max length',
-
-It could be L</multiple> (and then L<Form::Data::Processor::Field/result> will be ArrayRef) or
-single (and then result will be a selected value).
 
 =head1 SYNOPSIS
 
@@ -306,18 +296,36 @@ single (and then result will be a selected value).
     has photos => (
         type     => 'List',
         multiple => 0,
-        options  => [ 'WITH', 'WITHOUT', 'ANY', ],
+        options  => [ 'COLORED', 'BW' ],
     );
 
     # Addition fields for search
     ...
 
 
+=head1 DESCRIPTION
+
+This field represents data which could be selected from list.
+
+This field is directly inherited from L<Form::Data::Processor::Field>.
+
+Field sets own error messages:
+
+    'required_input'   => 'Value is not provided',
+    'disabled_value'   => 'Value is disabled',
+    'is_not_multiple'  => 'Field does not take multiple values',
+    'max_input_length' => 'Input exceeds max length',
+
+It could be L</multiple> (and then L<Form::Data::Processor::Field/result> will
+be ArrayRef without undef values) or single (and then result will be a selected
+value).
+
+
 =head1 ACCESSORS
 
 Other accessors can be found in L<Form::Data::Processor::Field/ACCESSORS>
 
-All local accessors will be resettable.
+B<Notice:> all current accessors will be resettable.
 
 =head2 do_not_reload
 
@@ -329,9 +337,8 @@ All local accessors will be resettable.
 
 =back
 
-By default for List field with L<options builder|/options_builder>
-L</options> are being rebuilt every time, when this field is
-L<Form::Data::Processor::Field/ready>.
+By default for List field with L<options builder|/options_builder> L</options>
+are being rebuilt every time, when this field is L<Form::Data::Processor::Field/ready>.
 
 If you don't want this rebuilding set C<do_not_reload> to C<true>.
 
@@ -340,7 +347,7 @@ If you don't want this rebuilding set C<do_not_reload> to C<true>.
 
 =over 4
 
-=item Type: Positive or zero Int
+=item Type: Int
 
 =item Default: 10_000
 
@@ -349,11 +356,11 @@ If you don't want this rebuilding set C<do_not_reload> to C<true>.
 It answers the question "how many input values List could validate?".
 Zero means no limit.
 
-B<WARNING>: when you set it to zero and try to validate huge number
+B<Notice:> when you set it to zero and try to validate huge number
 of non unique values, this could take a lot of time.
 
-When input length is great than C<max_input_length>,
-then error C<max_input_length> will be added to field.
+When input length is greater than C<max_input_length>, then error
+C<max_input_length> will be added to field.
 
 
 =head2 multiple
@@ -383,8 +390,8 @@ C<is_not_multiple> will be added to field.
 It is a list of available options, which could be selected.
 
 When set, you could provide an ArrayRef of strings (and it will be values), or
-ArrayRef of HashRefs. When set via ArrayRef of HashRefs, then disabled values could
-be provided
+ArrayRef of HashRefs. When set via ArrayRef of HashRefs, then disabled values
+could be provided
 
     # ArrayRef of HashRefs
     has_field rating => (
@@ -448,6 +455,10 @@ It will set L</options_builder>.
             'kiwi',
         ];
     }
+
+B<Notice:> the "top" method will be used, this means that if you have
+several methods in form, in base form and in parent field, then method from
+form will be used.
 
 
 =head2 options_builder
