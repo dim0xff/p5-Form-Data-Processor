@@ -1,7 +1,5 @@
 Tests for Form::Data::Processor::Field::clear_empty
 Tests for Form::Data::Processor::Field::Repeatable
-Documentation
 
 Add FDP::Field::String
 
-Refactoring is needed (clear methods names, BUILD etc)
