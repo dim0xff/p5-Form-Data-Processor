@@ -1,5 +1,11 @@
 package Form::Data::Processor::Moose::Role;
 
+=head1 NAME
+
+Form::Data::Processor::Moose::Role - add C<has_field> and C<apply> keywords into roles.
+
+=cut
+
 use Moose::Role ();
 use Moose::Exporter;
 use namespace::autoclean;
@@ -27,3 +33,39 @@ sub apply {
 }
 
 1;
+
+__END__
+
+=head1 SYNOPSIS
+
+    # Form definition
+    package Form::With::SomeFields;
+
+    use Form::Data::Processor::Moose::Role;
+
+    has_field 'some'  => ( ... );
+    has_field 'field' => ( ... );
+
+    apply [
+        { ... }
+    ];
+
+    1;
+
+    # Later in your form
+    package Form::My;
+
+    use Form::Data::Processor::Moose;
+    extends 'Form::Data::Processor::Form';
+
+    with 'Form::With::SomeFields'; # And now your form has 'some' 'fields'
+
+    ...
+
+    1;
+
+=head1 AUTHOR
+
+Dmitry Latin <dim0xff@gmail.com>
+
+=cut

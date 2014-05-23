@@ -1,5 +1,11 @@
 package  Form::Data::Processor::Moose;
 
+=head1 NAME
+
+Form::Data::Processor::Moose - add C<has_field> and C<apply> keywords into fields and forms classes.
+
+=cut
+
 use Moose ();
 use Moose::Exporter;
 use namespace::autoclean;
@@ -27,3 +33,28 @@ sub apply {
 }
 
 1;
+
+__END__
+
+=head1 SYNOPSIS
+
+    package Form::My;
+
+    use Form::Data::Processor::Moose;
+    extends 'Form::Data::Processor::Form';
+
+    has_field 'some'  => ( ... );
+    has_field 'field' => ( ... );
+
+    apply [
+        { ... }
+    ];
+
+    1;
+
+
+=head1 AUTHOR
+
+Dmitry Latin <dim0xff@gmail.com>
+
+=cut

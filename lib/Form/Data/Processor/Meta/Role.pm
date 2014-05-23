@@ -1,4 +1,9 @@
-package Form::Data::Processor::Meta::Role;
+package                                         # hide from PAUSE
+    Form::Data::Processor::Meta::Role;
+
+# field list and apply list holder in
+# Form::Data::Processor::Moose::Role meta
+# and Form::Data::Processor::Moose meta
 
 use Moose::Role;
 use namespace::autoclean;

@@ -21,7 +21,7 @@ package Form {
 
     has_field general  => ( type => 'Boolean' );
     has_field required => ( type => 'Boolean', required => 1 );
-    has_field input    => ( type => 'Boolean', required_input => 1 );
+    has_field input    => ( type => 'Boolean');
 
     sub dump_errors {
         return { map { $_->full_name => [ $_->all_errors ] }
@@ -45,7 +45,6 @@ package main {
         $form->dump_errors,
         {
             required => ['Field is required'],
-            input    => ['Value is not provided'],
         },
         'OK, right error messages'
     );

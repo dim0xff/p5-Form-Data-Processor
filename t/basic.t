@@ -113,8 +113,12 @@ package Form::Prev {
 
     extends 'Form::Data::Processor::Form';
 
+    has '+field_name_space' => (
+        default => sub { ['Form']}
+    );
+
     has_field field_1 => (
-        type     => '+Form::Field1',
+        type     => 'Field1',
         required => 1,
         apply    => [
             {
@@ -128,7 +132,7 @@ package Form::Prev {
         ],
     );
 
-    has_field field_2 => ( type => '+Form::Field2' );
+    has_field field_2 => ( type => 'Field2' );
 
     has_field field_3 => (
         type   => 'Text',

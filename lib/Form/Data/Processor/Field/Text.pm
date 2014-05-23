@@ -6,26 +6,16 @@ Form::Data::Processor::Field::Text - text field
 
 =cut
 
-use utf8;
-
-use strict;
-use warnings;
-
 use Form::Data::Processor::Moose;
 use namespace::autoclean;
 
 extends 'Form::Data::Processor::Field';
 
-sub BUILD {
-    my $self = shift;
-
-    $self->set_error_message(
-        text_invalid   => 'Field value is not a valid text',
-        text_maxlength => 'Field is too long',
-        text_minlength => 'Field is too short',
-    );
-}
-
+has not_nullable => (
+    is      => 'rw',
+    isa     => 'Bool',
+    default => 0,
+);
 
 has maxlength => (
     is        => 'rw',
@@ -41,12 +31,6 @@ has minlength => (
     predicate => 'has_minlength',
     clearer   => 'clear_minlength',
     trigger   => sub { $_[0]->clear_minlength unless defined $_[1] },
-);
-
-has not_nullable => (
-    is      => 'rw',
-    isa     => 'Bool',
-    default => 0,
 );
 
 
@@ -69,6 +53,17 @@ apply [
 ];
 
 
+sub BUILD {
+    my $self = shift;
+
+    $self->set_error_message(
+        text_invalid   => 'Field value is not a valid text',
+        text_maxlength => 'Field is too long',
+        text_minlength => 'Field is too short',
+    );
+}
+
+
 after _before_ready => sub {
     my $self = shift;
 
@@ -79,20 +74,22 @@ after _before_ready => sub {
     );
 };
 
+
 around init_input => sub {
     my $orig = shift;
     my $self = shift;
 
     my $value = $self->$orig(@_);
 
-    return $value unless $self->has_value;
-
-    if ( defined($value) && $value eq '' && !$self->not_nullable ) {
-        return $self->set_value(undef);
-    }
+    return $self->set_value(undef)              # set value to null
+        if $self->has_value
+        && defined($value)
+        && $value eq ''                         # if empty value
+        && !$self->not_nullable;                # and field is nullable
 
     return $value;
 };
+
 
 around validate_required => sub {
     my $orig = shift;
@@ -105,23 +102,28 @@ around validate_required => sub {
 };
 
 
+# Apply actions
+#
 # $_[0] - self
 # $_[1] - value
 
 sub trim {
-    $_[1] =~ s/^\s+|\s+$//g unless ref $_[1] || !defined $_[1];
+    if ( defined $_[1] && !ref( $_[1] ) ) {
+        $_[1] =~ s/^\s+//;
+        $_[1] =~ s/\s+$//;
+    }
 
     return $_[1];
 }
 
 sub validate_maxlength {
     return 1 unless $_[0]->has_maxlength;
-    return ( ref( $_[1] ) || length( $_[1] ) <= $_[0]->maxlength );
+    return !!( ref( $_[1] ) || length( $_[1] ) <= $_[0]->maxlength );
 }
 
 sub validate_minlength {
     return 1 unless $_[0]->has_minlength;
-    return ( ref( $_[1] ) || length( $_[1] ) >= $_[0]->minlength );
+    return !!( ref( $_[1] ) || length( $_[1] ) >= $_[0]->minlength );
 }
 
 __PACKAGE__->meta->make_immutable;
@@ -130,14 +132,28 @@ __PACKAGE__->meta->make_immutable;
 
 __END__
 
+=head1 SYNOPSIS
+
+    package My::Form;
+
+    use Form::Data::Processor::Moose;
+    extends 'Form::Data::Processor::Form';
+
+    has_field just_text        => ( type => 'Text' );
+    has_field text_required    => ( type => 'Text', required     => 1 );
+    has_field text_notnullable => ( type => 'Text', not_nullable => 1 );
+    has_field text_min         => ( type => 'Text', minlength    => 10 );
+    has_field text_max         => ( type => 'Text', maxlength    => 10 );
+
+
 =head1 DESCRIPTION
 
 This field validates any data, which looks like text.
 
 This field is directly inherited from L<Form::Data::Processor::Field>.
 
-In addition to L<Form::Data::Processor::Field/required>,
-required also means that value must not be empty text.
+In addition to L<Form::Data::Processor::Field/required>, required also means
+that value must not be L<empty|Form::Data::Processor::Field/is_empty>.
 
 Field sets own error messages:
 
@@ -149,43 +165,12 @@ Error C<text_invalid> will be raised when field value is not look like text
 (actually when value is reference).
 
 
-=head1 SYNOPSYS
+=head1 ATTRIBUTES
 
-    package My::Form;
+Other attributes can be found in L<Form::Data::Processor::Field/ATTRIBUTES>
 
-    use Form::Data::Processor::Moose;
-    extends 'Form::Data::Processor::Form';
+B<Notice:> all current attributes will be resettable.
 
-    has_field just_text => (
-        type => 'Text',
-    );
-
-    has_field text_required => (
-        type     => 'Text',
-        required => 1,
-    );
-
-    has_field text_notnullable => (
-        type         => 'Text',
-        not_nullable => 1,
-    );
-
-    has_field text_min => (
-        type      => 'Text',
-        minlength => 10,
-    );
-
-    has_field text_max => (
-        type      => 'Text',
-        maxlength => 10,
-    );
-
-
-=head1 ACCESSORS
-
-Other accessors can be found in L<Form::Data::Processor::Field/ACCESSORS>
-
-All local accessors will be resettable.
 
 =head2 not_nullable
 
@@ -197,11 +182,10 @@ All local accessors will be resettable.
 
 =back
 
-It has meaning only if field value can be set (eg. not disabled),
-input value is posted and it is empty (C<''>).
+It has meaning only if field value is defined and it is empty (C<''>).
 
-If not_nullable is TRUE, then value is set as is. Otherwise,
-when input value is empty, then field value will be set as C<undef>.
+When C<true>, then value is set as is. Otherwise (value is nullable), when
+input value is empty, then field value will be set as C<undef>.
 
 
 =head2 maxlength
@@ -212,8 +196,8 @@ when input value is empty, then field value will be set as C<undef>.
 
 =back
 
-If maxlength is defined and field value length is exceed maxlength,
-then error 'text_maxlength' raised.
+When defined and field value length is exceed C<maxlength>, then error
+C<text_maxlength> raised.
 
 Also provided clearer C<clear_maxlength> and predicator C<has_maxlength>.
 
@@ -226,8 +210,8 @@ Also provided clearer C<clear_maxlength> and predicator C<has_maxlength>.
 
 =back
 
-If minlength is defined and field value length is less than minlength,
-then error 'text_minlength' raised.
+When defined and field value length is less than C<minlength>, then error
+C<text_minlength> raised.
 
 Also provided clearer C<clear_minlength> and predicator C<has_minlength>.
 
@@ -240,11 +224,11 @@ Also provided clearer C<clear_minlength> and predicator C<has_minlength>.
 
 =item Arguments: $value
 
-=item Return: trimmed value
+=item Return: $value without leading spaces
 
 =back
 
-It will remove leading spaces.
+By default it is using in C<input_transform> action.
 
 
 =head2 validate_maxlength
@@ -288,5 +272,10 @@ Field has default actions:
 =item L</validate_minlength>
 
 =back
+
+
+=head1 AUTHOR
+
+Dmitry Latin <dim0xff@gmail.com>
 
 =cut
