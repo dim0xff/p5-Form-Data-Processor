@@ -165,4 +165,9 @@ and does L<Form::Data::Processor::Role::Fields>.
 
 When input value is not HashRef, then it raises error C<invalid>.
 
+
+=head1 AUTHOR
+
+Dmitry Latin <dim0xff@gmail.com>
+
 =cut

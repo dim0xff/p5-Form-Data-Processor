@@ -362,7 +362,7 @@ on demand.
 
 
 =head1 AUTHOR
-    
+
 Dmitry Latin <dim0xff@gmail.com>
-    
+
 =cut

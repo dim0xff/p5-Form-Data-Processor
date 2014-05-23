@@ -132,4 +132,8 @@ Field value should not be empty (C<undef>, C<0>, C<''> etc.). Also see
 L<Form::Data::Processor::Field/required>.
 
 
+=head1 AUTHOR
+
+Dmitry Latin <dim0xff@gmail.com>
+
 =cut

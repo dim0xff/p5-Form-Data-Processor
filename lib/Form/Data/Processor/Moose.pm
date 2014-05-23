@@ -52,6 +52,7 @@ __END__
 
     1;
 
+
 =head1 AUTHOR
 
 Dmitry Latin <dim0xff@gmail.com>

@@ -273,4 +273,9 @@ Field has default actions:
 
 =back
 
+
+=head1 AUTHOR
+
+Dmitry Latin <dim0xff@gmail.com>
+
 =cut

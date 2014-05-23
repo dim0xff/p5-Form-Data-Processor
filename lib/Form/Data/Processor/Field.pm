@@ -1330,4 +1330,9 @@ validation will be from parent field and only then - from form.
         }
     }
 
+
+=head1 AUTHOR
+
+Dmitry Latin <dim0xff@gmail.com>
+
 =cut
