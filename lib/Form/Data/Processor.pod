@@ -1,5 +1,5 @@
 # PODNAME: Form::Data::Processor
-# ABSTRACT: yet another form data processor
+# ABSTRACT: Yet another form data processor
 
 
 =head1 DESCRIPTION
