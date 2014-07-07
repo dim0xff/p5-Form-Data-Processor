@@ -3,3 +3,4 @@ Tests for Form::Data::Processor::Field::Repeatable
 
 Add FDP::Field::String
 
+Form::Data::Processor::Role::Fields/init_input remove 'confess'
