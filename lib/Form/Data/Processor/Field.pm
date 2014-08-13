@@ -178,9 +178,7 @@ sub _result { return $_[0]->value }
 sub result {
     my $self = shift;
 
-    return if $self->has_errors;
-
-    return $self->_result;
+    return $self->has_errors ? undef : $self->_result;
 }
 
 
