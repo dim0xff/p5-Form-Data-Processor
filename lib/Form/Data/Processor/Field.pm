@@ -352,7 +352,7 @@ sub add_actions {
                 $v_sub = sub {
                     my $self = shift;
 
-                    unless ( ( $self->value || '' ) =~ $action->{check} ) {
+                    unless ( ( $self->value // '' ) =~ $action->{check} ) {
                         $self->add_error( $error_message, $self->value );
                     }
                 };
@@ -428,7 +428,7 @@ sub _find_external_validators {
 
     my $sub;
     $sub = sub {
-        my ($self, $field)  = @_;
+        my ( $self, $field ) = @_;
 
         my @validators;
 

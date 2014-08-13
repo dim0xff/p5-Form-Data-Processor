@@ -113,9 +113,7 @@ package Form::Prev {
 
     extends 'Form::Data::Processor::Form';
 
-    has '+field_name_space' => (
-        default => sub { ['Form']}
-    );
+    has '+field_name_space' => ( default => sub { ['Form'] } );
 
     has_field field_1 => (
         type     => 'Field1',
@@ -413,6 +411,23 @@ package main {
             1, 'Disabled' );
         is( $form->field('required')->get_default_value('minlength'),
             100, 'minlength' );
+    };
+
+
+    subtest 'regexp action' => sub {
+        my $f = $form->field('field_1');
+        $f->clear_init_input_actions;
+        $f->add_actions(
+            [
+                {
+                    check => qr/0/,
+                }
+            ]
+        );
+        $f->init_input(0);
+        $f->validate;
+        ok( !$f->has_errors, 'field validated without errors' );
+        is( $f->result, 0, 'Result OK' );
     };
 
     done_testing();
