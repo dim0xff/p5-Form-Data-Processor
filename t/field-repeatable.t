@@ -63,6 +63,7 @@ package Form {
     #       },
     #       ...
     #   ],
+    #   rep_5 => [ 'Text', ... ], 
     # }
 
 #<<<
@@ -91,13 +92,16 @@ package Form {
     has_field 'rep_2.contains.text_min'  => ( type => 'Text', minlength => 10, );
 
 
-    has_field 'rep_3'                    => ( type => 'Repeatable',);
-    has_field 'rep_3.rep'                => ( type => 'Repeatable', );
-    has_field 'rep_3.rep.text'           => ( type => 'Text', );
+    has_field 'rep_3'                    => ( type => 'Repeatable' );
+    has_field 'rep_3.rep'                => ( type => 'Repeatable' );
+    has_field 'rep_3.rep.text'           => ( type => 'Text' );
     has_field 'rep_3.text_min'           => ( type => 'Text', minlength => 10, );
 
-    has_field 'rep_4'                    => ( type => 'Repeatable',);
-    has_field 'rep_4.contains'           => ( type => '+Form::Field::Contains', );
+    has_field 'rep_4'                    => ( type => 'Repeatable' );
+    has_field 'rep_4.contains'           => ( type => '+Form::Field::Contains' );
+
+    has_field 'rep_5'                    => ( type => 'Repeatable', disabled => 1, );
+    has_field 'rep_5.contains'           => ( type => 'Text' );
 
 #>>>
 
@@ -130,53 +134,55 @@ package Form {
 package main {
     my $form = Form->new();
 
-    is( $form->field('rep_1')->num_fields,
-        10, 'rep_1 has 10 subfields (via prebuild_subfields)' );
-    is( $form->field('rep_2')->num_fields,
-        4, 'rep_2 has 4 subfields (by default)' );
+    subtest numfields => sub {
+        is( $form->field('rep_1')->num_fields,
+            10, 'rep_1 has 10 subfields (via prebuild_subfields)' );
+        is( $form->field('rep_2')->num_fields,
+            4, 'rep_2 has 4 subfields (by default)' );
 
-    ok( !$form->field('rep_1.text'), 'Form: no subfields for repeatable' );
-    ok(
-        !$form->field('rep_1')->subfield('text'),
-        'Fields: no subfields for repeatable'
-    );
+        ok( !$form->field('rep_1.text'), 'Form: no subfields for repeatable' );
+        ok(
+            !$form->field('rep_1')->subfield('text'),
+            'Fields: no subfields for repeatable'
+        );
 
-    is( $form->field('rep_1')->contains->num_fields,
-        1, 'rep_1: num fields is ok' );
-    is( $form->field('rep_1')->contains->fields->[0]->name,
-        'text', 'rep_1 contains: text' );
+        is( $form->field('rep_1')->contains->num_fields,
+            1, 'rep_1: num fields is ok' );
+        is( $form->field('rep_1')->contains->fields->[0]->name,
+            'text', 'rep_1 contains: text' );
 
-    is( $form->field('rep_2')->contains->num_fields,
-        1, 'rep_2: num fields is ok' );
-    is( $form->field('rep_2')->contains->fields->[0]->name,
-        'text_min', 'rep_2 contains: text' );
+        is( $form->field('rep_2')->contains->num_fields,
+            1, 'rep_2: num fields is ok' );
+        is( $form->field('rep_2')->contains->fields->[0]->name,
+            'text_min', 'rep_2 contains: text' );
 
-    is( $form->field('rep_3')->contains->num_fields,
-        2, 'rep_3: num fields is ok' );
-    is( $form->field('rep_3')->contains->fields->[0]->name,
-        'rep', 'rep_3 contains: rep' );
-    is( $form->field('rep_3')->contains->fields->[1]->name,
-        'text_min', 'rep_3 contains: text_min' );
+        is( $form->field('rep_3')->contains->num_fields,
+            2, 'rep_3: num fields is ok' );
+        is( $form->field('rep_3')->contains->fields->[0]->name,
+            'rep', 'rep_3 contains: rep' );
+        is( $form->field('rep_3')->contains->fields->[1]->name,
+            'text_min', 'rep_3 contains: text_min' );
 
-    is( $form->field('rep_3')->contains->num_fields,
-        2, 'rep_3.rep: num fields is ok' );
+        is( $form->field('rep_3')->contains->num_fields,
+            2, 'rep_3.rep: num fields is ok' );
 
-    is(
-        $form->field('rep_3')->contains->fields->[0]->contains->fields->[0]
-            ->name,
-        'text', 'rep_3.rep contains: text'
-    );
+        is(
+            $form->field('rep_3')->contains->fields->[0]->contains->fields->[0]
+                ->name,
+            'text', 'rep_3.rep contains: text'
+        );
 
-    is( $form->field('rep_4')->contains->num_fields,
-        2, 'rep_4.rep: num fields is ok' );
+        is( $form->field('rep_4')->contains->num_fields,
+            2, 'rep_4.rep: num fields is ok' );
 
-    is( $form->field('rep_4')->contains->fields->[0]->name,
-        'text_req', 'rep_4 contains: text_req' );
-    is( $form->field('rep_4')->contains->fields->[1]->name,
-        'text', 'rep_4 contains: text' );
+        is( $form->field('rep_4')->contains->fields->[0]->name,
+            'text_req', 'rep_4 contains: text_req' );
+        is( $form->field('rep_4')->contains->fields->[1]->name,
+            'text', 'rep_4 contains: text' );
 
-    is( $form->field('rep_1')->num_fields, 10, 'rep_1 has 10 subfields' );
-    is( $form->field('rep_2')->num_fields, 4,  'rep_2 has 4 subfields' );
+        is( $form->field('rep_1')->num_fields, 10, 'rep_1 has 10 subfields' );
+        is( $form->field('rep_2')->num_fields, 4,  'rep_2 has 4 subfields' );
+    };
 
 
     subtest 'FDP::Field::clone' => sub {
@@ -379,6 +385,20 @@ package main {
             'OK, field doesnt have value on [undef, undef, ...] input' );
 
         $f->clear_empty(0);
+    };
+
+    subtest 'plain text' => sub {
+        my $f = $form->field('rep_5');
+        $f->disabled(0);
+
+        $f->init_input( [ 'Text 1', ' Text 2 ', ' Text 3' ], 1 );
+        $f->validate();
+        ok( !$f->has_errors, 'field validated' );
+        is_deeply(
+            $f->result,
+            [ 'Text 1', 'Text 2', 'Text 3', ],
+            'field result OK'
+        );
     };
 
     done_testing();

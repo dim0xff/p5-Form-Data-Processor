@@ -150,6 +150,11 @@ around validate => sub {
     $self->validate_fields;
 };
 
+sub result {
+    my $self = shift;
+
+    return $self->has_errors ? undef : $self->_result;
+}
 
 sub _result {
     my $self = shift;
@@ -169,11 +174,7 @@ sub _build_contains {
     my $self = shift;
 
     # Subfield 'contains' is defined explicitly
-    if (   $self->num_fields
-        && $self->subfield('contains')
-        && $self->subfield('contains')
-        ->DOES('Form::Data::Processor::Role::Fields') )
-    {
+    if ( $self->num_fields && $self->subfield('contains') ) {
         $self->contains( $self->subfield('contains') );
     }
     else {
