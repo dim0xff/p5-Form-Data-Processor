@@ -2,8 +2,6 @@ package Form::Data::Processor::Field::List;
 
 # ABSTRACT: field with selectable values
 
-use feature 'current_sub';
-
 use Form::Data::Processor::Moose;
 use namespace::autoclean;
 
@@ -226,11 +224,12 @@ sub _find_options_builders {
     my $self = shift;
 
     # Recursive search for options builder
-    my $sub = sub {
+    my $sub;
+    $sub = sub {
         my ( $self, $field ) = @_;
 
         my $code;
-        $code = __SUB__->( $self->parent, $field ) if $self->can('parent');
+        $code = $sub->( $self->parent, $field ) if $self->can('parent');
 
         if ( !$code ) {
             my $builder = $field->full_name;
@@ -245,8 +244,7 @@ sub _find_options_builders {
             $code = $self->can("options_$builder");
         }
 
-        return sub { $code->( $self, pop ) }
-            if $code;
+        return $code ? sub { $code->( $self, pop ) } : undef;
     };
 
     return $sub->( $self->parent, $self );

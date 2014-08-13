@@ -2,8 +2,6 @@ package Form::Data::Processor::Field;
 
 # ABSTRACT: base class for each field
 
-use feature 'current_sub';
-
 use Form::Data::Processor::Moose;
 use namespace::autoclean;
 
@@ -428,7 +426,8 @@ sub _init_external_validators {
 sub _find_external_validators {
     my $self = shift;
 
-    my $sub = sub {
+    my $sub;
+    $sub = sub {
         my ($self, $field)  = @_;
 
         my @validators;
@@ -456,7 +455,7 @@ sub _find_external_validators {
 
         # Search validator in parent objects
         if ( $self->can('parent') ) {
-            push( @validators, __SUB__->( $self->parent, $field ) );
+            push( @validators, $sub->( $self->parent, $field ) );
         }
 
         return @validators;
