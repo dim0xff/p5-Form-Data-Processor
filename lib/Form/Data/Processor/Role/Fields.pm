@@ -51,9 +51,10 @@ has has_fields_errors => (
 
         # $_[0] - new
         # $_[1] - old
-
         # Tell to parent when we have errors, so parent as well
-        eval { $self->parent->has_fields_errors(1) } if $_[0] && !$_[1];
+        if ( $_[0] && !$_[1] && $self->can('parent') && $self->has_parent ) {
+            $self->parent->has_fields_errors(1);
+        }
     }
 );
 

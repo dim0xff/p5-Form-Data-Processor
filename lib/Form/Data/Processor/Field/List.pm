@@ -229,7 +229,9 @@ sub _find_options_builders {
         my ( $self, $field ) = @_;
 
         my $code;
-        $code = $sub->( $self->parent, $field ) if $self->can('parent');
+
+        $code = $sub->( $self->parent, $field )
+            if $self->can('parent') && $self->has_parent;
 
         if ( !$code ) {
             my $builder = $field->full_name;

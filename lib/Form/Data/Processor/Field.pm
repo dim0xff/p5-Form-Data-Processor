@@ -416,7 +416,7 @@ sub add_actions {
 sub _init_external_validators {
     my $self = shift;
 
-    return unless $self->parent;
+    return unless $self->has_parent;
 
     $self->clear_external_validators;
 
@@ -454,7 +454,7 @@ sub _find_external_validators {
         }
 
         # Search validator in parent objects
-        if ( $self->can('parent') ) {
+        if ( $self->can('parent') && $self->has_parent ) {
             push( @validators, $sub->( $self->parent, $field ) );
         }
 
@@ -470,7 +470,7 @@ sub _set_full_name {
     my $self = shift;
 
     my $full_name = (
-          $self->parent
+          $self->has_parent
         ? $self->parent->is_form
                 ? ''
                 : $self->parent->full_name . '.'
