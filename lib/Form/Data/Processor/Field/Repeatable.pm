@@ -51,7 +51,7 @@ after _init_external_validators => sub {
     $self->contains->_init_external_validators if $self->has_contains;
 };
 
-after _before_ready => sub {
+before ready => sub {
     my $self = shift;
 
     $self->set_default_value( max_input_length => $self->max_input_length );
@@ -60,7 +60,9 @@ after _before_ready => sub {
     $self->_build_contains;
 };
 
-after _before_reset => sub { $_[0]->reset_fields };
+before reset => sub {
+    $_[0]->reset_fields;
+};
 
 before clear_value => sub {
     my $self = shift;
@@ -186,9 +188,7 @@ sub _build_contains {
                 type => 'Compound',
             }
         );
-        $contains->_before_ready();
         $contains->ready();
-        $contains->_after_ready();
 
         for my $field ( $self->all_fields ) {
             next if $field->name eq 'contains';

@@ -20,7 +20,7 @@ has real_result => (
 );
 
 
-after _before_ready => sub {
+after populate_defaults => sub {
     my $self = shift;
 
     $self->set_default_value(

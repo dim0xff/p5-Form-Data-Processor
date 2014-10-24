@@ -15,9 +15,9 @@ sub BUILD {
     $self->_build_fields;
 }
 
-after _before_ready => sub { $_[0]->_ready_fields };
+before ready => sub { $_[0]->_ready_fields };
 
-after _before_reset => sub { $_[0]->reset_fields };
+before reset => sub { $_[0]->reset_fields };
 
 after _init_external_validators => sub {
     my $self = shift;

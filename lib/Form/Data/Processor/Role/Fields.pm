@@ -108,12 +108,7 @@ sub reset_fields {
     my $self = shift;
 
     for my $field ( $self->all_fields ) {
-        if ( !$field->not_resettable ) {
-            $field->_before_reset;
-            $field->reset;
-            $field->_after_reset;
-        }
-
+        $field->reset       if !$field->not_resettable;
         $field->clear_value if $field->has_value;
     }
 }
@@ -416,11 +411,7 @@ sub _field_index {
 sub _ready_fields {
     my $self = shift;
 
-    for my $field ( $self->all_fields ) {
-        $field->_before_ready;
-        $field->ready;
-        $field->_after_ready;
-    }
+    $_->ready for $self->all_fields;
 }
 
 1;

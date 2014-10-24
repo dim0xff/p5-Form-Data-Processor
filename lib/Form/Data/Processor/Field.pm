@@ -150,22 +150,19 @@ sub has_fields { return 0 }                     # By default field doesn't have 
 sub is_form    { return 0 }                     # Field is not form
 
 
-# About _before_ready and _after_ready see Form::Data::Processor::Form comments
-#
-# ! default attribute values MUST be set in _before_ready
-# ! otherwise it won't corresponds to inherited redefined values
-
-sub _before_ready { $_[0]->populate_defaults; }
-
-sub ready        { }
-sub _after_ready { }
-
+sub ready {
+    $_[0]->populate_defaults;
+}
 
 sub populate_defaults {
     my $self = shift;
 
-    $self->set_default_value( map { $_ => $self->$_ }
-            ( 'required', 'disabled', 'not_resettable', 'clear_empty', ) );
+    $self->set_default_value(
+        required       => $self->required,
+        disabled       => $self->disabled,
+        not_resettable => $self->not_resettable,
+        clear_empty    => $self->clear_empty
+    );
 }
 
 
@@ -178,10 +175,6 @@ sub result {
 
     return $self->has_errors ? undef : $self->_result;
 }
-
-
-sub _before_reset { }
-sub _after_reset  { }
 
 sub reset {
     my $self = shift;
@@ -1181,10 +1174,12 @@ Also provide next methods:
 
 =method ready
 
-Method which normally should be called for each subfield after all fields for
-L</parent> are ready.
+Method which normally is being called for each subfield after all fields
+for L</parent> are ready.
 
 By default it does nothing, but you can use it when extend fields.
+
+B<Note>: don't overwrite this method! Use C<before>, C<after>, <around> hooks instead.
 
 
 =method reset

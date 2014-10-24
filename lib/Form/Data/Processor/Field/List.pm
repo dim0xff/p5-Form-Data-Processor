@@ -108,7 +108,7 @@ sub BUILD {
 
 
 # Set options builder when field is ready
-after _before_ready => sub {
+after populate_defaults => sub {
     my $self = shift;
 
     $self->set_default_value(
@@ -117,15 +117,19 @@ after _before_ready => sub {
         max_input_length => $self->max_input_length,
         uniq_input       => $self->uniq_input,
     );
+};
 
-    my $code = $self->_find_options_builders() || $self->can('build_options');
+before ready => sub {
+    my $self = shift;
+
+    my $code = $self->_find_options_builders();
     $self->options_builder($code) if $code;
 
     $self->_build_options if $self->has_options_builder;
 };
 
 
-after _after_reset => sub {
+after reset => sub {
     my $self = shift;
 
     # Reload options if needed after reset
@@ -249,14 +253,23 @@ sub _find_options_builders {
         return $code ? sub { $code->( $self, pop ) } : undef;
     };
 
-    return $sub->( $self->parent, $self );
+    # Search recursively
+    my $code = $sub->( $self->parent, $self );
+    return $code if $code;
+
+    # Not found, try build_options for field inherited from FDP::Field::List
+    $code = $self->can('build_options');
+    return $code if $code;
+
+    # Not found
+    return undef;
 }
 
 # Populate options via options_builder
 sub _build_options {
     my $self = shift;
 
-    my @options = $self->options_builder->( $self->form, $self );
+    my @options = $self->options_builder->($self);
 
     $self->options( \@options );
 }
@@ -437,7 +450,7 @@ It will set L</options_builder>.
     has_field fruit => ( type => 'List' );
 
     sub options_fruit {
-        # $_[0] - form
+        # $_[0] - self
         # $_[1] - field
 
         # Must return ArrayRef

@@ -40,9 +40,9 @@ package Form::Field1 {
         },
     ];
 
-    sub ready {
+    after ready => sub {
         shift->add_ready_cnt(1);
-    }
+    };
 }
 
 # Role for field with input_transform action
