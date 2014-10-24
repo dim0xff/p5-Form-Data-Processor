@@ -34,28 +34,16 @@ sub BUILD {
     my $self = shift;
 
     $self->_build_fields;
-
     $self->_ready_fields;
-
-    $self->_before_ready;
     $self->ready;
-    $self->_after_ready;
 }
 
 
-# _before_ready() and _after_ready() - extending helpers
-# If you gonna provide extensions for FDP you can use before, around, after
-# for these helpers.
-# But don't use these hooks for ready(), programmer could create his own ready()
-# without 'around' hook and your hooks won't work
-
-sub _before_ready { }
-sub ready         { }
-sub _after_ready  { }
-
+sub ready    { }
 sub form     { return shift }
 sub is_form  { return 1 }
 sub has_form { return 1 }
+
 
 sub process {
     my $self = shift;
@@ -271,6 +259,8 @@ Returns C<true>, if form validated without errors via L</validated>.
 Method which normally should be called after all fields are L<Form::Data::Processor::Field/ready>
 
 By default it does nothing, but you can use it when extending form.
+
+B<Note>: don't overwrite this method! Use C<before>, C<after>, <around> hooks instead.
 
 
 =method setup_form

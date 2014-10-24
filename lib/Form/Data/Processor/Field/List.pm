@@ -108,7 +108,7 @@ sub BUILD {
 
 
 # Set options builder when field is ready
-after _before_ready => sub {
+after populate_defaults => sub {
     my $self = shift;
 
     $self->set_default_value(
@@ -117,6 +117,10 @@ after _before_ready => sub {
         max_input_length => $self->max_input_length,
         uniq_input       => $self->uniq_input,
     );
+};
+
+before ready => sub {
+    my $self = shift;
 
     my $code = $self->_find_options_builders() || $self->can('build_options');
     $self->options_builder($code) if $code;
@@ -125,7 +129,7 @@ after _before_ready => sub {
 };
 
 
-after _after_reset => sub {
+after reset => sub {
     my $self = shift;
 
     # Reload options if needed after reset
