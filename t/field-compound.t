@@ -27,9 +27,9 @@ package Form::Role::Ready {
         }
     );
 
-    sub ready {
+    after ready => sub {
         shift->add_ready_cnt(1);
-    }
+    };
 }
 
 package Form::TraitFor::Text {
