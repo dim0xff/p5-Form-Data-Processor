@@ -17,7 +17,7 @@ has name => (
     is       => 'rw',
     isa      => 'Str',
     required => 1,
-    trigger  => \&_set_full_name,
+    trigger  => sub { shift->generate_full_name },
 );
 
 has type => (
@@ -58,17 +58,12 @@ has form => (
     clearer   => 'clear_form',
 );
 
-has full_name => (
-    is  => 'rw',
-    isa => 'Str',
-);
-
 has parent => (
     is        => 'rw',
     isa       => 'Form::Data::Processor::Form|Form::Data::Processor::Field',
     weak_ref  => 1,
     predicate => 'has_parent',
-    trigger   => \&_set_full_name,
+    trigger   => sub { shift->generate_full_name },
 );
 
 has value => (
@@ -145,14 +140,10 @@ sub BUILD {
     $self->_init_external_validators();
 }
 
-
 sub has_fields { return 0 }                     # By default field doesn't have subfields
 sub is_form    { return 0 }                     # Field is not form
 
-
-sub ready {
-    $_[0]->populate_defaults;
-}
+sub ready { $_[0]->populate_defaults }
 
 sub populate_defaults {
     my $self = shift;
@@ -164,7 +155,6 @@ sub populate_defaults {
         clear_empty    => $self->clear_empty
     );
 }
-
 
 sub has_result { return !$_[0]->disabled && $_[0]->has_value }
 
@@ -457,31 +447,6 @@ sub _find_external_validators {
     return $sub->( $self->parent, $self );
 }
 
-
-# Trigger to fix full field name
-sub _set_full_name {
-    my $self = shift;
-
-    my $full_name = (
-          $self->has_parent
-        ? $self->parent->is_form
-                ? ''
-                : $self->parent->full_name . '.'
-        : ''
-    ) . $self->name;
-
-    $full_name =~ s/\.$//g;
-
-    $self->full_name($full_name);
-
-    if ( $self->DOES('Form::Data::Processor::Role::Fields') ) {
-        for my $field ( $self->all_fields ) {
-            $field->_set_full_name;
-        }
-    }
-}
-
-
 # Add into actions (see add_actions) actions which are defined in parents.
 sub _build_apply_list {
     my $self = shift;
@@ -531,6 +496,9 @@ sub build_error_messages {
         wrong_value    => 'Wrong value',
     };
 }
+
+
+with 'Form::Data::Processor::Role::FullName';
 
 
 __PACKAGE__->meta->make_immutable;
@@ -622,32 +590,6 @@ on this field.
 =back
 
 Form element. It has clearer C<clear_form> and predicator C<has_form>.
-
-B<Notice:> Normally is being set by Form::Data::Processor internals.
-
-
-=attr full_name
-
-=over 4
-
-=item Type: Str
-
-=back
-
-Full field name.
-
-Full name is automatically changed when you change L</parent> or L</name>.
-
-    ...
-    has_field address.street;
-    ...
-
-    # Name is street
-    $form->field('address.street')->name;
-
-    # Full name is 'address.street'
-    $form->field('address.street')->full_name;
-    ...
 
 B<Notice:> Normally is being set by Form::Data::Processor internals.
 
