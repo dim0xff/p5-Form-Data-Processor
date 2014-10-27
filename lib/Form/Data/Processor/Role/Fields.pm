@@ -150,6 +150,7 @@ sub validate_fields {
         next if $field->disabled;
 
         $field->validate;
+
         next unless $field->has_value;
 
         for my $code ( $field->all_external_validators ) {
@@ -196,16 +197,14 @@ sub values {
     };
 }
 
-sub result {
+around result => sub {
+    my $orig = shift;
     my $self = shift;
 
     return undef if $self->has_fields_errors;
 
-    return {
-        map { $_->name => $_->_result }
-        grep { $_->has_result } $self->all_fields
-    };
-}
+    return $self->$orig(@_);
+};
 
 
 # Private methods
@@ -622,18 +621,12 @@ Do L<reset|Form::Data::Processor::Field/reset> and
 
 =over 4
 
-=item Return: \%field_result|undef
-
 =back
 
-Return C<undef> when "L<has errors|/has_fields_errors>".
+Wrapper around base class C<return> method.
 
-Return "L<result|Form::Data::Processor::Field/result> for subfields:
-
-    {
-        field_name => field_result,
-        ...
-    }
+Return C<undef> when "L<has errors|/has_fields_errors>". Or result of original
+C<result> method call.
 
 
 =method subfield

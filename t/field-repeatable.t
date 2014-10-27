@@ -418,5 +418,15 @@ package main {
         );
     };
 
+    subtest 'undef' => sub {
+        my $f = $form->field('rep_5');
+        $f->disabled(0);
+
+        $f->init_input( undef, 1 );
+        $f->validate();
+        ok( !$f->has_errors, 'field validated' );
+        is_deeply( $f->result, undef, 'field result OK' );
+    };
+
     done_testing();
 }

@@ -73,8 +73,7 @@ package Form::Field::Fruits {
             'Arguments in field vie `build_options`' => sub {
                 cmp_ok( ~~ @args, '==', 1, 'One argument' );
                 ok(
-                    ( ref $args[0] )
-                    ->isa('Form::Data::Processor::Field::List'),
+                    ( ref $args[0] )->isa('Form::Data::Processor::Field::List'),
                     'Has proper first arguments'
                 );
             }
@@ -221,7 +220,7 @@ package main {
         };
 
         my $result = {
-            photos       => [],
+            photos       => undef,
             days_of_week => [ 'Wednesday', 'Monday' ],
             year         => $now->year(),
             fruits       => ['kiwi'],
@@ -263,7 +262,7 @@ package main {
     subtest 'multiple required' => sub {
         my $data = {
             days_of_week => [undef],
-            year         => [undef],
+            year         => undef,
         };
 
         ok( !$form->process($data), 'Form validated with errors' );
@@ -287,7 +286,7 @@ package main {
         };
 
         my $result = {
-            photos       => [],
+            photos       => undef,
             days_of_week => [ 'Wednesday', 'Monday' ],
             year         => $now->year(),
             fruits       => ['kiwi'],
@@ -314,6 +313,7 @@ package main {
         $form->field('year')->set_default_value( do_not_reload => 0 );
         ok( $form->process($data), 'Form validated without errors' );
         is_deeply( $form->result, $result, 'Result is fine' );
+        diag explain $form->result;
     };
 
     subtest 'clear_empty' => sub {

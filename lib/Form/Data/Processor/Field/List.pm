@@ -160,7 +160,7 @@ around validate => sub {
 
     $self->$orig();
 
-    return if $self->has_errors || !$self->has_value;
+    return if $self->has_errors || !$self->has_value || !defined $self->value;
 
     my $values = ref $self->value ? $self->value : [ $self->value ];
 
