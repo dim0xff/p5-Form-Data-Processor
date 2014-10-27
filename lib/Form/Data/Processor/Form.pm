@@ -8,6 +8,21 @@ use namespace::autoclean;
 with 'Form::Data::Processor::Role::Errors';
 with 'Form::Data::Processor::Role::Fields';
 
+has name => (
+    is      => 'rw',
+    isa     => 'Str',
+    default => '',
+    trigger => sub { shift->generate_full_name },
+);
+
+has parent => (
+    is        => 'rw',
+    isa       => 'Form::Data::Processor::Form|Form::Data::Processor::Field',
+    weak_ref  => 1,
+    predicate => 'has_parent',
+    trigger   => sub { shift->generate_full_name },
+);
+
 has field_traits => (
     is      => 'ro',
     traits  => ['Array'],
@@ -99,6 +114,9 @@ around _update_or_create => sub {
 
 };
 
+
+with 'Form::Data::Processor::Role::FullName';
+
 __PACKAGE__->meta->make_immutable;
 
 1;
@@ -179,6 +197,19 @@ for more information.
 Array of trait names, which will be applied for every new field.
 
 
+=attr name
+
+=over 4
+
+=item Type: Str
+
+=item Default: C<''>
+
+=back
+
+Field name.
+
+
 =attr params
 
 =over 4
@@ -204,6 +235,21 @@ Also provides methods:
 =item has_params
 
 =back
+
+
+=attr parent
+
+=over 4
+
+=item Type: L<Form::Data::Processor::Field>|L<Form::Data::Processor::Form>
+
+=back
+
+Parent element (could be Form::Data::Processor::Field
+or Form::Data::Processor::Form, could be checked via C<parent-E<gt>is_form>).
+It has predicator C<has_parent>.
+
+B<Notice:> normally is being set by Form::Data::Processor internals.
 
 
 =method clear_form
