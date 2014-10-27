@@ -22,6 +22,13 @@ package Form::Field::Contains {
     has_field text     => ( type => 'Text', required => 0 );
 }
 
+package Form::Field::Repeatable4 {
+    use Form::Data::Processor::Moose;
+    extends 'Form::Data::Processor::Field::Repeatable';
+
+    has_field 'contains' => (type => '+Form::Field::Contains');
+}
+
 package Form {
     use Form::Data::Processor::Moose;
 
@@ -97,8 +104,7 @@ package Form {
     has_field 'rep_3.rep.text'           => ( type => 'Text' );
     has_field 'rep_3.text_min'           => ( type => 'Text', minlength => 10, );
 
-    has_field 'rep_4'                    => ( type => 'Repeatable' );
-    has_field 'rep_4.contains'           => ( type => '+Form::Field::Contains' );
+    has_field 'rep_4'                    => ( type => '+Form::Field::Repeatable4' );
 
     has_field 'rep_5'                    => ( type => 'Repeatable', disabled => 1, );
     has_field 'rep_5.contains'           => ( type => 'Text' );
