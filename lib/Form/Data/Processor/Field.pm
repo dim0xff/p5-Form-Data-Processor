@@ -158,13 +158,16 @@ sub populate_defaults {
 
 sub has_result { return !$_[0]->disabled && $_[0]->has_value }
 
-sub _result { return $_[0]->value }
-
 sub result {
     my $self = shift;
 
-    return $self->has_errors ? undef : $self->_result;
+    return undef if $self->has_errors;
+    return undef unless defined $self->value;
+
+    return $self->_result;
 }
+
+sub _result { return $_[0]->value }
 
 sub reset {
     my $self = shift;
@@ -1138,7 +1141,8 @@ Resetting is not possible when field is L</not_resettable>.
 
 =back
 
-If field has errors, then it returns C<undef>.
+If field has errors, then it returns C<undef>. If field value is undefined,
+then return C<undef> too.
 
 
 =method validate

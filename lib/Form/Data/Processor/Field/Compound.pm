@@ -98,7 +98,7 @@ around validate => sub {
 
     $self->$orig(@_);
 
-    return if $self->has_errors || !$self->has_value;
+    return if $self->has_errors || !$self->has_value || !defined $self->value;
 
     return $self->add_error( 'invalid', $self->value )
         if ref $self->value ne 'HASH';

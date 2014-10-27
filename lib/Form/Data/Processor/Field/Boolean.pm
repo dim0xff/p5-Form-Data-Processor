@@ -50,6 +50,13 @@ sub has_result {
     return $self->has_value;
 }
 
+sub result {
+    my $self = shift;
+
+    return undef if $self->has_errors;
+
+    return $self->_result;
+}
 
 sub _result {
     my $self = shift;

@@ -97,6 +97,15 @@ sub validated {
     return !( shift->has_errors );
 }
 
+sub result {
+    my $self = shift;
+
+    return {
+        map { $_->name => $_->result }
+        grep { $_->has_result } $self->all_fields
+    };
+}
+
 # Add traits into fields
 # via 'around' hook Form::Data::Processor::Role::Fields/_update_or_create
 around _update_or_create => sub {
@@ -307,6 +316,22 @@ Method which normally should be called after all fields are L<Form::Data::Proces
 By default it does nothing, but you can use it when extending form.
 
 B<Note>: don't overwrite this method! Use C<before>, C<after>, <around> hooks instead.
+
+
+=method result
+
+=over 4
+
+=item Return: \%field_result|undef
+
+=back
+
+Return "L<result|Form::Data::Processor::Field/result> for subfields:
+
+    {
+        field_name => field_result,
+        ...
+    }
 
 
 =method setup_form
