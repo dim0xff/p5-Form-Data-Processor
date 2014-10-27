@@ -199,8 +199,16 @@ package Form {
         shift->field_traits_check(0);
     };
 
-    sub ready {
+    after ready => sub {
         shift->add_ready_cnt(1);
+    };
+
+    sub validate_field_1 {
+        my $self  = shift;
+        my $field = shift;
+
+        $field->add_error('Field 1 lenght validation')
+            unless length( $field->value );
     }
 
     sub validate_field_2 {
