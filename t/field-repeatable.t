@@ -22,12 +22,20 @@ package Form::Field::Contains {
     has_field text     => ( type => 'Text', required => 0 );
 }
 
+package Form::Field::Repeatable1 {
+    use Form::Data::Processor::Moose;
+    extends 'Form::Data::Processor::Field::Repeatable';
+
+    has_field text => ( type => 'Text', required => 1, );
+}
+
 package Form::Field::Repeatable4 {
     use Form::Data::Processor::Moose;
     extends 'Form::Data::Processor::Field::Repeatable';
 
-    has_field 'contains' => (type => '+Form::Field::Contains');
+    has_field 'contains' => ( type => '+Form::Field::Contains' );
 }
+
 
 package Form {
     use Form::Data::Processor::Moose;
@@ -70,12 +78,11 @@ package Form {
     #       },
     #       ...
     #   ],
-    #   rep_5 => [ 'Text', ... ], 
+    #   rep_5 => [ 'Text', ... ],
     # }
 
 #<<<
-    has_field 'rep_1'                    => ( type => 'Repeatable', prebuild_subfields => 10, max_input_length => 10);
-    has_field 'rep_1.text'               => ( type => 'Text', required => 1, );
+    has_field 'rep_1'                    => ( type => '+Form::Field::Repeatable1', prebuild_subfields => 10, max_input_length => 10);
 
     has_field 'rep_2'                    => (
         type => 'Repeatable',
@@ -243,7 +250,11 @@ package main {
     $form->process( { rep_1 => [ ( { text => 'Text' } ) x 5 ] } );
     $form->process( { rep_1 => [ ( { text => 'Text' } ) x 2 ] } );
 
-    is( scalar( @{ $form->result->{rep_1} } ), 2, 'Only two fields returned' );
+    is_deeply(
+        $form->result->{rep_1},
+        [ { text => 'Text' }, { text => 'Text' }, ],
+        'Only two fields returned'
+    );
 
     my $data = {
         rep_1 => [
