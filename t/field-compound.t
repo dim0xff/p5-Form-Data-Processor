@@ -276,6 +276,7 @@ package main {
                         text     => 'text',
                         compound => {
                             text_max => 'try',
+                            text => '',
                         },
                     }
                 }
