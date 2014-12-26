@@ -19,7 +19,7 @@ sub BUILD {
     my $self = shift;
 
     $self->set_error_message(
-        integer_invalid => 'Field value is not a valid integer' );
+        integer_invalid => 'Field value is not a valid integer number' );
 }
 
 __PACKAGE__->meta->make_immutable;

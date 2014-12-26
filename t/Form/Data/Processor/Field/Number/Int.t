@@ -38,8 +38,8 @@ package main {
     is_deeply(
         $form->dump_errors,
         {
-            min => ['Field value is not a valid integer'],
-            max => ['Field value is not a valid integer'],
+            min => ['Field value is not a valid integer number'],
+            max => ['Field value is not a valid integer number'],
         },
         'OK, right error messages'
     );

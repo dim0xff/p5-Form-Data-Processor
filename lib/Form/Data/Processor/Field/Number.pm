@@ -92,8 +92,6 @@ sub _result {
 }
 
 
-# Apply actions
-#
 # $_[0] - self
 # $_[1] - value
 
