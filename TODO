@@ -9,9 +9,7 @@ Add fields:
 
         1.1 [DONE] String
             1.1.1 [DONE] Number
-                1.1.1.1 Integer
-                    Must be a number without decimal part
-
+                1.1.1.1 [DONE] Integer
                 1.1.1.2 Float
                     Must be a number with decimal part
                     Also add `precision` attribute
