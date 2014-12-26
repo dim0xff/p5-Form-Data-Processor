@@ -5,7 +5,7 @@ package Form::Data::Processor::Field::Number;
 use Form::Data::Processor::Moose;
 use namespace::autoclean;
 
-extends 'Form::Data::Processor::Field::Text';
+extends 'Form::Data::Processor::Field';
 
 use Scalar::Util ('looks_like_number');
 
