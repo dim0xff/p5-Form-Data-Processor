@@ -1,6 +1,39 @@
 Tests for Form::Data::Processor::Field::clear_empty
 Tests for Form::Data::Processor::Field::Repeatable
 
-Add FDP::Field::String
-
 Form::Data::Processor::Role::Fields/init_input remove 'confess'
+
+Add fields:
+    1. Text
+        Make `trim` optional
+
+        1.1 String
+            Like Text, but oneliner
+
+            1.1.1 Number
+                Number with `min`, `max`, 'positive', 'negative', 'allow_zero' attributes
+                Should inflate ("numify") input from string to number.
+
+                1.1.1.1 Integer
+                    Must be a number without decimal part
+
+                1.1.1.2 Float
+                    Must be a number with decimal part
+                    Also add `precision` attribute
+
+            1.1.2 Email
+
+            1.1.3 DateTime
+                Datetime in ISO-8601 format
+                With `min`, `max` attributes
+
+                1.1.3.1 Date
+
+                1.1.3.2 Time
+
+    2. Boolean
+        Add true and false values.
+        Example:
+            'YES' is true
+            'NO'  is false
+            Otherwise, field doesn't have value
