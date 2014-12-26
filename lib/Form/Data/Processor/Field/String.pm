@@ -9,9 +9,7 @@ extends 'Form::Data::Processor::Field::Text';
 
 apply [
     {
-        check => sub {
-            return !( ( $_[0] // '' ) =~ /[\f\n\r]/ );
-        },
+        check   => sub { return !( $_[0] =~ /[\f\n\r]/ ) },
         message => 'string_invalid',
     }
 ];
