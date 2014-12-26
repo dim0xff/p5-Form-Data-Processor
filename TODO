@@ -8,10 +8,7 @@ Add fields:
         Make `trim` optional
 
         1.1 [DONE] String
-            1.1.1 Number
-                Number with `min`, `max`, 'positive', 'negative', 'allow_zero' attributes
-                Should inflate ("numify") input from string to number.
-
+            1.1.1 [DONE] Number
                 1.1.1.1 Integer
                     Must be a number without decimal part
 
