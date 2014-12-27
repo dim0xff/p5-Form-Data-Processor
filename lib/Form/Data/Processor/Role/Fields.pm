@@ -108,8 +108,8 @@ sub reset_fields {
     my $self = shift;
 
     for my $field ( $self->all_fields ) {
-        $field->reset       if !$field->not_resettable;
-        $field->clear_value if $field->has_value;
+        $field->reset;
+        $field->clear_value;
     }
 }
 

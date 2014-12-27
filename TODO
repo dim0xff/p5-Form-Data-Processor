@@ -11,8 +11,7 @@ Add fields:
             1.1.1 [DONE] Number
                 1.1.1.1 [DONE] Integer
                 1.1.1.2 [DONE] Float
-
-            1.1.2 Email
+            1.1.2 [DONE] Email
 
             1.1.3 DateTime
                 Datetime in ISO-8601 format
