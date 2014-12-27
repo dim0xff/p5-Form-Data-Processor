@@ -92,4 +92,16 @@ Field sets own error messages:
 
 Validate parameters for Email::Valid could be provided via this attribute.
 
+
+=method reason
+
+=over 4
+
+=item Return: Str | undef
+
+=back
+
+On success validation returns C<undef>. When validation is failed, this method
+returns L<Email::Valid/details> about actual error.
+
 =cut
