@@ -84,10 +84,8 @@ package main {
         $field->validate();
         is( $field->has_errors, 0, 'Validated' );
 
-        is( $field->result, 200, "Value is numified" );
-
-        $field->numify(0);
-        is( $field->result, "2e2", "Value is not numified" );
+        is( $field->result, 200,   "Result is numified" );
+        is( $field->value,  "2e2", "Value is not numified" );
     };
 
     done_testing();

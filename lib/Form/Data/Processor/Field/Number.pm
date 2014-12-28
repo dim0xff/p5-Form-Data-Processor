@@ -9,13 +9,6 @@ extends 'Form::Data::Processor::Field';
 
 use Scalar::Util ('looks_like_number');
 
-
-has numify => (
-    is      => 'rw',
-    isa     => 'Bool',
-    default => 1,
-);
-
 has min => (
     is        => 'rw',
     isa       => 'Num|Undef',
@@ -62,7 +55,6 @@ after populate_defaults => sub {
     my $self = shift;
 
     $self->set_default_value(
-        numify     => $self->numify,
         min        => $self->min,
         max        => $self->max,
         allow_zero => $self->allow_zero,
@@ -85,11 +77,7 @@ around validate => sub {
     return $self->add_error('min')  unless $self->validate_min($value);
 };
 
-sub _result {
-    my $self = shift;
-
-    return $self->numify ? ( $self->value + 0 ) : $self->value;
-}
+sub _result { return ( 0 + shift->value ) }
 
 
 # $_[0] - self
@@ -189,34 +177,6 @@ Also provided clearer C<clear_max> and predicator C<has_max>.
 When defined and field value is less than C<min>, then error C<min> raised.
 
 Also provided clearer C<clear_min> and predicator C<has_min>.
-
-
-=attr numify
-
-=over 4
-
-=item Type: Int
-
-=item Default: true
-
-=back
-
-Indicate if L<Form::Data::Processor::Field/result> will be a number whatever
-value type is.
-
-If C<false>, then field value will be returned as is. So, be careful
-to validate values, which looks like number:
-
-    $field = Form::Data::Processor::Field::Number->new(name => 'TheField');
-
-    $field->init_input("2e2");
-    $field->validate();
-    is($field->has_errors, 0, 'Validated'); # true
-
-    is($field->result, 200, "Value is numified"); # true
-
-    $field->numify(0);
-    is($field->result, "2e2", "Value is not numified"); # true
 
 
 =method validate_max
