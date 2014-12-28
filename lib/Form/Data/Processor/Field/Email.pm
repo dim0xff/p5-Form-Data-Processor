@@ -24,22 +24,17 @@ has reason => (
     clearer  => '_clear_reason',
 );
 
+has _result => (
+    is       => 'rw',
+    isa      => 'Str',
+    init_arg => undef,
+    writer   => '_set_result',
+    clearer  => '_clear_result',
+);
+
 apply [
     {
-        check => sub {
-            local $Email::Valid::Details;
-
-            my $checked = Email::Valid->address(
-                %{ $_[1]->email_valid_params }, #
-                -address => $_[0],              #
-            );
-
-            return $_[1]->set_value($checked) if $checked;
-
-            $_[1]->_set_reason($Email::Valid::Details);
-
-            return 0;
-        },
+        check   => sub { return $_[1]->validate_email( $_[0] ) },
         message => 'email_invalid',
     }
 ];
@@ -51,7 +46,31 @@ sub BUILD {
         email_invalid => 'Field value is not a valid email' );
 }
 
-before reset => sub { $_[0]->_clear_reason };
+before reset => sub {
+    $_[0]->_clear_reason;
+    $_[0]->_clear_result;
+};
+
+
+# Apply actions
+#
+# $_[0] - self
+# $_[1] - value
+
+sub validate_email {
+    local $Email::Valid::Details;
+
+    my $checked = Email::Valid->address(
+        %{ $_[0]->email_valid_params },         #
+        -address => $_[1],                      #
+    );
+
+    return $_[0]->_set_result($checked) if $checked;
+
+    $_[0]->_set_reason($Email::Valid::Details);
+
+    return 0;
+}
 
 __PACKAGE__->meta->make_immutable;
 
@@ -103,5 +122,18 @@ Validate parameters for Email::Valid could be provided via this attribute.
 
 On success validation returns C<undef>. When validation is failed, this method
 returns L<Email::Valid/details> about actual error.
+
+
+=method validate_email
+
+=over 4
+
+=item Arguments: $value
+
+=item Return: bool
+
+=back
+
+Check if value is valid email address.
 
 =cut

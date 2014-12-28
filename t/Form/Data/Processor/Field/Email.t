@@ -58,7 +58,7 @@ package main {
         $form->process(
             {
                 email    => "email\@test.domain\f",
-                email_mx => "\tdim0xff\@gmail.com\n\r",
+                email_mx => "\tdim0xff \@ gmail . com\n\r",
             },
         ),
         'Form validated without errors'
@@ -71,6 +71,12 @@ package main {
             email_mx => 'dim0xff@gmail.com',
         },
         'OK, form result'
+    );
+
+    is(
+        $form->field('email_mx')->value,
+        'dim0xff @ gmail . com',
+        'email_mx, value'
     );
 
     is( $form->field('email')->reason,    undef, 'email, reason empty' );
