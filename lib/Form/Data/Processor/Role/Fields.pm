@@ -1,6 +1,6 @@
 package Form::Data::Processor::Role::Fields;
 
-# ABSTRACT: role for forms and fields.
+# ABSTRACT: role provides subfields
 
 use Moose::Role;
 use namespace::autoclean;
@@ -9,6 +9,7 @@ use Class::Load qw(load_optional_class);
 use Data::Clone ();
 
 requires 'form', 'has_errors', 'clear_errors', 'has_errors';
+
 
 #
 # ATTRIBUTES
@@ -108,14 +109,14 @@ sub reset_fields {
     my $self = shift;
 
     for my $field ( $self->all_fields ) {
-        $field->reset       if !$field->not_resettable;
-        $field->clear_value if $field->has_value;
+        $field->reset;
+        $field->clear_value;
     }
 }
 
 
 after clear_errors => sub {
-    shift->clear_fields_errors();
+    shift->clear_fields_errors;
 };
 
 
@@ -176,6 +177,10 @@ sub error_fields {
 sub all_error_fields {
     my $self = shift;
 
+    # Use 'num_errors' here instead of 'has_errors'
+    #
+    # Field (parent) 'has_errors' is TRUE when children have errors.
+    # But it doesn't mean than field (parent) has own errors.
     return (
         grep { $_->num_errors } map {
             (
@@ -207,8 +212,6 @@ around result => sub {
 };
 
 
-# Private methods
-
 # Fields builder
 sub _build_fields {
     my $self       = shift;
@@ -235,7 +238,7 @@ sub _build_fields {
         }
     }
 
-    $self->_process_field_array( $field_list, 0 ) if @{$field_list};
+    $self->_process_field_array($field_list) if @{$field_list};
 }
 
 
@@ -272,7 +275,7 @@ sub _make_field {
     my $name = $field_attr->{name};
 
 
-    # +field_name means that some field attributes should be overwritten
+    # +field_name means that some field attributes should be overloaded
     my $do_update;
     if ( $name =~ /^\+(.*)/ ) {
         $field_attr->{name} = $name = $1;
@@ -350,9 +353,6 @@ sub _find_parent {
         $parent = $self;
     }
 
-    $field_attr->{full_name}
-        = ( $parent ? $parent->full_name . '.' : '' ) . $field_attr->{name};
-
     return $parent;
 }
 
@@ -360,7 +360,6 @@ sub _find_parent {
 sub _update_or_create {
     my ( $self, $parent, $field_attr, $class, $do_update ) = @_;
 
-    $parent ||= $self->form;
     $field_attr->{parent} = $parent;
     $field_attr->{form} = $self->form if $self->form;
 
@@ -374,10 +373,9 @@ sub _update_or_create {
 
             for my $key ( keys %{$field_attr} ) {
                 next
-                    if $key eq 'name'           # These
-                    || $key eq 'form'           # field
-                    || $key eq 'parent'         # attributes
-                    || $key eq 'full_name'      # can not be
+                    if $key eq 'name'           # These fields
+                    || $key eq 'form'           # attributes
+                    || $key eq 'parent'         # can not be
                     || $key eq 'type';          # changed
 
                 $field->$key( $field_attr->{$key} ) if $field->can($key);
@@ -398,6 +396,7 @@ sub _update_or_create {
 
 sub _field_index {
     my ( $self, $name ) = @_;
+
     my $index = 0;
     for my $field ( $self->all_fields ) {
         return $index if $field->name eq $name;

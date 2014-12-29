@@ -150,7 +150,7 @@ package main {
             addresses => [
                 map {
                     {
-                        type => ( rand(2) ? 'BILLING' : 'SHIPPING' ),
+                        type => ( int( rand(2) ) ? 'BILLING' : 'SHIPPING' ),
                         address => {
                             zip     => '666999',
                             addr1   => 'The address #1 ',

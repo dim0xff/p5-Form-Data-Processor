@@ -5,7 +5,6 @@ package Form::Data::Processor::Field;
 use Form::Data::Processor::Moose;
 use namespace::autoclean;
 
-
 with 'MooseX::Traits', 'Form::Data::Processor::Role::Errors';
 
 
@@ -21,9 +20,9 @@ has name => (
 );
 
 has type => (
-    is      => 'rw',
-    isa     => 'Str',
-    default => sub { ref shift }
+    is       => 'rw',
+    isa      => 'Str',
+    required => 1,
 );
 
 has disabled => (
@@ -126,6 +125,7 @@ has _external_validators => (
     },
 );
 
+
 #
 # METHODS
 #
@@ -137,7 +137,7 @@ sub BUILD {
     $self->add_actions( $field_attr->{apply} )
         if ref $field_attr->{apply} eq 'ARRAY';
 
-    $self->_init_external_validators();
+    $self->_init_external_validators;
 }
 
 sub has_fields { return 0 }                     # By default field doesn't have subfields
@@ -149,10 +149,10 @@ sub populate_defaults {
     my $self = shift;
 
     $self->set_default_value(
-        required       => $self->required,
+        clear_empty    => $self->clear_empty,
         disabled       => $self->disabled,
         not_resettable => $self->not_resettable,
-        clear_empty    => $self->clear_empty
+        required       => $self->required,
     );
 }
 
@@ -198,7 +198,7 @@ sub init_input {
 
 
 sub is_empty {
-    return 0 if @_ == 1 && length( $_[0]->value // '' ) > 0;
+    return 0 if @_ == 1 && length( $_[0]->value // '' );
     return 0 if @_ == 2 && defined( $_[1] ) && length( $_[1] );
     return 1;
 }
@@ -209,8 +209,8 @@ sub validate {
 
     return if $self->disabled;
 
-    return $self->add_error('required')
-        if $self->required && !$self->validate_required();
+    return $self->add_error('required', $self->value)
+        if $self->required && !$self->validate_required;
 
     return unless $self->has_value && defined $self->value;
 
@@ -241,7 +241,7 @@ sub clone {
         )
     );
 
-    if ( $self->DOES('Form::Data::Processor::Role::Fields') ) {
+    if ( $self->has_fields ) {
         $clone->clear_fields;
         $clone->clear_index;
 
@@ -285,7 +285,7 @@ sub add_actions {
                 my $type = $action->{type};
                 $tobj
                     = Moose::Util::TypeConstraints::find_type_constraint($type)
-                    or confess "Cannot find type constraint $type";
+                    or confess "Cannot find type constraint '$type'";
             }
 
             $v_sub = sub {
@@ -296,19 +296,17 @@ sub add_actions {
 
                 my $error_message;
 
-
                 if ( $tobj->has_coercion && $tobj->validate($value) ) {
                     eval {
                         $new_value = $tobj->coerce($value);
                         $self->set_value($new_value);
-                    };
-
-                    if ($@) {
+                        1;
+                    } or do {
                         $error_message
                             = $tobj->has_message
                             ? $tobj->message->($value)
                             : 'error_occurred';
-                    }
+                    };
                 }
 
                 if ( $error_message ||= $tobj->validate($new_value) ) {
@@ -365,20 +363,19 @@ sub add_actions {
             $v_sub = sub {
                 my $self = shift;
 
-                my $new_value
-                    = eval { $action->{transform}->( $self->value, $self ) };
-
-                if ($@) {
-                    $self->add_error( $error_message, $self->value );
-                }
-                else {
+                eval {
+                    my $new_value
+                        = $action->{transform}->( $self->value, $self );
                     $self->set_value($new_value);
-                }
+                    1;
+                } or do {
+                    $self->add_error( $error_message, $self->value );
+                };
             };
         }
 
         # Transformation on input initiation
-        if ( ref $action->{input_transform} eq 'CODE' ) {
+        elsif ( ref $action->{input_transform} eq 'CODE' ) {
             $i_sub = sub {
                 my $self      = shift;
                 my $value_ref = shift;
@@ -406,7 +403,7 @@ sub _init_external_validators {
 
     $self->clear_external_validators;
 
-    $self->add_external_validator( $self->_find_external_validators() );
+    $self->add_external_validator( $self->_find_external_validators );
 }
 
 sub _find_external_validators {
@@ -522,6 +519,7 @@ __END__
 
     package My::Form::Field;
     use Form::Data::Processor::Moose;
+
     extends 'Form::Data::Processor::Field';
     with 'My::Form::TraitFor::Field::Ref';
 
@@ -542,16 +540,16 @@ __END__
 This is a base class for every field, and it provides basic options and methods
 to operate with field: initialization and validation.
 
-If you would like to make your own field class, you can done it
-by extending current class.
+If you would like to make your own field class, you can do it by extending
+current class.
 
-Every field, which is based on this class, does L<MooseX::Traits>
-and L<Form::Data::Processor::Role::Errors>.
+Every field, which is based on this class, does L<MooseX::Traits>,
+L<Form::Data::Processor::Role::Errors>
+and L<Form::Data::Processor::Role::FullName>.
 
 Field could be validated in different ways: L<actions|/add_actions>,
-L<internal validation|/validate> or "L<external validation|/EXTERNAL VALIDATION>".
+L<internal validation|/validate> or L<external validation|/EXTERNAL VALIDATION>.
 These ways could be mixed.
-
 
 
 =attr clear_empty
@@ -564,8 +562,7 @@ These ways could be mixed.
 
 =back
 
-When C<true>, then field input value will be cleared when it is empty
-(is being checked via L</is_empty>`).
+Indicate if field input value will be cleared when it is L<empty|/is_empty>.
 
 
 =attr disabled
@@ -594,7 +591,7 @@ on this field.
 
 Form element. It has clearer C<clear_form> and predicator C<has_form>.
 
-B<Notice:> Normally is being set by Form::Data::Processor internals.
+B<Notice:> normally is being set by Form::Data::Processor internals.
 
 
 =attr name
@@ -604,6 +601,8 @@ B<Notice:> Normally is being set by Form::Data::Processor internals.
 =item Type: Str
 
 =item Required
+
+=item Trigger: L<Form::Data::Processor::Role::FullName/generate_full_name>
 
 =back
 
@@ -621,11 +620,11 @@ Field name.
 =back
 
 Indicate if field will not be reseted to default values when L</reset>
-is called. Look L</populate_defaults> for more information about
+will being called. Look L</populate_defaults> for more information about
 "default values".
 
 Probably, you can a little bit speedup
-L<clearing|Form::Data::Processor::Form/clear_form> form, when field
+L<clearing|Form::Data::Processor::Form/clear_form> form, when complex field
 is not resettable.
 
 
@@ -635,10 +634,12 @@ is not resettable.
 
 =item Type: L<Form::Data::Processor::Field>|L<Form::Data::Processor::Form>
 
+=item Trigger: L<Form::Data::Processor::Role::FullName/generate_full_name>
+
 =back
 
-Parent element (could be Form::Data::Processor::Field
-or Form::Data::Processor::Form, could be checked via C<parent-E<gt>is_form>).
+Parent element (could be L<Form::Data::Processor::Field>
+or L<Form::Data::Processor::Form>, could be checked via C<parent-E<gt>is_form>).
 It has predicator C<has_parent>.
 
 B<Notice:> normally is being set by Form::Data::Processor internals.
@@ -666,30 +667,26 @@ validation will fail.
 
 =item Type: Str
 
-=item Default: Text
+=item Required
 
 =back
 
-Field type.
+Field type. L<Look|SEE ALSO> at available fields list for more info.
 
-Has two notations: short and long. Long notation must be started from '+'.
-Example:
+Has two notations: short and long. Long notation must be started from C<+>.
 
-    ...
-    has_field 'field_short' ( type => 'Short::Type');
-
-    has_field 'field_long' ( type => '+My::Form::Field::Long::Type');
-    ...
+    has_field 'with_short_notation' ( type => 'Short::Type' );
+    has_field 'with_long_notation'  ( type => '+My::Form::Field::Long::Type' );
 
 When short notation is used, then Form::Data::Processor tries to find
 extension package (C<Form::Data::ProcessorX::Field::>),
 internal package (C<Form::Data::Processor::Field::>),
-or package with provided field name space (which is provided by
-L<Form::Data::Processor::Form/field_name_space>).
+or package with provided field name space
+(via L<Form::Data::Processor::Form/field_name_space>).
 
 When long notation is used, then Form::Data::Processor tries to find package,
 which corresponds to package name provided in field L</type>
-(without start '+').
+(without start C<+>).
 
 
 =attr value
@@ -791,21 +788,21 @@ For example, you want to make text upper case:
         ],
     );
 
-You have to know, that value inside input_transform subroutine is still B<NOT>
-validated. So you probably have to check it before transform. Also there are
-B<no error raised> if any error occurs while subroutine was executed. Actually
-execution is performed inside C<eval> block, so you could try to catch C<$@>
-after L</init_input>.
+You have to know, that value inside C<input_transform> subroutine is still
+B<NOT> validated. So you probably have to check it before transform. Also
+there are B<no error raised> if any error occurs while subroutine was called.
+Actually subroutine is performed inside C<eval> block, so you could try to catch
+C<$@> after L</init_input>.
 
 
 =head4 Validation level action
 
 These actions will be applied for defined field values B<before>
-"L<external validation|/EXTERNAL VALIDATION>".
+L<external validation|/EXTERNAL VALIDATION>.
 
 For each validation action could be provided custom error message. Message
 could be provided via C<message> key. If it is not provided, then default error
-message will be used.
+message will be used. 
 
 Validation level actions also provide next methods:
 
@@ -853,7 +850,8 @@ value.
         => message { "This number ($_) is not greater than 10" };
 
     has_field 'text_gt' => ( apply=> [ 'GreaterThan10' ] );
-    # or
+
+    # or with specified for field error message
     has_field 'text_gt' => (
         apply => [
             {
@@ -908,7 +906,7 @@ Default error message is C<not_match>.
 
 =item 2.3 ArrayRef
 
-Array should contain allowed value.
+Array should contain allowed values.
 If field value is not equal any of provided values then validation is
 unsuccessful.
 
@@ -989,7 +987,7 @@ Cloned fields have proper L</parent> reference. If field has subfields, then
 subfields will be cloned too.
 
 When you need to set custom attributes for clone, then it could be passed
-through C<%replacement>. But it has B<limitation>: replacement will be passed
+via C<%replacement>. But it has B<limitation>: replacement will be passed
 to subfields too (so replacement could be provided only for attributes which
 exists in field and in its subfields and so on).
 
@@ -1005,7 +1003,7 @@ exists in field and in its subfields and so on).
 
 =over 4
 
-=item Return: false
+=item Return: Bool
 
 =back
 
@@ -1016,13 +1014,12 @@ Indicate if field can contains fields. By default field doesn't have subfields.
 
 =over 4
 
-=item Return: 0 | 1
+=item Return: Bool
 
 =back
 
-If field has result, then return C<1> otherwise return C<0>.
-
-Field has result when it is not L</disabled> and "L<has value|/value>"
+Indicate if field has result. Field has result when it is not L</disabled>
+and L<has value|/value>.
 
 
 =method init_input
@@ -1039,10 +1036,10 @@ Initialize fields value with user input.
 
 When field is L</disabled>, or when C<$posted> is C<false> and C<$value> is not
 defined, then it does nothing. Otherwise fields value will be set to C<$value>, when
-"L<not empty|/is_empty>".
+value is L<not empty|/is_empty> and field allows L<empty values|/clear_empty>.
 
-Also apply "L<init input actions|/Input initialization level action>" before
-L<empty|/is_empty> checking.
+Also L<input initialization actions|/Input initialization level action> will be applied
+before L<empty|/is_empty> checking.
 
 
 =method is_empty
@@ -1051,25 +1048,24 @@ L<empty|/is_empty> checking.
 
 =item Arguments: $value?
 
-=item Return: 0 | 1
+=item Return: Bool
 
 =back
 
-Returns C<0> when C<$value> is not empty (defined and length is positive).
-Otherwise returns C<1>.
+Indicate if C<$value> is not empty (defined and length is positive).
 
-When C<$value> is not provided, then check current field L</value>
+If C<$value> is omitted, then check current field L</value>.
 
 
 =method is_form
 
 =over 4
 
-=item Return: 0
+=item Return: false
 
 =back
 
-Indicate if it is not a form. Useful when check if parent is form or field.
+Indicate if it is not a form. Useful when check if L</parent> is form or field.
 
 
 =method populate_defaults
@@ -1099,9 +1095,9 @@ Also provide next methods:
 
 =over 1
 
-=item set_default_value( attr => 'value' )
+=item set_default_value( attr => value )
 
-=item get_default_value('attr')
+=item get_default_value(attr)
 
 =item all_default_values
 
@@ -1124,7 +1120,7 @@ for L</parent> are ready.
 
 By default it does nothing, but you can use it when extend fields.
 
-B<Note>: don't overwrite this method! Use C<before>, C<after>, <around> hooks instead.
+B<Notice>: don't overload this method! Use C<before>, C<after>, C<around> hooks instead.
 
 
 =method reset
@@ -1137,7 +1133,7 @@ Resetting is not possible when field is L</not_resettable>.
 
 =over 4
 
-=item Return: result field value or undef
+=item Return: result field value | undef
 
 =back
 
@@ -1155,11 +1151,11 @@ Validating contains next steps:
 
 =item 1. Check L</disabled>
 
-Disabled fields are not being validated and validation stops if field disabled
+Disabled fields are not being validated and validation stops if field is disabled
 
 =item 2. Check L</required>
 
-If field is required and "L<doesn't have value|/validate_required>" then field
+If field is required and L<doesn't have value|/validate_required> then field
 validation stops with C<required> error.
 
 =item 3. Apply validation L<actions|/add_actions>
@@ -1171,13 +1167,13 @@ validation stops with C<required> error.
 
 =over 4
 
-=item Return: bool
+=item Return: Bool
 
 =back
 
 When field is L</required> check if field has defined value.
 
-Return C<1> on success and C<0> when fail.
+Return C<true> on success and C<false> when fail.
 
 
 =head1 EXTERNAL VALIDATION

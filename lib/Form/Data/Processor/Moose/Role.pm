@@ -10,16 +10,16 @@ Moose::Exporter->setup_import_methods(
     with_meta      => [ 'has_field', 'apply' ],
     also           => 'Moose::Role',
     role_metaroles => {
-        role => ['Form::Data::Processor::Meta::Role']
+        role => ['Form::Data::Processor::Meta::Role'],
     },
 );
 
 sub has_field {
     my ( $meta, $name, %options ) = @_;
 
-    my $names = ( ref($name) eq 'ARRAY' ) ? $name : [ ($name) ];
+    my $names = ( ref($name) eq 'ARRAY' ) ? $name : [$name];
 
-    $meta->add_to_field_list( { name => $_, %options } ) for @$names;
+    $meta->add_to_field_list( { name => $_, %options } ) for @{$names};
 }
 
 sub apply {
