@@ -50,6 +50,12 @@ has required => (
     default => 0,
 );
 
+has force_validation_actions => (
+    is      => 'rw',
+    isa     => 'Bool',
+    default => 1,
+);
+
 has form => (
     is        => 'rw',
     isa       => 'Form::Data::Processor::Form',
@@ -149,10 +155,11 @@ sub populate_defaults {
     my $self = shift;
 
     $self->set_default_value(
-        required       => $self->required,
-        disabled       => $self->disabled,
-        not_resettable => $self->not_resettable,
-        clear_empty    => $self->clear_empty
+        required                 => $self->required,
+        disabled                 => $self->disabled,
+        not_resettable           => $self->not_resettable,
+        clear_empty              => $self->clear_empty,
+        force_validation_actions => $self->force_validation_actions,
     );
 }
 
@@ -215,7 +222,10 @@ sub validate {
     # Don't do actions validation for undefined value
     return unless defined $self->value;
 
+    my $force = $self->force_validation_actions;
     for my $sub ( $self->all_validate_actions ) {
+        last if !$force && $self->has_errors;
+
         $sub->($self);
     }
 }
@@ -576,6 +586,20 @@ Indicate if field is disabled.
 
 When field is disabled, then there are no any validation or input initialization
 on this field.
+
+
+=attr force_validation_actions
+
+=over 4
+
+=item Type: Bool
+
+=item Default: true
+
+=back
+
+Indicate if all validation actions should be performed.
+Otherwise, actions validation will be stopped on first error.
 
 
 =attr form

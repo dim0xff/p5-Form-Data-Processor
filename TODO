@@ -2,4 +2,3 @@ Tests for Form::Data::Processor::Field::clear_empty
 Tests for Form::Data::Processor::Field::Repeatable
 
 Form::Data::Processor::Role::Fields/init_input remove 'confess'
-Add return_on_first_error (or similar) for actions to skip further actions if error occurred

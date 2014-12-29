@@ -1,16 +1,8 @@
 use strict;
 use warnings;
 
-use utf8;
-
 use Test::More;
 use Test::Exception;
-
-use FindBin;
-use lib ( "$FindBin::Bin/lib", "$FindBin::Bin/../lib" );
-
-use Data::Dumper;
-use Time::HiRes qw(gettimeofday tv_interval);
 
 use Moose::Util::TypeConstraints;
 
@@ -300,32 +292,62 @@ package main {
     );
 
 
-    ok(
-        !$form->process(
-            {
-                field_1 => 'field 1',
-                field_2 => '1',
-                field_3 => '2',
-                field_4 => '3',
-            }
-        ),
-        'Form validated with errors'
-    );
+    subtest 'force_validation_actions' => sub {
+        ok(
+            !$form->process(
+                {
+                    field_1 => 'field 1',
+                    field_2 => '1',
+                    field_3 => '2',
+                    field_4 => '3',
+                }
+            ),
+            'Form validated with errors'
+        );
 
-    is_deeply(
-        $form->dump_errors,
-        {
-            field_2 => [
-                'Number is too small',
-                'This number (1) is not greater than 10'
-            ],
-            field_3 => [ 'Number is too small', 'Value does not match', ],
-            field_4 => [
-                'field_4 is not pass GreaterThan10', 'Value is not allowed',
-            ],
-        },
-        'OK, returned proper error messages '
-    );
+        is_deeply(
+            $form->dump_errors,
+            {
+                field_2 => [
+                    'Number is too small',
+                    'This number (1) is not greater than 10'
+                ],
+                field_3 => [ 'Number is too small', 'Value does not match', ],
+                field_4 => [
+                    'field_4 is not pass GreaterThan10',
+                    'Value is not allowed',
+                ],
+            },
+            'OK, returned proper error messages (force_validation_actions => 1)'
+        );
+
+
+        $_->set_default_value( force_validation_actions => 0 )
+            for $form->all_fields;
+        ok(
+            !$form->process(
+                {
+                    field_1 => 'field 1',
+                    field_2 => '1',
+                    field_3 => '2',
+                    field_4 => '3',
+                }
+            ),
+            'Form validated with errors'
+        );
+
+        is_deeply(
+            $form->dump_errors,
+            {
+                field_2 => [ 'Number is too small', ],
+                field_3 => [ 'Number is too small', ],
+                field_4 => [ 'field_4 is not pass GreaterThan10', ],
+            },
+            'OK, returned proper error messages (force_validation_actions => 0)'
+        );
+        $_->set_default_value( force_validation_actions => 1 )
+            for $form->all_fields;
+    };
 
     ok(
         !$form->process(
