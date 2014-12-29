@@ -341,8 +341,9 @@ value).
 
 =back
 
-By default for List field with L<options builder|/options_builder> L</options>
-are being rebuilt every time, when this field is L<Form::Data::Processor::Field/ready>.
+By default (for List field with L<options builder|/options_builder>)
+L</options> are being rebuilt every time, when this field is
+being L<reseted|Form::Data::Processor::Field/reset>.
 
 If you don't want this rebuilding set C<do_not_reload> to C<true>.
 
