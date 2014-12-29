@@ -2,8 +2,6 @@ Tests for Form::Data::Processor::Field::clear_empty
 Tests for Form::Data::Processor::Field::Repeatable
 Tests for actions
 
-Add FDP::Field::String
-
 Form::Data::Processor::Role::Fields/init_input remove 'confess'
 
 POD: add info for read only attributes

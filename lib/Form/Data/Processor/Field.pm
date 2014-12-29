@@ -49,6 +49,12 @@ has required => (
     default => 0,
 );
 
+has force_validation_actions => (
+    is      => 'rw',
+    isa     => 'Bool',
+    default => 1,
+);
+
 has form => (
     is        => 'rw',
     isa       => 'Form::Data::Processor::Form',
@@ -149,10 +155,11 @@ sub populate_defaults {
     my $self = shift;
 
     $self->set_default_value(
-        clear_empty    => $self->clear_empty,
-        disabled       => $self->disabled,
-        not_resettable => $self->not_resettable,
-        required       => $self->required,
+        clear_empty              => $self->clear_empty,
+        disabled                 => $self->disabled,
+        not_resettable           => $self->not_resettable,
+        required                 => $self->required,
+        force_validation_actions => $self->force_validation_actions,
     );
 }
 
@@ -212,9 +219,13 @@ sub validate {
     return $self->add_error('required', $self->value)
         if $self->required && !$self->validate_required;
 
-    return unless $self->has_value && defined $self->value;
+    # Don't do actions validation for undefined value
+    return unless defined $self->value;
 
+    my $force = $self->force_validation_actions;
     for my $sub ( $self->all_validate_actions ) {
+        last if !$force && $self->has_errors;
+
         $sub->($self);
     }
 }
@@ -223,7 +234,6 @@ sub validate {
 sub validate_required {
     my $self = shift;
 
-    return 1 unless $self->required;
     return 0 unless $self->has_value && defined $self->value;
     return 1;
 }
@@ -325,9 +335,8 @@ sub add_actions {
                 $v_sub = sub {
                     my $self = shift;
 
-                    unless ( $action->{check}->( $self->value, $self ) ) {
-                        $self->add_error( $error_message, $self->value );
-                    }
+                    $self->add_error( $error_message, $self->value )
+                        unless $action->{check}->( $self->value, $self );
                 };
             }
             elsif ( $check eq 'Regexp' ) {
@@ -336,9 +345,8 @@ sub add_actions {
                 $v_sub = sub {
                     my $self = shift;
 
-                    unless ( ( $self->value // '' ) =~ $action->{check} ) {
-                        $self->add_error( $error_message, $self->value );
-                    }
+                    $self->add_error( $error_message, $self->value )
+                        unless $self->value =~ $action->{check};
                 };
             }
             elsif ( $check eq 'ARRAY' ) {
@@ -349,9 +357,8 @@ sub add_actions {
 
                     my $value = $self->value;
 
-                    unless ( grep { $value eq $_ } @{ $action->{check} } ) {
-                        $self->add_error( $error_message, $value );
-                    }
+                    $self->add_error( $error_message, $value )
+                        unless grep { $value eq $_ } @{ $action->{check} };
                 };
             }
         }
@@ -364,9 +371,8 @@ sub add_actions {
                 my $self = shift;
 
                 eval {
-                    my $new_value
-                        = $action->{transform}->( $self->value, $self );
-                    $self->set_value($new_value);
+                    my $value = $action->{transform}->( $self->value, $self );
+                    $self->set_value($value);
                     1;
                 } or do {
                     $self->add_error( $error_message, $self->value );
@@ -516,6 +522,7 @@ __END__
 
     1;
 
+    ...
 
     package My::Form::Field;
     use Form::Data::Processor::Moose;
@@ -523,11 +530,9 @@ __END__
     extends 'Form::Data::Processor::Field';
     with 'My::Form::TraitFor::Field::Ref';
 
-    around validate => sub {
-        my $orig = shift;
+    after validate => sub {
         my $self = shift;
 
-        $self->$orig(@_);
         return if $self->could_be_ref || $self->has_errors || !$self->has_value;
 
         $self->add_error('Could not be reference') if ref $self->value;
@@ -579,6 +584,20 @@ Indicate if field is disabled.
 
 When field is disabled, then there are no any validation or input initialization
 on this field.
+
+
+=attr force_validation_actions
+
+=over 4
+
+=item Type: Bool
+
+=item Default: true
+
+=back
+
+Indicate if all validation actions should be performed.
+Otherwise, actions validation will be stopped on first error.
 
 
 =attr form
@@ -1144,6 +1163,9 @@ then return C<undef> too.
 =method validate
 
 Validate input value.
+
+B<Notice:> calling this method doesn't perform
+"L<external validation|/EXTERNAL VALIDATION>".
 
 Validating contains next steps:
 

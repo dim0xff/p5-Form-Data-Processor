@@ -10,8 +10,7 @@ use List::MoreUtils qw(uniq);
 extends 'Form::Data::Processor::Field';
 
 
-#<<<
-# Type checking and coercion for options list
+#<<< Type checking and coercion for options list
 {
     use Moose::Util::TypeConstraints;
 
@@ -132,8 +131,10 @@ before ready => sub {
 after reset => sub {
     my $self = shift;
 
+    return if $self->not_resettable;
+
     # Reload options if needed after reset
-    $self->_build_options()
+    $self->_build_options
         if !$self->do_not_reload && $self->has_options_builder;
 };
 
@@ -329,8 +330,6 @@ It could be L</multiple> (and then L<Form::Data::Processor::Field/result> will
 be ArrayRef without undef values) or single (and then result will be a selected
 value).
 
-B<Notice:> all current attributes are resettable.
-
 
 =attr do_not_reload
 
@@ -346,6 +345,8 @@ By default for List field with L<options builder|/options_builder> L</options>
 are being rebuilt every time, when this field is L<Form::Data::Processor::Field/ready>.
 
 If you don't want this rebuilding set C<do_not_reload> to C<true>.
+
+B<Notice:> current attribute is resettable.
 
 
 =attr max_input_length
@@ -367,6 +368,8 @@ of non unique values, this could take a lot of time.
 When input length is greater than C<max_input_length>, then error
 C<max_input_length> will be added to field.
 
+B<Notice:> current attribute is resettable.
+
 
 =attr multiple
 
@@ -382,6 +385,8 @@ If set to C<false>, then only one value could be selected.
 
 When is C<false> and multiple values is being validated, then error
 C<is_not_multiple> will be added to field.
+
+B<Notice:> current attribute is resettable.
 
 
 =attr options
@@ -509,6 +514,8 @@ be rebuilt before using (see L</do_not_reload>).
 Field has input L<action|Form::Data::Processor::Field/Input initialization level action>,
 which removes duplicated and undefined input values, when there are more
 than one input value.
+
+B<Notice:> current attribute is resettable.
 
 
 =head1 SEE ALSO
