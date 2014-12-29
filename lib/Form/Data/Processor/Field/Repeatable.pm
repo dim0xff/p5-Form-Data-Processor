@@ -61,7 +61,11 @@ before ready => sub {
 };
 
 before reset => sub {
-    $_[0]->reset_fields;
+    my $self = shift;
+
+    return if $self->not_resettable;
+
+    $self->reset_fields;
 };
 
 before clear_value => sub {

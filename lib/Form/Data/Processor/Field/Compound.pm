@@ -17,7 +17,13 @@ sub BUILD {
 
 before ready => sub { $_[0]->_ready_fields };
 
-before reset => sub { $_[0]->reset_fields };
+before reset => sub {
+    my $self = shift;
+
+    return if $self->not_resettable;
+
+    $self->reset_fields;
+};
 
 after _init_external_validators => sub {
     my $self = shift;
