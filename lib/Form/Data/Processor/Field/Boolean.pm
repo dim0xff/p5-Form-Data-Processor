@@ -17,9 +17,7 @@ has force_result => (
 after populate_defaults => sub {
     my $self = shift;
 
-    $self->set_default_value(
-        force_result => $self->force_result,
-    );
+    $self->set_default_value( force_result => $self->force_result, );
 };
 
 
@@ -51,11 +49,7 @@ sub result {
     return $self->_result;
 }
 
-sub _result {
-    my $self = shift;
-
-    return ( $self->value ? 1 : 0 );
-}
+sub _result { return !!( shift->value ) }
 
 
 __PACKAGE__->meta->make_immutable;
