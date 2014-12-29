@@ -7,6 +7,12 @@ use namespace::autoclean;
 
 extends 'Form::Data::Processor::Field';
 
+has no_trim => (
+    is      => 'rw',
+    isa     => 'Bool',
+    default => 0,
+);
+
 has not_nullable => (
     is      => 'rw',
     isa     => 'Bool',
@@ -64,6 +70,7 @@ after populate_defaults => sub {
     my $self = shift;
 
     $self->set_default_value(
+        no_trim      => $self->no_trim,
         not_nullable => $self->not_nullable,
         maxlength    => $self->maxlength,
         minlength    => $self->minlength,
@@ -77,10 +84,9 @@ around init_input => sub {
 
     my $value = $self->$orig(@_);
 
-    return $self->set_value(undef)              # set value to null
-        if $self->has_value
-        && defined($value)
-        && $value eq ''                         # if empty value
+    return $self->set_value(undef)              # set value to `undef`
+        if defined($value)
+        && $value eq ''                         # if value is empty
         && !$self->not_nullable;                # and field is nullable
 
     return $value;
@@ -104,6 +110,8 @@ around validate_required => sub {
 # $_[1] - value
 
 sub trim {
+    return $_[1] if $_[0]->no_trim;
+
     if ( defined $_[1] && !ref( $_[1] ) ) {
         $_[1] =~ s/^\s+//;
         $_[1] =~ s/\s+$//;
@@ -161,6 +169,20 @@ Error C<text_invalid> will be raised when field value is not look like text
 (actually when value is reference).
 
 B<Notice:> all current attributes are resettable.
+
+
+=attr no_trim
+
+=over 4
+
+=item Type: Bool
+
+=item Default: false
+
+=back
+
+Indicate if input value should not be L<trimmed|/trim> before further
+validation.
 
 
 =attr not_nullable
@@ -226,11 +248,11 @@ By default it is using in C<input_transform> action.
 
 =item Arguments: $value
 
-=item Return: bool
+=item Return: Bool
 
 =back
 
-Validate if value exceed L</maxlength>.
+Validate if C<$value> length is less than L</maxlength> or equal to it.
 
 
 =method validate_minlength
@@ -239,11 +261,11 @@ Validate if value exceed L</maxlength>.
 
 =item Arguments: $value
 
-=item Return: bool
+=item Return: Bool
 
 =back
 
-Validate if value less than L</minlength>.
+Validate if C<$value> length is greater than L</minlength> or equal to it.
 
 
 =head1 ACTIONS

@@ -4,9 +4,7 @@ Tests for Form::Data::Processor::Field::Repeatable
 Form::Data::Processor::Role::Fields/init_input remove 'confess'
 
 Add fields:
-    1. Text
-        Make `trim` optional
-
+    1. [DONE] Text: make `trim` optional
         1.1 [DONE] String
             1.1.1 [DONE] Number
                 1.1.1.1 [DONE] Integer
