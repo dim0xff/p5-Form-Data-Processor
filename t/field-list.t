@@ -269,8 +269,8 @@ package main {
         is_deeply(
             $form->dump_errors,
             {
-                days_of_week => ['Field is required'],
-                year         => ['Field is required'],
+                days_of_week => [ { REF => 'Field is required' } ],
+                year => ['Field is required'],
             },
             'OK, right error messages'
         );
@@ -313,7 +313,6 @@ package main {
         $form->field('year')->set_default_value( do_not_reload => 0 );
         ok( $form->process($data), 'Form validated without errors' );
         is_deeply( $form->result, $result, 'Result is fine' );
-        diag explain $form->result;
     };
 
     subtest 'clear_empty' => sub {
