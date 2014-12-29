@@ -51,23 +51,19 @@ before reset => sub {
     $_[0]->_clear_result;
 };
 
-
-# Apply actions
-#
-# $_[0] - self
-# $_[1] - value
-
 sub validate_email {
+    my ( $self, $value ) = @_;
+
     local $Email::Valid::Details;
 
     my $checked = Email::Valid->address(
-        %{ $_[0]->email_valid_params },         #
-        -address => $_[1],                      #
+        %{ $self->email_valid_params },         #
+        -address => $value,                     #
     );
 
-    return $_[0]->_set_result($checked) if $checked;
+    return $self->_set_result($checked) if $checked;
 
-    $_[0]->_set_reason($Email::Valid::Details);
+    $self->_set_reason($Email::Valid::Details);
 
     return 0;
 }
