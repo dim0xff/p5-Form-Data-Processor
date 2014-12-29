@@ -49,7 +49,7 @@ sub result {
     return $self->_result;
 }
 
-sub _result { return !!( shift->value ) }
+sub _result { return ( shift->value ? 1 : 0 ) }
 
 
 __PACKAGE__->meta->make_immutable;
