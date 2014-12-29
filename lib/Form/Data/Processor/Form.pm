@@ -293,7 +293,7 @@ and L<Form::Data::Processor::Role::Fields/reset_fields>).
 
 =item Arguments: @arguments?
 
-=item Return: bool
+=item Return: Bool
 
 =back
 
@@ -393,7 +393,7 @@ like it L<HTML::FormHandler> does.
 
 =over 4
 
-=item Return: bool
+=item Return: Bool
 
 =back
 
