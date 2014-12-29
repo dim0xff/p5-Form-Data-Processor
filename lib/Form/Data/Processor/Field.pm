@@ -212,7 +212,8 @@ sub validate {
     return $self->add_error('required')
         if $self->required && !$self->validate_required();
 
-    return unless $self->has_value && defined $self->value;
+    # Don't do actions validation for undefined value
+    return unless defined $self->value;
 
     for my $sub ( $self->all_validate_actions ) {
         $sub->($self);
@@ -223,7 +224,6 @@ sub validate {
 sub validate_required {
     my $self = shift;
 
-    return 1 unless $self->required;
     return 0 unless $self->has_value && defined $self->value;
     return 1;
 }
@@ -327,9 +327,8 @@ sub add_actions {
                 $v_sub = sub {
                     my $self = shift;
 
-                    unless ( $action->{check}->( $self->value, $self ) ) {
-                        $self->add_error( $error_message, $self->value );
-                    }
+                    $self->add_error( $error_message, $self->value )
+                        unless $action->{check}->( $self->value, $self );
                 };
             }
             elsif ( $check eq 'Regexp' ) {
@@ -338,9 +337,8 @@ sub add_actions {
                 $v_sub = sub {
                     my $self = shift;
 
-                    unless ( ( $self->value // '' ) =~ $action->{check} ) {
-                        $self->add_error( $error_message, $self->value );
-                    }
+                    $self->add_error( $error_message, $self->value )
+                        unless $self->value =~ $action->{check};
                 };
             }
             elsif ( $check eq 'ARRAY' ) {
@@ -351,9 +349,8 @@ sub add_actions {
 
                     my $value = $self->value;
 
-                    unless ( grep { $value eq $_ } @{ $action->{check} } ) {
-                        $self->add_error( $error_message, $value );
-                    }
+                    $self->add_error( $error_message, $value )
+                        unless grep { $value eq $_ } @{ $action->{check} };
                 };
             }
         }
@@ -365,15 +362,13 @@ sub add_actions {
             $v_sub = sub {
                 my $self = shift;
 
-                my $new_value
-                    = eval { $action->{transform}->( $self->value, $self ) };
+                eval {
+                    my $value = $action->{transform}->( $self->value, $self );
 
-                if ($@) {
-                    $self->add_error( $error_message, $self->value );
-                }
-                else {
-                    $self->set_value($new_value);
-                }
+                    $self->set_value($value);
+                };
+
+                $self->add_error( $error_message, $self->value ) if $@;
             };
         }
 
@@ -519,17 +514,16 @@ __END__
 
     1;
 
+    ...
 
     package My::Form::Field;
     use Form::Data::Processor::Moose;
     extends 'Form::Data::Processor::Field';
     with 'My::Form::TraitFor::Field::Ref';
 
-    around validate => sub {
-        my $orig = shift;
+    after validate => sub {
         my $self = shift;
 
-        $self->$orig(@_);
         return if $self->could_be_ref || $self->has_errors || !$self->has_value;
 
         $self->add_error('Could not be reference') if ref $self->value;
@@ -1148,6 +1142,9 @@ then return C<undef> too.
 =method validate
 
 Validate input value.
+
+B<Notice:> calling this method doesn't perform
+"L<external validation|/EXTERNAL VALIDATION>".
 
 Validating contains next steps:
 
