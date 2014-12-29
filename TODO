@@ -2,22 +2,4 @@ Tests for Form::Data::Processor::Field::clear_empty
 Tests for Form::Data::Processor::Field::Repeatable
 
 Form::Data::Processor::Role::Fields/init_input remove 'confess'
-
-Add fields:
-    1. [DONE] Text: make `trim` optional
-        1.1 [DONE] String
-            1.1.1 [DONE] Number
-                1.1.1.1 [DONE] Integer
-                1.1.1.2 [DONE] Float
-            1.1.2 [DONE] Email
-
-            1.1.3 [DONE] DateTime
-                1.1.3.1 Date
-                1.1.3.2 Time
-
-    2. Boolean
-        Add true and false values.
-        Example:
-            'YES' is true
-            'NO'  is false
-            Otherwise, field doesn't have value
+Add return_on_first_error (or similar) for actions to skip further actions if error occurred
