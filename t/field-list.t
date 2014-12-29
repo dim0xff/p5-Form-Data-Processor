@@ -22,6 +22,23 @@ package Form::Field::CheckList {
     has_field list => ( type => 'List' );
 
     sub options_list {
+        my (@args) = @_;
+        use Test::More;
+        subtest(
+            'Arguments in field' => sub {
+                cmp_ok( ~~ @args, '==', 2, 'Two arguments' );
+                ok(
+                    ( ref $args[0] )
+                    ->isa('Form::Data::Processor::Field::Compound'),
+                    'Has proper first arguments'
+                );
+                ok(
+                    ( ref $args[1] )->isa('Form::Data::Processor::Field::List'),
+                    'Has proper second arguments'
+                );
+            }
+        );
+
         return ( 'First', 'Second' );
     }
 }
@@ -50,6 +67,17 @@ package Form::Field::Fruits {
     extends 'Form::Data::Processor::Field::List';
 
     sub build_options {
+        my (@args) = @_;
+        use Test::More;
+        subtest(
+            'Arguments in field vie `build_options`' => sub {
+                cmp_ok( ~~ @args, '==', 1, 'One argument' );
+                ok(
+                    ( ref $args[0] )->isa('Form::Data::Processor::Field::List'),
+                    'Has proper first arguments'
+                );
+            }
+        );
         return ( 'kiwi', 'apples', 'oranges' );
     }
 }
@@ -192,7 +220,7 @@ package main {
         };
 
         my $result = {
-            photos       => [],
+            photos       => undef,
             days_of_week => [ 'Wednesday', 'Monday' ],
             year         => $now->year(),
             fruits       => ['kiwi'],
@@ -208,9 +236,12 @@ package main {
             'Maxlength: OK, right error messages'
         );
 
-        $form->field('days_of_week')->set_default_value(max_input_length => 0);
-        ok( $form->process($data), 'Form validated without errors (max_input_length = 0)' );
-        $form->field('days_of_week')->set_default_value(max_input_length => 32);
+        $form->field('days_of_week')
+            ->set_default_value( max_input_length => 0 );
+        ok( $form->process($data),
+            'Form validated without errors (max_input_length = 0)' );
+        $form->field('days_of_week')
+            ->set_default_value( max_input_length => 32 );
 
 
         # Uniq input
@@ -231,15 +262,15 @@ package main {
     subtest 'multiple required' => sub {
         my $data = {
             days_of_week => [undef],
-            year         => [undef],
+            year         => undef,
         };
 
         ok( !$form->process($data), 'Form validated with errors' );
         is_deeply(
             $form->dump_errors,
             {
-                days_of_week => ['Field is required'],
-                year         => ['Field is required'],
+                days_of_week => [ { REF => 'Field is required' } ],
+                year => ['Field is required'],
             },
             'OK, right error messages'
         );
@@ -255,7 +286,7 @@ package main {
         };
 
         my $result = {
-            photos       => [],
+            photos       => undef,
             days_of_week => [ 'Wednesday', 'Monday' ],
             year         => $now->year(),
             fruits       => ['kiwi'],

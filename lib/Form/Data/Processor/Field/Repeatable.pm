@@ -51,7 +51,7 @@ after _init_external_validators => sub {
     $self->contains->_init_external_validators if $self->has_contains;
 };
 
-after _before_ready => sub {
+before ready => sub {
     my $self = shift;
 
     $self->set_default_value( max_input_length => $self->max_input_length );
@@ -60,7 +60,13 @@ after _before_ready => sub {
     $self->_build_contains;
 };
 
-after _before_reset => sub { $_[0]->reset_fields };
+before reset => sub {
+    my $self = shift;
+
+    return if $self->not_resettable;
+
+    $self->reset_fields;
+};
 
 before clear_value => sub {
     my $self = shift;
@@ -84,7 +90,7 @@ sub init_input {
 
     return $self->clear_value if $self->clear_empty && $self->is_empty($value);
 
-    # Specified for Compound field logic
+    # Specified for Repeatable field logic
     if ( ref $value eq 'ARRAY' ) {
         $self->_set_input_length( my $input_length = @{$value} );
 
@@ -138,7 +144,7 @@ around validate => sub {
 
     $self->$orig(@_);
 
-    return if $self->has_errors || !$self->has_value;
+    return if $self->has_errors || !$self->has_value || !defined $self->value;
 
     return $self->add_error( 'invalid', $self->value )
         if ref $self->value ne 'ARRAY';
@@ -149,7 +155,6 @@ around validate => sub {
 
     $self->validate_fields;
 };
-
 
 sub _result {
     my $self = shift;
@@ -169,11 +174,7 @@ sub _build_contains {
     my $self = shift;
 
     # Subfield 'contains' is defined explicitly
-    if (   $self->num_fields
-        && $self->subfield('contains')
-        && $self->subfield('contains')
-        ->DOES('Form::Data::Processor::Role::Fields') )
-    {
+    if ( $self->num_fields && $self->subfield('contains') ) {
         $self->contains( $self->subfield('contains') );
     }
     else {
@@ -185,9 +186,7 @@ sub _build_contains {
                 type => 'Compound',
             }
         );
-        $contains->_before_ready();
         $contains->ready();
-        $contains->_after_ready();
 
         for my $field ( $self->all_fields ) {
             next if $field->name eq 'contains';

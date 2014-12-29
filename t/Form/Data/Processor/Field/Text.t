@@ -1,16 +1,8 @@
 use strict;
 use warnings;
 
-use utf8;
-
 use Test::More;
 use Test::Exception;
-
-use FindBin;
-use lib ( "$FindBin::Bin/lib", "$FindBin::Bin/../lib" );
-
-use Data::Dumper;
-use Time::HiRes qw(gettimeofday tv_interval);
 
 use Moose::Util::TypeConstraints;
 
@@ -33,9 +25,9 @@ package Form {
     );
 
     has_field text_min => (
-        type      => 'Text',
-        minlength => 10,
-        not_nullable => 1, 
+        type         => 'Text',
+        minlength    => 10,
+        not_nullable => 1,
     );
 
     has_field text_max => (
@@ -90,7 +82,7 @@ package main {
         'OK, right error messages'
     );
 
-    subtest 'FDP::Field::Text not_nullable && trim' => sub {
+    subtest 'FDP::Field::Text not_nullable/trim/no_trim' => sub {
         $form->field('text_required_notnullable')
             ->set_default_value( required => 0 );
         ok(
@@ -128,8 +120,43 @@ package main {
             $form->dump_errors,
             {
                 text_required_notnullable => ['Field is required']
-            }
+            },
+            'Form error messages'
         );
+
+
+        $form->field('text_required')->set_default_value( no_trim => 1 );
+        $form->field('text_required_notnullable')->set_default_value( no_trim => 1 );
+        $form->field('text_min')->set_default_value( no_trim => 1 );
+
+        ok(
+            $form->process(
+                {
+                    text                      => ' ' x 10,
+                    text_required             => ' ' x 10,
+                    text_required_notnullable => ' ' x 10,
+                    text_min                  => ' ' x 10,
+                    text_max                  => ' ' x 10,
+                }
+            ),
+            'Form validated without errors'
+        );
+
+        is_deeply(
+            $form->result,
+            {
+                text                      => undef,
+                text_required             => ' ' x 10,
+                text_required_notnullable => ' ' x 10,
+                text_min                  => ' ' x 10,
+                text_max                  => undef,
+            },
+            'result not trimmed'
+        );
+
+        $form->field('text_required')->set_default_value( no_trim => 0 );
+        $form->field('text_required_notnullable')->set_default_value( no_trim => 0 );
+        $form->field('text_min')->set_default_value( no_trim => 0 );
     };
 
     subtest 'FDP::Field::Text validate_(min/max)length' => sub {
@@ -145,7 +172,6 @@ package main {
             ),
             'Form validated with errors'
         );
-
 
 
         is_deeply(

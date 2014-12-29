@@ -2,8 +2,6 @@ package Form::Data::Processor::Field::List;
 
 # ABSTRACT: field with selectable values
 
-use feature 'current_sub';
-
 use Form::Data::Processor::Moose;
 use namespace::autoclean;
 
@@ -12,8 +10,7 @@ use List::MoreUtils qw(uniq);
 extends 'Form::Data::Processor::Field';
 
 
-#<<<
-# Type checking and coercion for options list
+#<<< Type checking and coercion for options list
 {
     use Moose::Util::TypeConstraints;
 
@@ -110,7 +107,7 @@ sub BUILD {
 
 
 # Set options builder when field is ready
-after _before_ready => sub {
+after populate_defaults => sub {
     my $self = shift;
 
     $self->set_default_value(
@@ -119,19 +116,25 @@ after _before_ready => sub {
         max_input_length => $self->max_input_length,
         uniq_input       => $self->uniq_input,
     );
+};
 
-    my $code = $self->_find_options_builders() || $self->can('build_options');
+before ready => sub {
+    my $self = shift;
+
+    my $code = $self->_find_options_builders();
     $self->options_builder($code) if $code;
 
     $self->_build_options if $self->has_options_builder;
 };
 
 
-after _after_reset => sub {
+after reset => sub {
     my $self = shift;
 
+    return if $self->not_resettable;
+
     # Reload options if needed after reset
-    $self->_build_options()
+    $self->_build_options
         if !$self->do_not_reload && $self->has_options_builder;
 };
 
@@ -158,7 +161,7 @@ around validate => sub {
 
     $self->$orig();
 
-    return if $self->has_errors || !$self->has_value;
+    return if $self->has_errors || !$self->has_value || !defined $self->value;
 
     my $values = ref $self->value ? $self->value : [ $self->value ];
 
@@ -226,11 +229,14 @@ sub _find_options_builders {
     my $self = shift;
 
     # Recursive search for options builder
-    my $sub = sub {
+    my $sub;
+    $sub = sub {
         my ( $self, $field ) = @_;
 
         my $code;
-        $code = __SUB__->( $self->parent, $field ) if $self->can('parent');
+
+        $code = $sub->( $self->parent, $field )
+            if $self->can('parent') && $self->has_parent;
 
         if ( !$code ) {
             my $builder = $field->full_name;
@@ -245,18 +251,26 @@ sub _find_options_builders {
             $code = $self->can("options_$builder");
         }
 
-        return sub { $code->( $self, pop ) }
-            if $code;
+        return $code ? sub { $code->( $self, pop ) } : undef;
     };
 
-    return $sub->( $self->parent, $self );
+    # Search recursively
+    my $code = $sub->( $self->parent, $self );
+    return $code if $code;
+
+    # Not found, try build_options for field inherited from FDP::Field::List
+    $code = $self->can('build_options');
+    return $code if $code;
+
+    # Not found
+    return undef;
 }
 
 # Populate options via options_builder
 sub _build_options {
     my $self = shift;
 
-    my @options = $self->options_builder->( $self->form, $self );
+    my @options = $self->options_builder->($self);
 
     $self->options( \@options );
 }
@@ -316,8 +330,6 @@ It could be L</multiple> (and then L<Form::Data::Processor::Field/result> will
 be ArrayRef without undef values) or single (and then result will be a selected
 value).
 
-B<Notice:> all current attributes are resettable.
-
 
 =attr do_not_reload
 
@@ -333,6 +345,8 @@ By default for List field with L<options builder|/options_builder> L</options>
 are being rebuilt every time, when this field is L<Form::Data::Processor::Field/ready>.
 
 If you don't want this rebuilding set C<do_not_reload> to C<true>.
+
+B<Notice:> current attribute is resettable.
 
 
 =attr max_input_length
@@ -354,6 +368,8 @@ of non unique values, this could take a lot of time.
 When input length is greater than C<max_input_length>, then error
 C<max_input_length> will be added to field.
 
+B<Notice:> current attribute is resettable.
+
 
 =attr multiple
 
@@ -369,6 +385,8 @@ If set to C<false>, then only one value could be selected.
 
 When is C<false> and multiple values is being validated, then error
 C<is_not_multiple> will be added to field.
+
+B<Notice:> current attribute is resettable.
 
 
 =attr options
@@ -437,7 +455,7 @@ It will set L</options_builder>.
     has_field fruit => ( type => 'List' );
 
     sub options_fruit {
-        # $_[0] - form
+        # $_[0] - self
         # $_[1] - field
 
         # Must return ArrayRef
@@ -496,6 +514,8 @@ be rebuilt before using (see L</do_not_reload>).
 Field has input L<action|Form::Data::Processor::Field/Input initialization level action>,
 which removes duplicated and undefined input values, when there are more
 than one input value.
+
+B<Notice:> current attribute is resettable.
 
 
 =head1 SEE ALSO

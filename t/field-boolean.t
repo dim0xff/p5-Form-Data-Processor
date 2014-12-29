@@ -21,7 +21,7 @@ package Form {
 
     has_field general  => ( type => 'Boolean' );
     has_field required => ( type => 'Boolean', required => 1 );
-    has_field input    => ( type => 'Boolean');
+    has_field input    => ( type => 'Boolean' );
 
     sub dump_errors {
         return { map { $_->full_name => [ $_->all_errors ] }
@@ -78,118 +78,97 @@ package main {
     $form->field('required')->not_resettable(0);
     $form->field('general')->set_default_value( force_result => 0 );
 
-    for my $real ( 0, 1 ) {
-        my $subtest = ( $real ? 'real_result' : 'result' );
-        subtest $subtest => sub {
-            $form->field('general')->set_default_value( real_result => $real );
-            $form->field('required')->set_default_value( real_result => $real );
-            $form->field('input')->set_default_value( real_result => $real );
+    subtest 'result' => sub {
 
-            for my $i (
-                {
-                    name  => '0 1 0',
-                    input => {
-                        general  => 0,
-                        required => 1,
-                        input    => 0,
-                    },
-                    result => {
-                        general  => 0,
-                        required => 1,
-                        input    => 0,
-                    }
-                },
-                {
-                    name  => '"0" "1" "0"',
-                    input => {
-                        general  => "0",
-                        required => "1",
-                        input    => "0",
-                    },
-                    result => {
-                        general  => 0,
-                        required => 1,
-                        input    => 0,
-                    }
-                },
-                {
-                    name  => '"000" "111" "000"',
-                    input => {
-                        general  => "000",
-                        required => "111",
-                        input    => "000",
-                    },
-                    result => {
-                        general  => 1,
-                        required => 1,
-                        input    => 1,
-                    }
-                },
-                {
-                    name  => 'undef "yes" undef',
-                    input => {
-                        general  => undef,
-                        required => 'yes',
-                        input    => undef,
-                    },
-                    result => {
-                        general  => 0,
-                        required => 1,
-                        input    => 0,
-                    }
-                },
-                {
-                    name  => '"" "0E0" ""',
-                    input => {
-                        general  => '',
-                        required => '0E0',
-                        input    => '',
-                    },
-                    result => {
-                        general  => 0,
-                        required => 1,
-                        input    => 0,
-                    }
-                },
-                {
-                    name  => 'X HASH ARRAY',
-                    input => {
-                        required => { a => 'b' },
-                        input => [ 'a', 'b' ],
-                    },
-                    real_result => {
-                        required => { a => 'b' },
-                        input => [ 'a', 'b' ],
-                    },
-                    result => {
-                        required => 1,
-                        input    => 1,
-                    }
-                },
-                )
+        for my $i (
             {
-                ok( $form->process( $i->{input} ),
-                    'Form validated without errors (' . $i->{name} . ')' );
-                is_deeply(
-                    $form->result,
-                    (
-                        $real
-                        ? ( $i->{real_result} || $i->{input} )
-                        : $i->{result}
-                    ),
-                    'Form result is fine (' . $i->{name} . ')'
-                );
-                is_deeply( $form->values, $i->{input},
-                    'Form values is fine (' . $i->{name} . ')' );
-            }
-        };
-    }
+                name  => '0 1 0',
+                input => {
+                    general  => 0,
+                    required => 1,
+                    input    => 0,
+                },
+                result => {
+                    general  => 0,
+                    required => 1,
+                    input    => 0,
+                }
+            },
+            {
+                name  => '"0" "1" "0"',
+                input => {
+                    general  => "0",
+                    required => "1",
+                    input    => "0",
+                },
+                result => {
+                    general  => 0,
+                    required => 1,
+                    input    => 0,
+                }
+            },
+            {
+                name  => '"000" "111" "000"',
+                input => {
+                    general  => "000",
+                    required => "111",
+                    input    => "000",
+                },
+                result => {
+                    general  => 1,
+                    required => 1,
+                    input    => 1,
+                }
+            },
+            {
+                name  => 'undef "yes" undef',
+                input => {
+                    general  => undef,
+                    required => 'yes',
+                    input    => undef,
+                },
+                result => {
+                    general  => 0,
+                    required => 1,
+                    input    => 0,
+                }
+            },
+            {
+                name  => '"" "0E0" ""',
+                input => {
+                    general  => '',
+                    required => '0E0',
+                    input    => '',
+                },
+                result => {
+                    general  => 0,
+                    required => 1,
+                    input    => 0,
+                }
+            },
+            {
+                name  => 'X HASH ARRAY',
+                input => {
+                    required => { a => 'b' },
+                    input => [ 'a', 'b' ],
+                },
+                result => {
+                    required => 1,
+                    input    => 1,
+                }
+            },
+            )
+        {
+            ok( $form->process( $i->{input} ),
+                'Form validated without errors (' . $i->{name} . ')' );
+            is_deeply( $form->result, $i->{result},
+                'Form result is fine (' . $i->{name} . ')' );
+            is_deeply( $form->values, $i->{input},
+                'Form values is fine (' . $i->{name} . ')' );
+        }
+    };
 
     subtest 'force_result' => sub {
-        $form->field('general')->set_default_value( real_result => 0 );
-        $form->field('required')->set_default_value( real_result => 0 );
-        $form->field('input')->set_default_value( real_result => 0 );
-
         for ( 0, 1 ) {
             $form->field('general')->set_default_value( force_result => $_ );
             ok(

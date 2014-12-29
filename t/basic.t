@@ -1,16 +1,8 @@
 use strict;
 use warnings;
 
-use utf8;
-
 use Test::More;
 use Test::Exception;
-
-use FindBin;
-use lib ( "$FindBin::Bin/lib", "$FindBin::Bin/../lib" );
-
-use Data::Dumper;
-use Time::HiRes qw(gettimeofday tv_interval);
 
 use Moose::Util::TypeConstraints;
 
@@ -40,9 +32,9 @@ package Form::Field1 {
         },
     ];
 
-    sub ready {
+    after ready => sub {
         shift->add_ready_cnt(1);
-    }
+    };
 }
 
 # Role for field with input_transform action
@@ -113,9 +105,7 @@ package Form::Prev {
 
     extends 'Form::Data::Processor::Form';
 
-    has '+field_name_space' => (
-        default => sub { ['Form']}
-    );
+    has '+field_name_space' => ( default => sub { ['Form'] } );
 
     has_field field_1 => (
         type     => 'Field1',
@@ -201,8 +191,16 @@ package Form {
         shift->field_traits_check(0);
     };
 
-    sub ready {
+    after ready => sub {
         shift->add_ready_cnt(1);
+    };
+
+    sub validate_field_1 {
+        my $self  = shift;
+        my $field = shift;
+
+        $field->add_error('Field 1 lenght validation')
+            unless length( $field->value );
     }
 
     sub validate_field_2 {
@@ -294,32 +292,62 @@ package main {
     );
 
 
-    ok(
-        !$form->process(
-            {
-                field_1 => 'field 1',
-                field_2 => '1',
-                field_3 => '2',
-                field_4 => '3',
-            }
-        ),
-        'Form validated with errors'
-    );
+    subtest 'force_validation_actions' => sub {
+        ok(
+            !$form->process(
+                {
+                    field_1 => 'field 1',
+                    field_2 => '1',
+                    field_3 => '2',
+                    field_4 => '3',
+                }
+            ),
+            'Form validated with errors'
+        );
 
-    is_deeply(
-        $form->dump_errors,
-        {
-            field_2 => [
-                'Number is too small',
-                'This number (1) is not greater than 10'
-            ],
-            field_3 => [ 'Number is too small', 'Value does not match', ],
-            field_4 => [
-                'field_4 is not pass GreaterThan10', 'Value is not allowed',
-            ],
-        },
-        'OK, returned proper error messages '
-    );
+        is_deeply(
+            $form->dump_errors,
+            {
+                field_2 => [
+                    'Number is too small',
+                    'This number (1) is not greater than 10'
+                ],
+                field_3 => [ 'Number is too small', 'Value does not match', ],
+                field_4 => [
+                    'field_4 is not pass GreaterThan10',
+                    'Value is not allowed',
+                ],
+            },
+            'OK, returned proper error messages (force_validation_actions => 1)'
+        );
+
+
+        $_->set_default_value( force_validation_actions => 0 )
+            for $form->all_fields;
+        ok(
+            !$form->process(
+                {
+                    field_1 => 'field 1',
+                    field_2 => '1',
+                    field_3 => '2',
+                    field_4 => '3',
+                }
+            ),
+            'Form validated with errors'
+        );
+
+        is_deeply(
+            $form->dump_errors,
+            {
+                field_2 => [ 'Number is too small', ],
+                field_3 => [ 'Number is too small', ],
+                field_4 => [ 'field_4 is not pass GreaterThan10', ],
+            },
+            'OK, returned proper error messages (force_validation_actions => 0)'
+        );
+        $_->set_default_value( force_validation_actions => 1 )
+            for $form->all_fields;
+    };
 
     ok(
         !$form->process(
@@ -413,6 +441,23 @@ package main {
             1, 'Disabled' );
         is( $form->field('required')->get_default_value('minlength'),
             100, 'minlength' );
+    };
+
+
+    subtest 'regexp action' => sub {
+        my $f = $form->field('field_1');
+        $f->clear_init_input_actions;
+        $f->add_actions(
+            [
+                {
+                    check => qr/0/,
+                }
+            ]
+        );
+        $f->init_input(0);
+        $f->validate;
+        ok( !$f->has_errors, 'field validated without errors' );
+        is( $f->result, 0, 'Result OK' );
     };
 
     done_testing();

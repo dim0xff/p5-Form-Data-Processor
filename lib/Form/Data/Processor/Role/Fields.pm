@@ -1,6 +1,6 @@
 package Form::Data::Processor::Role::Fields;
 
-# ABSTRACT: role for forms and fields.
+# ABSTRACT: role provides subfields
 
 use Moose::Role;
 use namespace::autoclean;
@@ -9,6 +9,7 @@ use Class::Load qw(load_optional_class);
 use Data::Clone ();
 
 requires 'form', 'has_errors', 'clear_errors', 'has_errors';
+
 
 #
 # ATTRIBUTES
@@ -51,9 +52,10 @@ has has_fields_errors => (
 
         # $_[0] - new
         # $_[1] - old
-
         # Tell to parent when we have errors, so parent as well
-        eval { $self->parent->has_fields_errors(1) } if $_[0] && !$_[1];
+        if ( $_[0] && !$_[1] && $self->can('parent') && $self->has_parent ) {
+            $self->parent->has_fields_errors(1);
+        }
     }
 );
 
@@ -107,19 +109,14 @@ sub reset_fields {
     my $self = shift;
 
     for my $field ( $self->all_fields ) {
-        if ( !$field->not_resettable ) {
-            $field->_before_reset;
-            $field->reset;
-            $field->_after_reset;
-        }
-
-        $field->clear_value if $field->has_value;
+        $field->reset;
+        $field->clear_value;
     }
 }
 
 
 after clear_errors => sub {
-    shift->clear_fields_errors();
+    shift->clear_fields_errors;
 };
 
 
@@ -155,6 +152,8 @@ sub validate_fields {
 
         $field->validate;
 
+        next unless $field->has_value;
+
         for my $code ( $field->all_external_validators ) {
             $code->($field);
         }
@@ -178,6 +177,10 @@ sub error_fields {
 sub all_error_fields {
     my $self = shift;
 
+    # Use 'num_errors' here instead of 'has_errors'
+    #
+    # Field (parent) 'has_errors' is TRUE when children have errors.
+    # But it doesn't mean than field (parent) has own errors.
     return (
         grep { $_->num_errors } map {
             (
@@ -199,19 +202,15 @@ sub values {
     };
 }
 
-sub result {
+around result => sub {
+    my $orig = shift;
     my $self = shift;
 
     return undef if $self->has_fields_errors;
 
-    return {
-        map { $_->name => $_->_result }
-        grep { $_->has_result } $self->all_fields
-    };
-}
+    return $self->$orig(@_);
+};
 
-
-# Private methods
 
 # Fields builder
 sub _build_fields {
@@ -239,7 +238,7 @@ sub _build_fields {
         }
     }
 
-    $self->_process_field_array( $field_list, 0 ) if @{$field_list};
+    $self->_process_field_array($field_list) if @{$field_list};
 }
 
 
@@ -276,7 +275,7 @@ sub _make_field {
     my $name = $field_attr->{name};
 
 
-    # +field_name means that some field attributes should be overwritten
+    # +field_name means that some field attributes should be overloaded
     my $do_update;
     if ( $name =~ /^\+(.*)/ ) {
         $field_attr->{name} = $name = $1;
@@ -354,9 +353,6 @@ sub _find_parent {
         $parent = $self;
     }
 
-    $field_attr->{full_name}
-        = ( $parent ? $parent->full_name . '.' : '' ) . $field_attr->{name};
-
     return $parent;
 }
 
@@ -364,7 +360,6 @@ sub _find_parent {
 sub _update_or_create {
     my ( $self, $parent, $field_attr, $class, $do_update ) = @_;
 
-    $parent ||= $self->form;
     $field_attr->{parent} = $parent;
     $field_attr->{form} = $self->form if $self->form;
 
@@ -378,10 +373,9 @@ sub _update_or_create {
 
             for my $key ( keys %{$field_attr} ) {
                 next
-                    if $key eq 'name'           # These
-                    || $key eq 'form'           # field
-                    || $key eq 'parent'         # attributes
-                    || $key eq 'full_name'      # can not be
+                    if $key eq 'name'           # These fields
+                    || $key eq 'form'           # attributes
+                    || $key eq 'parent'         # can not be
                     || $key eq 'type';          # changed
 
                 $field->$key( $field_attr->{$key} ) if $field->can($key);
@@ -402,6 +396,7 @@ sub _update_or_create {
 
 sub _field_index {
     my ( $self, $name ) = @_;
+
     my $index = 0;
     for my $field ( $self->all_fields ) {
         return $index if $field->name eq $name;
@@ -415,11 +410,7 @@ sub _field_index {
 sub _ready_fields {
     my $self = shift;
 
-    for my $field ( $self->all_fields ) {
-        $field->_before_ready;
-        $field->ready;
-        $field->_after_ready;
-    }
+    $_->ready for $self->all_fields;
 }
 
 1;
@@ -629,18 +620,12 @@ Do L<reset|Form::Data::Processor::Field/reset> and
 
 =over 4
 
-=item Return: \%field_result|undef
-
 =back
 
-Return C<undef> when "L<has errors|/has_fields_errors>".
+Wrapper around base class C<return> method.
 
-Return "L<result|Form::Data::Processor::Field/result> for subfields:
-
-    {
-        field_name => field_result,
-        ...
-    }
+Return C<undef> when "L<has errors|/has_fields_errors>". Or result of original
+C<result> method call.
 
 
 =method subfield
@@ -677,7 +662,8 @@ For each not L<Form::Data::Processor::Field/disabled> subfield does
 
     $subfield->validate();
 
-End else does subfield "L<external validation|Form::Data::Processor::Field/EXTERNAL VALIDATION>".
+End else does subfield "L<external validation|Form::Data::Processor::Field/EXTERNAL VALIDATION>"
+when subfield has value.
 
 
 =method values

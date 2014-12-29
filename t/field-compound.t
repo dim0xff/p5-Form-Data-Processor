@@ -27,9 +27,9 @@ package Form::Role::Ready {
         }
     );
 
-    sub ready {
+    after ready => sub {
         shift->add_ready_cnt(1);
-    }
+    };
 }
 
 package Form::TraitFor::Text {
@@ -195,13 +195,17 @@ package main {
         );
 
         $form->field('compound')->not_resettable(0);
-        ok( !$form->process( { compound => undef, } ),
-            'Form validated with errors' );
-        is_deeply(
-            $form->dump_errors,
-            { compound => ['Field is invalid'] },
-            'Field is invalid on undef'
+        ok(
+            $form->process( { compound => undef, } ),
+            'Form validated without errors for undef compound'
         );
+        is_deeply(
+            $form->result,
+            { compound => undef },
+            'Undef conpound form result'
+        );
+        diag explain $form->result;
+        $form->field('compound')->result;
     };
 
     subtest 'has_fields_errors' => sub {
@@ -276,6 +280,7 @@ package main {
                         text     => 'text',
                         compound => {
                             text_max => 'try',
+                            text     => '',
                         },
                     }
                 }

@@ -15,9 +15,15 @@ sub BUILD {
     $self->_build_fields;
 }
 
-after _before_ready => sub { $_[0]->_ready_fields };
+before ready => sub { $_[0]->_ready_fields };
 
-after _before_reset => sub { $_[0]->reset_fields };
+before reset => sub {
+    my $self = shift;
+
+    return if $self->not_resettable;
+
+    $self->reset_fields;
+};
 
 after _init_external_validators => sub {
     my $self = shift;
@@ -98,7 +104,7 @@ around validate => sub {
 
     $self->$orig(@_);
 
-    return if $self->has_errors || !$self->has_value;
+    return if $self->has_errors || !$self->has_value || !defined $self->value;
 
     return $self->add_error( 'invalid', $self->value )
         if ref $self->value ne 'HASH';
