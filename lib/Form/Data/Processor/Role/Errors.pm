@@ -1,6 +1,6 @@
 package Form::Data::Processor::Role::Errors;
 
-# ABSTRACT: role for form and fields error handling.
+# ABSTRACT: role provides error handling
 
 use Moose::Role;
 use namespace::autoclean;
@@ -61,15 +61,12 @@ sub all_errors {
 
 __END__
 
-
 =head1 DESCRIPTION
 
 This role provide basic functionality for form/field error handling.
 
 Any L<forms|Form::Data::Processor::Form> and L<fields|Form::Data::Processor::Field>
 do this role.
-
-See L<attributes|/ATTRIBUTES> and L<methods|/METHODS> which role provides.
 
 
 =attr errors
@@ -116,9 +113,7 @@ Hash ref with error messages.
         }
     }
 
-Has builder C<build_error_messages>
-(see "L<default errors|Form::Data::Processor::Field/build_error_messages>"
-for field).
+Has builder C<build_error_messages>.
 
 Also provides methods:
 
@@ -126,7 +121,7 @@ Also provides methods:
 
 =item set_error_message( error => 'Error message' )
 
-=item get_error_message('error')
+=item get_error_message(error)
 
 =back
 
@@ -146,7 +141,7 @@ than error message will be added, otherwise C<$error> will be added to
 L</errors> as is.
 
 C<$value> is value, which raise error message. By the way this value is
-not used by default, but you can use it by overwriting method.
+not used by default, but you can use it by overloading method.
 
 B<Notice:> added error messages won't be changed after you change
 field error message.
@@ -187,7 +182,6 @@ field error message.
 =item Return: @error_messages
 
 =back
-
 
 Return all form/field unique errors.
 
