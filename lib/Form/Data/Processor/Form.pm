@@ -8,6 +8,11 @@ use namespace::autoclean;
 with 'Form::Data::Processor::Role::Errors';
 with 'Form::Data::Processor::Role::Fields';
 
+
+#
+# ATTRIBUTES
+#
+
 has name => (
     is      => 'rw',
     isa     => 'Str',
@@ -45,6 +50,11 @@ has params => (
     },
 );
 
+
+#
+# METHODS
+#
+
 sub BUILD {
     my $self = shift;
 
@@ -74,9 +84,9 @@ sub process {
 sub clear_form {
     my $self = shift;
 
-    $self->clear_params();
-    $self->clear_errors();
-    $self->reset_fields();
+    $self->clear_params;
+    $self->clear_errors;
+    $self->reset_fields;
 }
 
 sub setup_form {
@@ -160,7 +170,7 @@ __END__
 
     1;
 
-    # Later in your user controller
+    # Later in your customer controller
     my $form = MyApp::Form::Customer->new;
 
     if ( $form->process( $ctx->params ) ) {
@@ -178,21 +188,8 @@ This is a base class for form which contains fields.
 Your form should extend current class.
 
 Every form, which is based on this class,
-does L<Form::Data::Processor::Role::Fields> and L<Form::Data::Processor::Role::Errors>.
-
-
-=attr field_name_space
-
-=over 4
-
-=item Type: ArrayRef[Str]
-
-=back
-
-Array of fields name spaces.
-
-It contains name spaces for searching fields classes, look L<Form::Data::Processor::Field/type>
-for more information.
+does L<Form::Data::Processor::Role::Fields>, L<Form::Data::Processor::Role::Errors>
+and L<Form::Data::Processor::Role::FullName>.
 
 
 =attr field_traits
@@ -214,9 +211,11 @@ Array of trait names, which will be applied for every new field.
 
 =item Default: C<''>
 
+=item Trigger: L<Form::Data::Processor::Role::FullName/generate_full_name>
+
 =back
 
-Field name.
+Form name. It is being used to generate fields full name.
 
 
 =attr params
@@ -227,7 +226,8 @@ Field name.
 
 =back
 
-Hash of fields parameters, which are provided from user L<input|Form::Data::Processor::Field/init_input>.
+Fields L<input|Form::Data::Processor::Field/init_input> parameters,
+which are going to be validated.
 
 Could be set via L</setup_form>.
 
@@ -250,12 +250,14 @@ Also provides methods:
 
 =over 4
 
-=item Type: L<Form::Data::Processor::Field>|L<Form::Data::Processor::Form>
+=item Type: L<Form::Data::Processor::Field> | L<Form::Data::Processor::Form>
+
+=item Trigger: L<Form::Data::Processor::Role::FullName/generate_full_name>
 
 =back
 
-Parent element (could be Form::Data::Processor::Field
-or Form::Data::Processor::Form, could be checked via C<parent-E<gt>is_form>).
+Parent element (could be L<Form::Data::Processor::Field>
+or L<Form::Data::Processor::Form>, could be checked via C<parent-E<gt>is_form>).
 It has predicator C<has_parent>.
 
 B<Notice:> normally is being set by Form::Data::Processor internals.
@@ -289,7 +291,7 @@ and L<Form::Data::Processor::Role::Fields/reset_fields>).
 
 =over 4
 
-=item Arguments: @arguments
+=item Arguments: @arguments?
 
 =item Return: bool
 
@@ -303,10 +305,9 @@ If arguments are provided, it will be placed to L</setup_form>.
 
 Returns C<true>, if form validated without errors via L</validated>.
 
-    # In your controller
     my $form = My::Form->new;
     ...
-    die 'Validation error' unless $form->process(...);
+    die 'Validated with errors' unless $form->process(...);
 
 
 =method ready
@@ -315,18 +316,18 @@ Method which normally should be called after all fields are L<Form::Data::Proces
 
 By default it does nothing, but you can use it when extending form.
 
-B<Note>: don't overwrite this method! Use C<before>, C<after>, <around> hooks instead.
+B<Notice>: don't overload this method! Use C<before>, C<after> and C<around> hooks instead.
 
 
 =method result
 
 =over 4
 
-=item Return: \%field_result|undef
+=item Return: \%fields_result | undef
 
 =back
 
-Return "L<result|Form::Data::Processor::Field/result> for subfields:
+Return HashRef with subfields L<results|Form::Data::Processor::Field/result>:
 
     {
         field_name => field_result,
@@ -342,9 +343,9 @@ Return "L<result|Form::Data::Processor::Field/result> for subfields:
 
 =back
 
-C<$params> contains user input, which will be placed into L</params>.
+C<\%params> contains user input, which will be placed into L</params>.
 
-C<%arguments> is hash of form arguments, which will be initialized.
+C<%arguments> is hash of form attributes, which will be used for initialization.
 
     package My::Form
     use Form::Data::Processor::Moose;
@@ -354,15 +355,14 @@ C<%arguments> is hash of form arguments, which will be initialized.
     has attr2 => ( ... );
     ...
 
-    # Later in your controller
     my $form = My::Form->new;
 
+    # This
     $form->attr1(...);
     $form->attr2(...);
     $form->setup_form($params);
 
-    # or
-
+    # is equal to
     $form->setup_form(
         params => $ctx->params
         attr1  => 'Attribute 1 value',
@@ -371,9 +371,9 @@ C<%arguments> is hash of form arguments, which will be initialized.
 
 B<Notice>: there are no built-in ability to "expand" params into HashRef,
 where keys are defined with separators (like C<.> or C<[]>)
-like as it L<HTML::FormHandler> does.
+like it L<HTML::FormHandler> does.
 
-    # So you should to make your own expanding tool, when you need it
+    # So you should make your own expanding tool, when you need it
     # to prepare data from:
     {
         'field.name.1' => 'value',
