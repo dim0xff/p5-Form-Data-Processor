@@ -12,7 +12,7 @@ version 0.1.0
 
 =head1 SYNOPSIS
 
-    package FDP::Field::Address;
+    package MyForm::Field::Address;
 
     use Form::Data::Processor::Moose;
     extends 'Form::Data::Processor::Field::Compound';
@@ -25,11 +25,13 @@ version 0.1.0
 
     ...
 
+    package MyForm;
+
     use Form::Data::Processor::Moose;
     extends 'Form::Data::Processor::Form';
 
     has_field 'addresses'         => ( type => 'Repeatable' );
-    has_field 'addresses.address' => ( type => '+FDP::Field::Address' );
+    has_field 'addresses.address' => ( type => '+MyForm::Field::Address' );
     has_field 'addresses.type' => (
         type           => 'List',
         required       => 1,
