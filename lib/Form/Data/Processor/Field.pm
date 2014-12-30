@@ -252,6 +252,7 @@ sub clone {
         )
     );
 
+    # TODO: move to FDP::Role::Fields
     if ( $self->has_fields ) {
         $clone->clear_fields;
         $clone->clear_index;
@@ -1027,7 +1028,8 @@ exists in field and in its subfields and so on).
 
 =back
 
-Indicate if field can contains fields. By default field doesn't have subfields.
+Indicate if field contains subfields. By default field doesn't have subfields
+and returns C<false>.
 
 
 =method has_result
