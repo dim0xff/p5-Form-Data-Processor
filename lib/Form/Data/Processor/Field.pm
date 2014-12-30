@@ -244,30 +244,7 @@ sub clone {
     my $self   = shift;
     my %params = @_;
 
-    my $clone = $self->meta->clone_object(
-        $self,
-        (
-            errors => [],
-            %params
-        )
-    );
-
-    # TODO: move to FDP::Role::Fields
-    if ( $self->has_fields ) {
-        $clone->clear_fields;
-        $clone->clear_index;
-
-        for my $subfield ( $self->all_fields ) {
-            my $cloned_subfield = $subfield->clone(%params);
-
-            $cloned_subfield->parent($clone);
-
-            $clone->add_field($cloned_subfield);
-            $clone->add_to_index( $cloned_subfield->name => $cloned_subfield );
-        }
-    }
-
-    return $clone;
+    return $self->meta->clone_object( $self, ( errors => [], @_ ) );
 }
 
 
@@ -1007,10 +984,8 @@ Return clone of current field.
 Cloned fields have proper L</parent> reference. If field has subfields, then
 subfields will be cloned too.
 
-When you need to set custom attributes for clone, then it could be passed
-via C<%replacement>. But it has B<limitation>: replacement will be passed
-to subfields too (so replacement could be provided only for attributes which
-exists in field and in its subfields and so on).
+You can set custom attributes for clone: it could be passed via C<%replacement>.
+But B<note>: replacement will be passed to subfields clones too.
 
     $field->disabled(0);
 

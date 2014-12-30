@@ -23,7 +23,7 @@ has fields => (
     handles => {
         all_fields   => 'elements',
         clear_fields => 'clear',
-        add_field    => 'push',
+        _add_field    => 'push',
         num_fields   => 'count',
         has_fields   => 'count',
         set_field_at => 'set',
@@ -75,6 +75,14 @@ has field_name_space => (
 # METHODS
 #
 
+sub add_field {
+    my ( $self, $field ) = @_;
+
+    $self->_add_field($field);
+    $self->add_to_index( $field->name => $field );
+}
+
+
 sub field {
     my ( $self, $name, $f ) = @_;
 
@@ -117,6 +125,28 @@ sub reset_fields {
 
 after clear_errors => sub {
     shift->clear_fields_errors;
+};
+
+
+around clone => sub {
+    my $orig = shift;
+    my $self = shift;
+
+    my $clone = $self->$orig(
+        fields => [],
+        index  => {},
+        @_
+    );
+
+    for my $subfield ( $self->all_fields ) {
+        my $cloned_subfield = $subfield->clone(@_);
+
+        $cloned_subfield->parent($clone);
+
+        $clone->add_field($cloned_subfield);
+    }
+
+    return $clone;
 };
 
 
@@ -388,7 +418,7 @@ sub _update_or_create {
     }
     else {
         $field = $class->new_with_traits($field_attr);
-        $parent->add_field($field);
+        $parent->_add_field($field);
     }
 
     return $field;
@@ -534,6 +564,17 @@ Does field exists in index?
 =item clear_index
 
 =back
+
+
+=method add_field
+
+=over 4
+
+=item Arguments: $fields
+
+=back
+
+Add new subfield (L<Form::Data::Processor::Field>) to parent.
 
 
 =method all_error_fields
