@@ -55,7 +55,7 @@ package FDP::Form {
     has_field 'deep.rep.text'  => ( type => "Text" );
     has_field 'deep.rep.list'  => ( type => "List", options => [1..5] );
     has_field 'deep.rep.bool'  => ( type => "Boolean" );
-    
+
     has_field 'deep.deep'      => ( type => "Compound" );
     has_field 'deep.deep.text'      => ( type => "Text" );
     has_field 'deep.deep.rep'       => ( type => "Repeatable" );
@@ -111,7 +111,7 @@ package HFH::Form {
     has_field 'deep.rep.text'  => ( type => "Text" );
     has_field 'deep.rep.list'  => ( type => "Select", options => [ map { { value => $_ } } ( 1 .. 5 ) ], multiple => 1, );
     has_field 'deep.rep.bool'  => ( type => "Boolean" );
-    
+
     has_field 'deep.deep'      => ( type => "Compound" );
     has_field 'deep.deep.text'      => ( type => "Text" );
     has_field 'deep.deep.rep'       => ( type => "Repeatable" );

@@ -38,16 +38,16 @@ package Form {
                 type => 'Str',
             },
             {
-                check => ['A'], 
-                message => 'A failed!', 
+                check   => ['A'],
+                message => 'A failed!',
             },
             {
-                check => ['B'], 
-                message => 'B failed!', 
+                check   => ['B'],
+                message => 'B failed!',
             },
             {
-                check => ['C'], 
-                message => 'C failed!', 
+                check   => ['C'],
+                message => 'C failed!',
             },
         ],
     );
@@ -103,7 +103,7 @@ package main {
 
     my $data = {
         text     => ["\tHere is\nthe text!\t\t\t"],
-        text => 'AB',
+        text     => 'AB',
         compound => {
             compound => {
                 text     => "Here is\nthe compound.compound.text",
