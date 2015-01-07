@@ -807,7 +807,7 @@ L<external validation|/EXTERNAL VALIDATION>.
 
 For each validation action could be provided custom error message. Message
 could be provided via C<message> key. If it is not provided, then default error
-message will be used. 
+message will be used.
 
 Validation level actions also provide next methods:
 
