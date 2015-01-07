@@ -15,6 +15,16 @@ requires 'form', 'has_errors', 'clear_errors', 'has_errors';
 # ATTRIBUTES
 #
 
+has field_traits => (
+    is      => 'ro',
+    traits  => ['Array'],
+    isa     => 'ArrayRef[Str]',
+    default => sub { [] },
+    handles => {
+        has_field_traits => 'count',
+    },
+);
+
 has fields => (
     is      => 'rw',
     isa     => 'ArrayRef[Form::Data::Processor::Field]',
@@ -23,7 +33,7 @@ has fields => (
     handles => {
         all_fields   => 'elements',
         clear_fields => 'clear',
-        _add_field    => 'push',
+        _add_field   => 'push',
         num_fields   => 'count',
         has_fields   => 'count',
         set_field_at => 'set',
@@ -393,6 +403,17 @@ sub _update_or_create {
     $field_attr->{parent} = $parent;
     $field_attr->{form} = $self->form if $self->form;
 
+
+    # Add traits for new field
+    if ( ( $field_attr->{form} || $self )->has_field_traits ) {
+        $field_attr->{traits} //= [];
+
+        unshift @{ $field_attr->{traits} },
+            @{ ( $field_attr->{form} || $self )->field_traits };
+
+    }
+
+
     my $index = $parent->_field_index( $field_attr->{name} );
     my $field;
 
@@ -519,6 +540,17 @@ Also provides methods:
 =item set_field_at( index => field )
 
 =back
+
+
+=attr field_traits
+
+=over 4
+
+=item Type: ArrayRef[Str]
+
+=back
+
+Array of trait names, which will be applied for every new field.
 
 
 =attr has_fields_errors

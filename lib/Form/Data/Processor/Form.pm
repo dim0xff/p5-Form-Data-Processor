@@ -28,16 +28,6 @@ has parent => (
     trigger   => sub { shift->generate_full_name },
 );
 
-has field_traits => (
-    is      => 'ro',
-    traits  => ['Array'],
-    isa     => 'ArrayRef[Str]',
-    default => sub { [] },
-    handles => {
-        has_field_traits => 'count',
-    },
-);
-
 has params => (
     is      => 'rw',
     isa     => 'HashRef',
@@ -130,24 +120,6 @@ sub result {
     };
 }
 
-# Add traits into fields
-# via 'around' hook Form::Data::Processor::Role::Fields/_update_or_create
-around _update_or_create => sub {
-    my ( $orig, $self, $parent, $field_attr, $class, $do_update ) = @_;
-
-    # Traits could be added only for new fields
-    unless ($do_update) {
-        $field_attr->{traits} = [] unless exists $field_attr->{traits};
-
-        unshift @{ $field_attr->{traits} }, @{ $self->field_traits }
-            if $self->has_field_traits;
-    }
-
-    return $self->$orig( $parent, $field_attr, $class, $do_update );
-
-};
-
-
 with 'Form::Data::Processor::Role::FullName';
 
 __PACKAGE__->meta->make_immutable;
@@ -204,17 +176,6 @@ Your form should extend current class.
 Every form, which is based on this class,
 does L<Form::Data::Processor::Role::Fields>, L<Form::Data::Processor::Role::Errors>
 and L<Form::Data::Processor::Role::FullName>.
-
-
-=attr field_traits
-
-=over 4
-
-=item Type: ArrayRef[Str]
-
-=back
-
-Array of trait names, which will be applied for every new field.
 
 
 =attr name
