@@ -12,6 +12,9 @@ with 'MooseX::Traits', 'Form::Data::Processor::Role::Errors';
 # ATTRIBUTES
 #
 
+has '+_trait_namespace' =>
+    ( default => 'Form::Data::Processor::TraitFor::Field' );
+
 has name => (
     is       => 'rw',
     isa      => 'Str',
@@ -86,6 +89,7 @@ has _defaults => (
     default => sub { {} },
     handles => {
         set_default_value    => 'set',
+        delete_default_value => 'delete',
         get_default_value    => 'get',
         all_default_values   => 'kv',
         clear_default_values => 'clear',
@@ -217,7 +221,7 @@ sub validate {
 
     return if $self->disabled;
 
-    return $self->add_error('required', $self->value)
+    return $self->add_error( 'required', $self->value )
         if $self->required && !$self->validate_required;
 
     # Don't do actions validation for undefined value
@@ -530,6 +534,9 @@ current class.
 Every field, which is based on this class, does L<MooseX::Traits>,
 L<Form::Data::Processor::Role::Errors>
 and L<Form::Data::Processor::Role::FullName>.
+
+B<Notice:> default L<trait namespace|MooseX::Traits/_trait_namespace> is
+C<Form::Data::Processor::TraitFor::Field>.
 
 Field could be validated in different ways: L<actions|/add_actions>,
 L<internal validation|/validate> or L<external validation|/EXTERNAL VALIDATION>.
@@ -1093,6 +1100,8 @@ Also provide next methods:
 =over 1
 
 =item set_default_value( attr => value )
+
+=item delete_default_value( attr )
 
 =item get_default_value(attr)
 

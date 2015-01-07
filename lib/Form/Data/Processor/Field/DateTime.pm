@@ -1,19 +1,35 @@
 package Form::Data::Processor::Field::DateTime;
 
-# ABSTRACT: datetime field (via L<Time::Piece>)
+# ABSTRACT: datetime field
 
 use Form::Data::Processor::Moose;
 use namespace::autoclean;
 
-extends 'Form::Data::Processor::Field::Text';
+extends 'Form::Data::Processor::Field';
 
-use Time::Piece;
+use DateTime::Format::Strptime;
 
 has format => (
     is       => 'rw',
     isa      => 'Str',
     required => 1,
     default  => '%Y-%m-%dT%H:%M:%S',
+);
+
+has locale => (
+    is        => 'rw',
+    isa       => 'Str|Undef',
+    predicate => 'has_locale',
+    clearer   => 'clear_locale',
+    trigger   => sub { $_[0]->clear_locale unless defined $_[1] },
+);
+
+has time_zone => (
+    is        => 'rw',
+    isa       => 'Str|Undef',
+    predicate => 'has_time_zone',
+    clearer   => 'clear_time_zone',
+    trigger   => sub { $_[0]->clear_time_zone unless defined $_[1] },
 );
 
 has dt_start => (
@@ -63,9 +79,11 @@ after populate_defaults => sub {
     my $self = shift;
 
     $self->set_default_value(
-        format   => $self->format,
-        dt_start => $self->dt_start,
-        dt_end   => $self->dt_end,
+        format    => $self->format,
+        locale    => $self->locale,
+        time_zone => $self->time_zone,
+        dt_start  => $self->dt_start,
+        dt_end    => $self->dt_end,
     );
 };
 
@@ -76,7 +94,6 @@ around validate => sub {
     $self->$orig(@_);
 
     return if $self->has_errors || !$self->has_value || !defined $self->value;
-
 
     my $value = $self->_result;
 
@@ -93,12 +110,11 @@ before reset => sub { $_[0]->_clear_result };
 sub validate_datetime {
     my ( $self, $value ) = @_;
 
-    # Don't show Time::Piece warnings
-    local $SIG{__WARN__} = sub { };
+    my $strp = DateTime::Format::Strptime->new( $self->_strptime_options );
 
-    my $dt = eval { Time::Piece->strptime( $value, $self->format ) };
+    my $dt = eval { $strp->parse_datetime($value) };
 
-    return 0 if $@;
+    return 0 if $@ || $strp->errmsg;
     return $self->_set_result($dt);
 }
 
@@ -107,10 +123,9 @@ sub validate_dt_start {
 
     return 1 unless $self->has_dt_start && defined $result;
 
-    # Don't show Time::Piece warnings
-    local $SIG{__WARN__} = sub { };
-
-    my $dt_start = Time::Piece->strptime( $self->dt_start, $self->format );
+    my $dt_start
+        = DateTime::Format::Strptime->new( $self->_strptime_options )
+        ->parse_datetime( $self->dt_start );
 
     return !!( $result >= $dt_start );
 }
@@ -120,12 +135,21 @@ sub validate_dt_end {
 
     return 1 unless $self->has_dt_end && defined $result;
 
-    # Don't show Time::Piece warnings
-    local $SIG{__WARN__} = sub { };
-
-    my $dt_end = Time::Piece->strptime( $self->dt_end, $self->format );
+    my $dt_end
+        = DateTime::Format::Strptime->new( $self->_strptime_options )
+        ->parse_datetime( $self->dt_end );
 
     return !!( $result <= $dt_end );
+}
+
+sub _strptime_options {
+    my $self = shift;
+
+    return (
+        pattern => $self->format,
+        ( $self->has_time_zone ? ( time_zone => $self->time_zone ) : () ),
+        ( $self->has_locale    ? ( locale    => $self->locale )    : () ),
+    );
 }
 
 __PACKAGE__->meta->make_immutable;
@@ -142,9 +166,10 @@ __END__
     extends 'Form::Data::Processor::Form';
 
     has_field check_date => (
-        type     => 'DateTime',
-        dt_start => '2014-01-01',
-        dt_end   => '2014-12-31T17:00:00',
+        type      => 'DateTime',
+        dt_start  => '2014-01-01',
+        dt_end    => '2014-12-31T17:00:00',
+        time_zone => 'Europe/Moscow',
     );
 
 
@@ -152,10 +177,10 @@ __END__
 
 This field validates datetime input data.
 
-The basic validation is performed via L<Time::Piece/strptime>.
-The field result also will be a L<Time::Piece> object.
+The basic validation is performed via L<DateTime::Format::Strptime>.
+The field result will be a L<DateTime> object.
 
-This field is directly inherited from L<Form::Data::Processor::Field::Text>.
+This field is directly inherited from L<Form::Data::Processor::Field>.
 
 Field sets own error messages:
 
@@ -163,7 +188,7 @@ Field sets own error messages:
     datetime_early   => 'Date is too early',
     datetime_late    => 'Date is too late',
 
-Error C<text_invalid> will be raised when field value is not could be parsed
+Error C<datetime_invalid> will be raised when field value is not could be parsed
 as datetime string.
 
 B<Notice:> all current attributes are resettable.
@@ -179,10 +204,39 @@ B<Notice:> all current attributes are resettable.
 
 =back
 
-Format for parsing input value. Please refer to L<Time::Piece/strptime>
-for more info about correct C<format> syntax.
+Format for parsing input value.
+Please refer to L<DateTime::Format::Strptime/pattern> for more info about
+correct C<format> syntax.
 
 Default C<format> value is corresponded to ISO8601 datetime format.
+
+
+=attr locale
+
+=over 4
+
+=item Type: Str
+
+=back
+
+Locale for datetime.
+Please refer to L<DateTime::Format::Strptime/locale> for more info.
+
+Also provided clearer C<clear_locale> and predicator C<has_locale>.
+
+
+=attr time_zone
+
+=over 4
+
+=item Type: Str
+
+=back
+
+Time zone for datetime.
+Please refer to L<DateTime::Format::Strptime/time_zone> for more info.
+
+Also provided clearer C<clear_time_zone> and predicator C<has_time_zone>.
 
 
 =attr dt_start
@@ -227,7 +281,7 @@ Also provided clearer C<clear_dt_end> and predicator C<has_dt_end>.
 
 =back
 
-Returns C<1> if C<$value> could be parsed via L<Time::Piece/strptime>
+Returns C<1> if C<$value> could be parsed via L<DateTime::Format::Strptime>
 with current L</format>. Otherwise returns C<0>.
 
 
@@ -242,7 +296,7 @@ with current L</format>. Otherwise returns C<0>.
 =back
 
 C<$result> is current field L<Form::Data::Processor::Field/result>
-(actually is L<Time::Piece> object).
+(actually is L<DateTime> object).
 
 Validate if C<$result> is great than L</dt_start> or equal to it.
 
@@ -258,7 +312,7 @@ Validate if C<$result> is great than L</dt_start> or equal to it.
 =back
 
 C<$result> is current field L<Form::Data::Processor::Field/result>
-(actually is L<Time::Piece> object).
+(actually is L<DateTime> object).
 
 Validate if C<$result> is less than L</dt_end> or equal to it.
 
