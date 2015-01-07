@@ -298,7 +298,7 @@ package main {
         ],
     };
 
-    if ( !$ENV{NO_BENCH} ) {
+    if ( $ENV{DO_BENCH} ) {
         for ( 1 .. 10 ) {
             my $t0 = [gettimeofday];
             $form->process($data);

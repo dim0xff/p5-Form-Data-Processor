@@ -204,7 +204,6 @@ package main {
             { compound => undef },
             'Undef conpound form result'
         );
-        diag explain $form->result;
         $form->field('compound')->result;
     };
 

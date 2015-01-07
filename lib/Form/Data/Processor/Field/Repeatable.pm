@@ -218,7 +218,6 @@ sub _add_repeatable_subfield {
     $clone->parent($self);
     $clone->name( $self->num_fields );
 
-    $self->add_to_index( $clone->name => $clone );
     $self->add_field($clone);
 }
 

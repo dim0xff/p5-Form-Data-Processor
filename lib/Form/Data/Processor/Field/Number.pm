@@ -217,4 +217,15 @@ Validate if value is greater or equal than L</min>.
 
 Validate if value is equal zero (C<0>).
 
+
+=head1 SEE ALSO
+
+=over 1
+
+=item L<Form::Data::Processor::Field::Number::Float>
+
+=item L<Form::Data::Processor::Field::Number::Int>
+
+=back
+
 =cut
