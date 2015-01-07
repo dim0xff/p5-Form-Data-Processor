@@ -75,7 +75,7 @@ package Form::Field::TextCompound {
     has_field text_max => (
         type      => 'Text',
         maxlength => 10,
-        traits    => [ 'Form::TraitFor::Text', 'Form::Role::Ready' ],
+        traits    => [ '+Form::TraitFor::Text', '+Form::Role::Ready' ],
     );
 }
 
@@ -87,7 +87,7 @@ package Form {
 
     has_field 'compound' => (
         type   => 'Compound',
-        traits => ['Form::Role::Ready'],
+        traits => ['+Form::Role::Ready'],
         apply  => [
             {
                 input_transform => sub {
@@ -108,13 +108,13 @@ package Form {
     has_field 'compound.text' => (
         type     => 'Text',
         required => 1,
-        traits   => ['Form::Role::Ready'],
+        traits   => ['+Form::Role::Ready'],
     );
 
     has_field 'compound.text_min' => (
         type      => 'Text',
         minlength => 10,
-        traits    => ['Form::Role::Ready'],
+        traits    => ['+Form::Role::Ready'],
     );
 
     has_field 'compound.compound' => ( type => '+Form::Field::TextCompound', );
