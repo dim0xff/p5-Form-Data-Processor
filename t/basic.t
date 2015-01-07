@@ -118,7 +118,7 @@ package Form::Prev {
             },
         ],
         traits => [
-            'Form::TraitFor::Field1',
+            '+Form::TraitFor::Field1',
         ],
     );
 
@@ -127,7 +127,7 @@ package Form::Prev {
     has_field field_3 => (
         type   => 'Text',
         apply  => [],
-        traits => ['Form::TraitFor::Field3'],
+        traits => ['+Form::TraitFor::Field3'],
     );
 
     has_field field_4 => (
@@ -176,7 +176,7 @@ package Form {
 
     has '+field_traits' => (
         default => sub {
-            ['Form::TraitFor::AllFields'];
+            ['+Form::TraitFor::AllFields'];
         }
     );
 

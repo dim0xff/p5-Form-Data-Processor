@@ -12,6 +12,9 @@ with 'MooseX::Traits', 'Form::Data::Processor::Role::Errors';
 # ATTRIBUTES
 #
 
+has '+_trait_namespace' =>
+    ( default => 'Form::Data::Processor::TraitFor::Field' );
+
 has name => (
     is       => 'rw',
     isa      => 'Str',
@@ -86,6 +89,7 @@ has _defaults => (
     default => sub { {} },
     handles => {
         set_default_value    => 'set',
+        delete_default_value => 'delete',
         get_default_value    => 'get',
         all_default_values   => 'kv',
         clear_default_values => 'clear',
@@ -217,7 +221,7 @@ sub validate {
 
     return if $self->disabled;
 
-    return $self->add_error('required', $self->value)
+    return $self->add_error( 'required', $self->value )
         if $self->required && !$self->validate_required;
 
     # Don't do actions validation for undefined value
@@ -244,29 +248,7 @@ sub clone {
     my $self   = shift;
     my %params = @_;
 
-    my $clone = $self->meta->clone_object(
-        $self,
-        (
-            errors => [],
-            %params
-        )
-    );
-
-    if ( $self->has_fields ) {
-        $clone->clear_fields;
-        $clone->clear_index;
-
-        for my $subfield ( $self->all_fields ) {
-            my $cloned_subfield = $subfield->clone(%params);
-
-            $cloned_subfield->parent($clone);
-
-            $clone->add_field($cloned_subfield);
-            $clone->add_to_index( $cloned_subfield->name => $cloned_subfield );
-        }
-    }
-
-    return $clone;
+    return $self->meta->clone_object( $self, ( errors => [], @_ ) );
 }
 
 
@@ -552,6 +534,9 @@ current class.
 Every field, which is based on this class, does L<MooseX::Traits>,
 L<Form::Data::Processor::Role::Errors>
 and L<Form::Data::Processor::Role::FullName>.
+
+B<Notice:> default L<trait namespace|MooseX::Traits/_trait_namespace> is
+C<Form::Data::Processor::TraitFor::Field>.
 
 Field could be validated in different ways: L<actions|/add_actions>,
 L<internal validation|/validate> or L<external validation|/EXTERNAL VALIDATION>.
@@ -1006,10 +991,8 @@ Return clone of current field.
 Cloned fields have proper L</parent> reference. If field has subfields, then
 subfields will be cloned too.
 
-When you need to set custom attributes for clone, then it could be passed
-via C<%replacement>. But it has B<limitation>: replacement will be passed
-to subfields too (so replacement could be provided only for attributes which
-exists in field and in its subfields and so on).
+You can set custom attributes for clone: it could be passed via C<%replacement>.
+But B<note>: replacement will be passed to subfields clones too.
 
     $field->disabled(0);
 
@@ -1027,7 +1010,8 @@ exists in field and in its subfields and so on).
 
 =back
 
-Indicate if field can contains fields. By default field doesn't have subfields.
+Indicate if field contains subfields. By default field doesn't have subfields
+and returns C<false>.
 
 
 =method has_result
@@ -1116,6 +1100,8 @@ Also provide next methods:
 =over 1
 
 =item set_default_value( attr => value )
+
+=item delete_default_value( attr )
 
 =item get_default_value(attr)
 

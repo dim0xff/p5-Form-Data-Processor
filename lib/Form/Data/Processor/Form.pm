@@ -81,6 +81,20 @@ sub process {
     return $self->validated;
 }
 
+sub clone {
+    my $self   = shift;
+    my %params = @_;
+
+    return $self->meta->clone_object(
+        $self,
+        (
+            errors => [],
+            params => {},
+            @_,
+        )
+    );
+}
+
 sub clear_form {
     my $self = shift;
 
@@ -267,6 +281,12 @@ B<Notice:> normally is being set by Form::Data::Processor internals.
 
 Clear current form (L</clear_params>, L<Form::Data::Processor::Role::Errors/clear_errors>
 and L<Form::Data::Processor::Role::Fields/reset_fields>).
+
+
+=method clone
+
+Return clone of current form.
+Please refer to L<field clone|Form::Data::Processor::Field/clone> for more info.
 
 
 =method form

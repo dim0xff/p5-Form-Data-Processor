@@ -96,13 +96,13 @@ package Form {
     has_field photos => (
         type    => 'List',
         options => [ 'WITH+PHOTOS', 'WITHOUT+PHOTOS', ],
-        traits  => ['Form::TraitFor::Field::List'],
+        traits  => ['+Form::TraitFor::Field::List'],
     );
 
     has_field comments => (
         type     => 'List',
         options  => [ 'WITH+COMMENTS', 'WITHOUT+COMMENTS', ],
-        traits   => ['Form::TraitFor::Field::List'],
+        traits   => ['+Form::TraitFor::Field::List'],
         multiple => 0,
     );
 
@@ -111,19 +111,19 @@ package Form {
         type            => 'List',
         options_builder => \&build_days,
         required        => 1,
-        traits          => ['Form::TraitFor::Field::List'],
+        traits          => ['+Form::TraitFor::Field::List'],
     );
 
     # From form method "options_year"
     has_field year => (
         type     => 'List::Single',
         required => 1,
-        traits   => ['Form::TraitFor::Field::List'],
+        traits   => ['+Form::TraitFor::Field::List'],
     );
 
     has_field fruits => (
         type   => '+Form::Field::Fruits',
-        traits => ['Form::TraitFor::Field::List'],
+        traits => ['+Form::TraitFor::Field::List'],
     );
 
     # With parent options builder

@@ -61,7 +61,7 @@ package Form {
 
     has_field 'compound.compound.compound' => (
         type   => 'Compound',
-        traits => ['Form::TraitsFor::Compound::Text']
+        traits => ['+Form::TraitsFor::Compound::Text']
     );
     has_field '+compound.compound.compound.text' => ( required => 1 );
     has_field 'compound.compound.compound.text0' => ( type     => 'Text' );

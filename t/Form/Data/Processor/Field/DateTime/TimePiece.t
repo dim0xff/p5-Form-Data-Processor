@@ -16,18 +16,21 @@ package Form {
     has_field zone => (
         type   => 'DateTime',
         format => '%Y-%m-%dT%H:%M:%S%z',
+        traits => ['DateTime::TimePiece'],
     );
 
     has_field format_start => (
         type     => 'DateTime',
         format   => '%d-%m-%y',
         dt_start => '1-12-13',
+        traits => ['DateTime::TimePiece'],
     );
 
     has_field format_end => (
         type   => 'DateTime',
         format => '%d %b, %Y',
         dt_end => '01 Dec, 2012',
+        traits => ['DateTime::TimePiece'],
     );
 
     sub dump_errors {
@@ -54,7 +57,7 @@ package main {
                 {
                     zone         => 'test',
                     format_start => Time::Piece->new->mdy('/'),
-                    format_end   => [],
+                    format_end   => '01 November, 2010',
                 },
             ),
             'Form validated with errors'
@@ -84,8 +87,7 @@ package main {
         is_deeply(
             $form->dump_errors,
             {
-                zone => ['Field value is not a valid datetime'],
-                format_start => ['Date is too early'],
+                format_start => ['Field value is not a valid datetime'],
                 format_end   => ['Date is too late'],
             },
             'OK, right error messages'
@@ -119,22 +121,22 @@ package main {
                 {
                     zone         => '2014-12-28T18:26:28+0300',
                     format_start => '05-12-13T16:00:21+0300',
-                    format_end   => '1 Nov, 2012',
+                    format_end   => '1 Nov,   2012',
                 },
             ),
             'Form validated without errors'
         );
 
-        cmp_ok( $form->field('zone')->result->epoch,
+        cmp_ok( $form->field('zone')->result,
             '==', '1419780388', 'field zone, ok' );
 
-        cmp_ok( $form->field('format_start')->result->epoch,
+        cmp_ok( $form->field('format_start')->result,
             '==', '1386201600', 'field format_start, ok' );
 
-        cmp_ok( $form->field('format_end')->result->epoch,
+        cmp_ok( $form->field('format_end')->result,
             '==', '1351728000', 'field format_end, ok' );
 
-        is( ref $form->field('zone')->result, 'DateTime', 'result ref' );
+        is( ref $form->field('zone')->result, 'Time::Piece', 'result ref' );
         is( $form->field('zone')->value, '2014-12-28T18:26:28+0300', 'value' );
 
     };
