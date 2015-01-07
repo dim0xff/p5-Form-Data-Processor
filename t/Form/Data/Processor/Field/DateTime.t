@@ -54,7 +54,7 @@ package main {
                 {
                     zone         => 'test',
                     format_start => Time::Piece->new->mdy('/'),
-                    format_end   => '01 November, 2010',
+                    format_end   => [],
                 },
             ),
             'Form validated with errors'
@@ -84,7 +84,8 @@ package main {
         is_deeply(
             $form->dump_errors,
             {
-                format_start => ['Field value is not a valid datetime'],
+                zone => ['Field value is not a valid datetime'],
+                format_start => ['Date is too early'],
                 format_end   => ['Date is too late'],
             },
             'OK, right error messages'
@@ -118,22 +119,22 @@ package main {
                 {
                     zone         => '2014-12-28T18:26:28+0300',
                     format_start => '05-12-13T16:00:21+0300',
-                    format_end   => '1 Nov,   2012',
+                    format_end   => '1 Nov, 2012',
                 },
             ),
             'Form validated without errors'
         );
 
-        cmp_ok( $form->field('zone')->result,
+        cmp_ok( $form->field('zone')->result->epoch,
             '==', '1419780388', 'field zone, ok' );
 
-        cmp_ok( $form->field('format_start')->result,
+        cmp_ok( $form->field('format_start')->result->epoch,
             '==', '1386201600', 'field format_start, ok' );
 
-        cmp_ok( $form->field('format_end')->result,
+        cmp_ok( $form->field('format_end')->result->epoch,
             '==', '1351728000', 'field format_end, ok' );
 
-        is( ref $form->field('zone')->result, 'Time::Piece', 'result ref' );
+        is( ref $form->field('zone')->result, 'DateTime', 'result ref' );
         is( $form->field('zone')->value, '2014-12-28T18:26:28+0300', 'value' );
 
     };
