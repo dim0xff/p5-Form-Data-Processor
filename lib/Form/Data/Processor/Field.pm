@@ -1275,9 +1275,17 @@ validation will be from parent field and only then - from form.
 
 =item L<Form::Data::Processor::Field::Compound>
 
+=item L<Form::Data::Processor::Field::DateTime>
+
+=item L<Form::Data::Processor::Field::Email>
+
 =item L<Form::Data::Processor::Field::List>
 
+=item L<Form::Data::Processor::Field::Number>
+
 =item L<Form::Data::Processor::Field::Repeatable>
+
+=item L<Form::Data::Processor::Field::String>
 
 =item L<Form::Data::Processor::Field::Text>
 
