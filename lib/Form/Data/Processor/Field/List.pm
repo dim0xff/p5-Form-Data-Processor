@@ -9,6 +9,8 @@ use List::MoreUtils qw(uniq);
 
 extends 'Form::Data::Processor::Field';
 
+use List::MoreUtils qw(any);
+
 #<<< Type checking and coercion for options list
 {
     use Moose::Util::TypeConstraints;
@@ -19,7 +21,7 @@ extends 'Form::Data::Processor::Field';
             my $val = $_;
 
             # Look if some option doesn't have 'value' attribute
-            return !grep( { !( exists $_->{value} ) } @{$val} );
+            return !(any { !( exists $_->{value} ) } @{$val} );
         },
         message { "Value is not provided for option" };
 
@@ -156,7 +158,7 @@ around is_empty => sub {
     return 0 unless ref $value eq 'ARRAY';
 
     # Seems it is ArrayRef. Look for defined value
-    return !grep( {defined} @{$value} );
+    return !( any {defined} @{$value} );
 };
 
 

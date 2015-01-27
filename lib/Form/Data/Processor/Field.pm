@@ -7,6 +7,7 @@ use namespace::autoclean;
 
 with 'MooseX::Traits', 'Form::Data::Processor::Role::Errors';
 
+use List::MoreUtils qw(any);
 
 #
 # ATTRIBUTES
@@ -338,7 +339,7 @@ sub add_actions {
                     my $value = $self->value;
 
                     $self->add_error( $error_message, $value )
-                        unless grep { $value eq $_ } @{ $action->{check} };
+                        unless any { $value eq $_ } @{ $action->{check} };
                 };
             }
         }

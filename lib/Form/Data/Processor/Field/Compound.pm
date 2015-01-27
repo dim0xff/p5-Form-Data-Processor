@@ -48,7 +48,7 @@ sub init_input {
 
     # Default init_input logic
     return if $self->disabled;
-    return unless $posted || $value;
+    return unless $posted || defined($value);
 
     for my $sub ( $self->all_init_input_actions ) {
         $sub->( $self, \$value );
