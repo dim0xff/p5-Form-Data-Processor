@@ -9,6 +9,7 @@ extends 'Form::Data::Processor::Field';
 
 with 'Form::Data::Processor::Role::Fields';
 
+use List::MoreUtils qw(any);
 
 has contains => (
     is        => 'rw',
@@ -82,7 +83,7 @@ sub init_input {
 
     # Default init_input logic
     return if $self->disabled;
-    return unless $posted || $value;
+    return unless $posted || defined($value);
 
     for my $sub ( $self->all_init_input_actions ) {
         $sub->( $self, \$value );
@@ -135,7 +136,7 @@ around is_empty => sub {
     return 0 unless ref $value eq 'ARRAY';
 
     # Seems it is ArrayRef. Look for defined value
-    return !( grep {defined} @{$value} );
+    return !( any {defined} @{$value} );
 };
 
 around validate => sub {

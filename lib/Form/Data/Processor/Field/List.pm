@@ -9,6 +9,7 @@ use List::MoreUtils qw(uniq);
 
 extends 'Form::Data::Processor::Field';
 
+use List::MoreUtils qw(any);
 
 #<<< Type checking and coercion for options list
 {
@@ -20,7 +21,7 @@ extends 'Form::Data::Processor::Field';
             my $val = $_;
 
             # Look if some option doesn't have 'value' attribute
-            return !grep( { !( exists $_->{value} ) } @{$val} );
+            return !(any { !( exists $_->{value} ) } @{$val} );
         },
         message { "Value is not provided for option" };
 
@@ -157,7 +158,7 @@ around is_empty => sub {
     return 0 unless ref $value eq 'ARRAY';
 
     # Seems it is ArrayRef. Look for defined value
-    return !grep( {defined} @{$value} );
+    return !( any {defined} @{$value} );
 };
 
 
@@ -203,19 +204,6 @@ EACH_VALUE:
             $self->add_error( 'not_allowed', $value );
         }
     }
-};
-
-
-around validate_required => sub {
-    my $orig = shift;
-    my $self = shift;
-
-    return 0 unless $self->$orig();
-    return 0
-        if ref $self->value eq 'ARRAY'
-        && !grep( {defined} @{ $self->value } );
-
-    return 1;
 };
 
 
