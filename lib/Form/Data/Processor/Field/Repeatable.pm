@@ -200,13 +200,12 @@ sub _build_contains {
 
     }
 
+    confess 'Repeatable does not contain fields' unless $self->has_contains;
+
     $self->clear_fields;
     $self->clear_index;
 
     $self->contains->name('');
-    $self->contains->_init_external_validators;
-
-    confess 'Repeatable does not contain fields' unless $self->has_contains;
 
     $self->_add_repeatable_subfield for ( 1 .. $self->prebuild_subfields );
 }
