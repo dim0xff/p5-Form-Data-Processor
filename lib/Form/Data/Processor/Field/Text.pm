@@ -93,17 +93,6 @@ around init_input => sub {
 };
 
 
-around validate_required => sub {
-    my $orig = shift;
-    my $self = shift;
-
-    return 0 unless $self->$orig();
-    return 0 if $self->is_empty( $self->value );
-
-    return 1;
-};
-
-
 # Apply actions
 #
 # $_[0] - self
@@ -155,9 +144,6 @@ __END__
 This field validates any data, which looks like text.
 
 This field is directly inherited from L<Form::Data::Processor::Field>.
-
-In addition to L<Form::Data::Processor::Field/required>, required also means
-that value must not be L<empty|Form::Data::Processor::Field/is_empty>.
 
 Field sets own error messages:
 

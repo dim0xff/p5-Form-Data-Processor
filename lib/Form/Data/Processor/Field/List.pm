@@ -9,7 +9,6 @@ use List::MoreUtils qw(uniq);
 
 extends 'Form::Data::Processor::Field';
 
-
 #<<< Type checking and coercion for options list
 {
     use Moose::Util::TypeConstraints;
@@ -203,19 +202,6 @@ EACH_VALUE:
             $self->add_error( 'not_allowed', $value );
         }
     }
-};
-
-
-around validate_required => sub {
-    my $orig = shift;
-    my $self = shift;
-
-    return 0 unless $self->$orig();
-    return 0
-        if ref $self->value eq 'ARRAY'
-        && !grep( {defined} @{ $self->value } );
-
-    return 1;
 };
 
 

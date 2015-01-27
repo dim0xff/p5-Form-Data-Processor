@@ -82,9 +82,9 @@ package Form {
     # }
 
 #<<<
-    has_field 'rep_1'                    => ( type => '+Form::Field::Repeatable1', prebuild_subfields => 10, max_input_length => 10);
+    has_field 'rep_1' => ( type => '+Form::Field::Repeatable1', prebuild_subfields => 10, max_input_length => 10);
 
-    has_field 'rep_2'                    => (
+    has_field 'rep_2' => (
         type => 'Repeatable',
         apply  => [
             {
@@ -102,6 +102,7 @@ package Form {
             },
         ],
     );
+
     has_field 'rep_2.contains'           => ( type => 'Compound', );
     has_field 'rep_2.contains.text_min'  => ( type => 'Text', minlength => 10, );
 
@@ -426,6 +427,32 @@ package main {
         $f->validate();
         ok( !$f->has_errors, 'field validated' );
         is_deeply( $f->result, undef, 'field result OK' );
+    };
+
+    subtest 'required' => sub {
+        $form->field('rep_1')->set_default_value( required => 1 );
+        $form->field('rep_3')->set_default_value( required => 1 );
+        $form->field('rep_4')->set_default_value( required => 1 );
+        $form->field('rep_5')
+            ->set_default_value( required => 1, disabled => 0 );
+
+        my $data = {
+            rep_1 => [],
+            rep_3 => [],
+            rep_4 => undef,
+        };
+        ok( !$form->process($data), 'Form validated with errors' );
+
+        is_deeply(
+            $form->dump_errors,
+            {
+                'rep_1' => ['Field is required'],
+                'rep_3' => ['Field is required'],
+                'rep_4' => ['Field is required'],
+                'rep_5' => ['Field is required'],
+            },
+            'OK, right error messages'
+        );
     };
 
     done_testing();
