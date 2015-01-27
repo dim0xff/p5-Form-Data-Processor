@@ -458,11 +458,11 @@ It will set L</options_builder>.
         # $_[1] - field
 
         # Must return ArrayRef
-        return [
+        return (
             'apples',
             'oranges',
             'kiwi',
-        ];
+        );
     }
 
 B<Notice:> the "top" method will be used, this means that if you have
