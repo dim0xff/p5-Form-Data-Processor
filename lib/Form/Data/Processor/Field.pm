@@ -211,7 +211,7 @@ sub init_input {
 
 sub is_empty {
     return 0 if @_ == 1 && length( $_[0]->value // '' );
-    return 0 if @_ == 2 && defined( $_[1] ) && length( $_[1] );
+    return 0 if @_ == 2 && length( $_[1] // '' );
     return 1;
 }
 
@@ -237,10 +237,7 @@ sub validate {
 
 
 sub validate_required {
-    my $self = shift;
-
-    return 0 unless $self->has_value && defined $self->value;
-    return 1;
+    return !( shift->is_empty );
 }
 
 
@@ -1056,7 +1053,7 @@ before L<empty|/is_empty> checking.
 
 =back
 
-Indicate if C<$value> is not empty (defined and length is positive).
+Indicate if C<$value> is empty (defined and length is positive).
 
 If C<$value> is omitted, then check current field L</value>.
 
@@ -1180,7 +1177,7 @@ validation stops with C<required> error.
 
 =back
 
-When field is L</required> check if field has defined value.
+When field is L</required> check if field is not L<empty|/is_empty>.
 
 Return C<true> on success and C<false> when fail.
 
