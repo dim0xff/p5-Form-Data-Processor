@@ -378,7 +378,7 @@ sub _find_parent {
         my $simple_name = pop(@names);
         my $parent_name = join( '.', @names );
 
-        if ( $parent = $self->field( $parent_name, undef, $self ) ) {
+        if ( $parent = $self->field( $parent_name, $self ) ) {
             confess "Parent field '$parent_name' can't contain fields for '"
                 . $field_attr->{name} . "'"
                 unless $parent->DOES('Form::Data::Processor::Role::Fields');
