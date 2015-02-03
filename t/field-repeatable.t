@@ -124,7 +124,7 @@ package Form {
                 shift->all_error_fields };
     }
 
-    sub validate_rep_3_rep_text {
+    sub validate_rep_3_rep_contains_text {
         my $self  = shift;
         my $field = shift;
 
@@ -134,7 +134,7 @@ package Form {
             if ( $field->value || '' ) =~ /try/;
     }
 
-    sub validate_rep_4_text_req {
+    sub validate_rep_4_contains_text_req {
         my $self  = shift;
         my $field = shift;
 
@@ -257,49 +257,49 @@ package main {
         'Only two fields returned'
     );
 
-    my $data = {
-        rep_1 => [
-            (
-                {
-                    text => 'Text'
-                }
-            ) x 10
-        ],
-        rep_2 => [
-            (
-                {
-                    text_min => 'Text',
-                }
-            ) x 32
-        ],
-        rep_3 => [
-            (
-                {
-                    rep => [
-                        (
-                            {
-                                text => 'Text',
-                            }
-                        ) x 32,
-                    ],
-                    text_min => 'Text',
-                }
-            ) x 32,
-        ],
-        rep_4 => [
-            (
-                {
-                    text_req => 'Required',
-                },
-                {
-                    text_req => 'Required',
-                    text     => 'Text',
-                }
-            ) x 32,
-        ],
-    };
-
     if ( $ENV{DO_BENCH} ) {
+        my $data = {
+            rep_1 => [
+                (
+                    {
+                        text => 'Text'
+                    }
+                ) x 10
+            ],
+            rep_2 => [
+                (
+                    {
+                        text_min => 'Text',
+                    }
+                ) x 32
+            ],
+            rep_3 => [
+                (
+                    {
+                        rep => [
+                            (
+                                {
+                                    text => 'Text',
+                                }
+                            ) x 32,
+                        ],
+                        text_min => 'Text',
+                    }
+                ) x 32,
+            ],
+            rep_4 => [
+                (
+                    {
+                        text_req => 'Required',
+                    },
+                    {
+                        text_req => 'Required',
+                        text     => 'Text',
+                    }
+                ) x 32,
+            ],
+        };
+
         for ( 1 .. 10 ) {
             my $t0 = [gettimeofday];
             $form->process($data);

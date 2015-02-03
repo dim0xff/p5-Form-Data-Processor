@@ -13,6 +13,11 @@ with 'Form::Data::Processor::Role::Fields';
 # ATTRIBUTES
 #
 
+has _uid => (
+    is        => 'ro',
+    default   => sub {rand}
+);
+
 has name => (
     is      => 'rw',
     isa     => 'Str',

@@ -16,6 +16,11 @@ use List::MoreUtils qw(any);
 has '+_trait_namespace' =>
     ( default => 'Form::Data::Processor::TraitFor::Field' );
 
+has _uid => (
+    is      => 'ro',
+    default => sub {rand}
+);
+
 has name => (
     is       => 'rw',
     isa      => 'Str',
@@ -396,19 +401,17 @@ sub _init_external_validators {
 sub _find_external_validators {
     my $self = shift;
 
+    # Recursive search validators from current fields parents to top
     my $sub;
     $sub = sub {
         my ( $self, $field ) = @_;
 
         my @validators;
 
-        ( my $validator = $field->full_name ) =~ s/\./_/g;
+        ( my $validator   = $field->full_name ) =~ s/\./_/g;
+        ( my $parent_name = $self->full_name ) =~ s/\./_/g;
 
-        if ( $self->can('full_name') ) {
-            ( my $full_name = $self->full_name ) =~ s/\./_/g;
-            $validator =~ s/^\Q$full_name\E_//;
-        }
-
+        $validator =~ s/^\Q$parent_name\E_//;
         $validator = 'validate_' . $validator;
 
         # Search validator in current obj
@@ -418,13 +421,30 @@ sub _find_external_validators {
                 sub {
                     my $field = shift;
 
-                    $code->( $self, $field );
+                    # Not always $self is one of real parents for current $field
+                    # Eg. Repeatable fields: it has "prototype" subfields, to
+                    # build real subfields.
+                    my $local_self;
+
+                    # So search real $self for current $field via field parents
+                    if ( $self->full_name ) {
+                        $local_self = $field;
+
+                        while ( $local_self = $local_self->parent ) {
+                            last if $local_self->_uid == $self->_uid;
+                        }
+                    }
+                    else {
+                        $local_self = $self;
+                    }
+
+                    $code->( $local_self, $field );
                 }
             );
         }
 
         # Search validator in parent objects
-        if ( $self->can('parent') && $self->has_parent ) {
+        if ( $self->has_parent ) {
             push( @validators, $sub->( $self->parent, $field ) );
         }
 
