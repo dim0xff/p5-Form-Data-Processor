@@ -705,7 +705,7 @@ When short notation is used, then Form::Data::Processor tries to find
 extension package (C<Form::Data::ProcessorX::Field::>),
 internal package (C<Form::Data::Processor::Field::>),
 or package with provided field name space
-(via L<Form::Data::Processor::Form/field_name_space>).
+(via L<Form::Data::Processor::Form::Role::Fields/field_name_space>).
 
 When long notation is used, then Form::Data::Processor tries to find package,
 which corresponds to package name provided in field L</type>
