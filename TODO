@@ -6,3 +6,8 @@ Form::Data::Processor::Role::Fields/init_input remove 'confess'
 
 POD: add info for read only attributes
 POD: Form::Data::Processor::Role::Fields add info about has_errors vs num_errors
+
+I hate FDP::Field::Repeatable/fallback!
+    Have an idea.
+    For each field there are should exist prototypes.
+    And $field->attr actually should do $field->proto->attr
