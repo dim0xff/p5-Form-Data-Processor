@@ -434,12 +434,12 @@ on C<contains> won't give effect.
         if ( $self->to_delete ) {
 
             # XXX - will not work as expected
-            $self->field('categories')->contains->field('id')->disabled(1);
+            $self->field('categories')->contains->field('position')->disabled(1);
 
             # Need to set disabled on all Repeatable subfields
             # Will work!
             for ( $self->field('categories')->all_fields ) {
-                $_->field('id')->disabled(1)
+                $_->field('position')->disabled(1)
             }
         }
     };
@@ -455,10 +455,10 @@ The other way is to user L</fallback> option.
 
             # Will work... but slower
             $self->field('categories')->fallback(1);
-            $self->field('categories')->contains->field('id')->disabled(1);
+            $self->field('categories')->contains->field('position')->disabled(1);
         }
         else {
-            $self->field('categories')->contains->field('id')->disabled(0);
+            $self->field('categories')->contains->field('position')->disabled(0);
         }
     };
 
