@@ -430,6 +430,32 @@ package main {
     };
 
     subtest 'required' => sub {
+        $form->field('rep_1')->contains->field('text')->disabled(1);
+        $form->field('rep_1')->set_default_value(fallback => 1);
+
+        ok(
+            $form->process(
+                {
+                    rep_1 => [ { text => [] } ]
+                }
+            ),
+            'Form validated without errors on fallback(1)'
+        );
+
+        $form->field('rep_1')->set_default_value(fallback => 0);
+        $form->field('rep_1')->contains->field('text')->disabled(0);
+        ok(
+            !$form->process(
+                {
+                    rep_1 => [ { text => [] } ]
+                }
+            ),
+            'Form validated with errors on fallback(0)'
+        );
+
+
+        $form->field('rep_1')->set_default_value(fallback => 0);
+
         $form->field('rep_1')->set_default_value( required => 1 );
         $form->field('rep_3')->set_default_value( required => 1 );
         $form->field('rep_4')->set_default_value( required => 1 );
