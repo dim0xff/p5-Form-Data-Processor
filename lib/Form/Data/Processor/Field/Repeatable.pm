@@ -438,7 +438,7 @@ on C<contains> won't give effect.
 
             # Need to set disabled on all Repeatable subfields
             # Will work!
-            for ( $self->field('contains')->all_fields ) {
+            for ( $self->field('categories')->all_fields ) {
                 $_->field('id')->disabled(1)
             }
         }
