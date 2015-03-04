@@ -32,20 +32,20 @@ has time_zone => (
     trigger   => sub { $_[0]->clear_time_zone unless defined $_[1] },
 );
 
-has dt_start => (
+has min => (
     is        => 'rw',
     isa       => 'Str|Undef',
-    predicate => 'has_dt_start',
-    clearer   => 'clear_dt_start',
-    trigger   => sub { $_[0]->clear_dt_start unless defined $_[1] },
+    predicate => 'has_min',
+    clearer   => 'clear_min',
+    trigger   => sub { $_[0]->clear_min unless defined $_[1] },
 );
 
-has dt_end => (
+has max => (
     is        => 'rw',
     isa       => 'Str|Undef',
-    predicate => 'has_dt_end',
-    clearer   => 'clear_dt_end',
-    trigger   => sub { $_[0]->clear_dt_end unless defined $_[1] },
+    predicate => 'has_max',
+    clearer   => 'clear_max',
+    trigger   => sub { $_[0]->clear_max unless defined $_[1] },
 );
 
 has _result => (
@@ -69,8 +69,8 @@ sub BUILD {
 
     $self->set_error_message(
         datetime_invalid => 'Field value is not a valid datetime',
-        datetime_early   => 'Date is too early',
-        datetime_late    => 'Date is too late',
+        min              => 'Date is too early',
+        max              => 'Date is too late',
     );
 }
 
@@ -82,8 +82,8 @@ after populate_defaults => sub {
         format    => $self->format,
         locale    => $self->locale,
         time_zone => $self->time_zone,
-        dt_start  => $self->dt_start,
-        dt_end    => $self->dt_end,
+        min       => $self->min,
+        max       => $self->max,
     );
 };
 
@@ -97,11 +97,8 @@ around validate => sub {
 
     my $value = $self->_result;
 
-    return $self->add_error('datetime_early')
-        unless $self->validate_dt_start($value);
-
-    return $self->add_error('datetime_late')
-        unless $self->validate_dt_end($value);
+    return $self->add_error('min') unless $self->validate_min($value);
+    return $self->add_error('max') unless $self->validate_max($value);
 };
 
 before reset => sub { $_[0]->_clear_result };
@@ -118,28 +115,28 @@ sub validate_datetime {
     return $self->_set_result($dt);
 }
 
-sub validate_dt_start {
+sub validate_min {
     my ( $self, $result ) = @_;
 
-    return 1 unless $self->has_dt_start && defined $result;
+    return 1 unless $self->has_min && defined $result;
 
-    my $dt_start
+    my $min
         = DateTime::Format::Strptime->new( $self->_strptime_options )
-        ->parse_datetime( $self->dt_start );
+        ->parse_datetime( $self->min );
 
-    return !!( $result >= $dt_start );
+    return !!( $result >= $min );
 }
 
-sub validate_dt_end {
+sub validate_max {
     my ( $self, $result ) = @_;
 
-    return 1 unless $self->has_dt_end && defined $result;
+    return 1 unless $self->has_max && defined $result;
 
-    my $dt_end
+    my $max
         = DateTime::Format::Strptime->new( $self->_strptime_options )
-        ->parse_datetime( $self->dt_end );
+        ->parse_datetime( $self->max );
 
-    return !!( $result <= $dt_end );
+    return !!( $result <= $max );
 }
 
 sub _strptime_options {
@@ -167,8 +164,8 @@ __END__
 
     has_field check_date => (
         type      => 'DateTime',
-        dt_start  => '2014-01-01',
-        dt_end    => '2014-12-31T17:00:00',
+        min       => '2014-01-01',
+        max       => '2014-12-31T17:00:00',
         time_zone => 'Europe/Moscow',
     );
 
@@ -185,8 +182,8 @@ This field is directly inherited from L<Form::Data::Processor::Field>.
 Field sets own error messages:
 
     datetime_invalid => 'Field value is not a valid datetime',
-    datetime_early   => 'Date is too early',
-    datetime_late    => 'Date is too late',
+    min              => 'Date is too early',
+    max              => 'Date is too late',
 
 Error C<datetime_invalid> will be raised when field value is not could be parsed
 as datetime string.
@@ -239,7 +236,7 @@ Please refer to L<DateTime::Format::Strptime/time_zone> for more info.
 Also provided clearer C<clear_time_zone> and predicator C<has_time_zone>.
 
 
-=attr dt_start
+=attr min
 
 =over 4
 
@@ -247,15 +244,15 @@ Also provided clearer C<clear_time_zone> and predicator C<has_time_zone>.
 
 =back
 
-When defined and field result is less than C<dt_start>, then error
-C<datetime_early> is raised.
+When defined and field result is less than C<min>, then error
+C<min> is raised.
 
 It should have the same format as L</format> to correct parse.
 
-Also provided clearer C<clear_dt_start> and predicator C<has_dt_start>.
+Also provided clearer C<clear_min> and predicator C<has_min>.
 
 
-=attr dt_end
+=attr max
 
 =over 4
 
@@ -263,12 +260,12 @@ Also provided clearer C<clear_dt_start> and predicator C<has_dt_start>.
 
 =back
 
-When defined and field result is great than C<dt_end>, then error
-C<datetime_late> is raised.
+When defined and field result is great than C<max>, then error
+C<max> is raised.
 
 It should have the same format as L</format> to correct parse.
 
-Also provided clearer C<clear_dt_end> and predicator C<has_dt_end>.
+Also provided clearer C<clear_max> and predicator C<has_max>.
 
 
 =method validate_datetime
@@ -285,7 +282,7 @@ Returns C<1> if C<$value> could be parsed via L<DateTime::Format::Strptime>
 with current L</format>. Otherwise returns C<0>.
 
 
-=method validate_dt_start
+=method validate_min
 
 =over 4
 
@@ -298,10 +295,10 @@ with current L</format>. Otherwise returns C<0>.
 C<$result> is current field L<Form::Data::Processor::Field/result>
 (actually is L<DateTime> object).
 
-Validate if C<$result> is great than L</dt_start> or equal to it.
+Validate if C<$result> is great than L</min> or equal to it.
 
 
-=method validate_dt_end
+=method validate_max
 
 =over 4
 
@@ -314,6 +311,6 @@ Validate if C<$result> is great than L</dt_start> or equal to it.
 C<$result> is current field L<Form::Data::Processor::Field/result>
 (actually is L<DateTime> object).
 
-Validate if C<$result> is less than L</dt_end> or equal to it.
+Validate if C<$result> is less than L</max> or equal to it.
 
 =cut

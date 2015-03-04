@@ -19,15 +19,15 @@ package Form {
     );
 
     has_field format_start => (
-        type     => 'DateTime',
-        format   => '%d-%m-%y',
-        dt_start => '1-12-13',
+        type   => 'DateTime',
+        format => '%d-%m-%y',
+        min    => '1-12-13',
     );
 
     has_field format_end => (
         type   => 'DateTime',
         format => '%d %b, %Y',
-        dt_end => '01 Dec, 2012',
+        max    => '01 Dec, 2012',
     );
 
     sub dump_errors {
@@ -84,7 +84,7 @@ package main {
         is_deeply(
             $form->dump_errors,
             {
-                zone => ['Field value is not a valid datetime'],
+                zone         => ['Field value is not a valid datetime'],
                 format_start => ['Date is too early'],
                 format_end   => ['Date is too late'],
             },
