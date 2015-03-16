@@ -25,7 +25,7 @@ has precision => (
     default   => 2,
     predicate => 'has_precision',
     clearer   => 'clear_precision',
-    trigger   => sub { $_[0]->clear_precision unless defined $_[1] },
+    trigger   => sub { $_[0]->clear_precision unless $_[1] },
 );
 
 
@@ -118,6 +118,8 @@ If defined and  field value precision length (how many number could be after dot
 is greater than C<precision>, then error C<float_precision> raised.
 
 Also provided clearer C<clear_precision> and predicator C<has_precision>.
+
+C<0> means any precision.
 
 
 =attr strong_float
