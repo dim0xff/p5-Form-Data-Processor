@@ -185,7 +185,7 @@ sub _result {
     my $self = shift;
 
     return [
-        map      { $self->fields->[$_]->_result }
+        map      { $self->fields->[$_]->result }
             grep { defined $self->fields->[$_] }
             ( 0 .. ( $self->input_length - 1 ) )
     ];

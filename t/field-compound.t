@@ -250,9 +250,7 @@ package main {
 
     $data->{compound}{compound}{text_max} =~ s/^\s+|\s+$//igs;
     is_deeply( $form->values, $data, 'Correct form values' );
-    $data->{compound}{compound}{text_max} =~ s/\s+/ /igs;
-    is_deeply( $form->field('compound')->_result,
-        $data->{compound}, 'Correct field _result' );
+
     is( $form->result,                    undef, 'Form result is undef' );
     is( $form->field('compound')->result, undef, 'Field result is undef' );
 
