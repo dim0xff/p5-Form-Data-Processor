@@ -5,6 +5,16 @@ use lib 't/lib';
 
 use Test::Most;
 
+package Bool {
+    use overload (
+        '""' => sub {'false'},
+        "0+" => sub { ${ $_[0] } },
+    );
+
+    no warnings;
+    $Bool::false = do { bless \( my $dummy = 0 ), 'Bool' };
+};
+
 package Form {
     use Form::Data::Processor::Moose;
     extends 'Form::Data::Processor::Form';
@@ -14,7 +24,7 @@ package Form {
         traits        => ['Boolean::CustomResult'],
         custom_result => {
             true  => 'Yes, confirmed',
-            false => 'NO!',
+            false => $Bool::false,
         },
     );
 }
@@ -38,13 +48,15 @@ package main {
 
     subtest 'no result' => sub {
         ok( $form->process( { confirm => '0' } ), 'Form processed' );
-        is_deeply( $form->result, { confirm => 'NO!' }, 'Proper result' );
+        is_deeply( $form->result, { confirm => $Bool::false },
+            'Proper result' );
     };
 
     subtest 'reset' => sub {
         $form->field('confirm')->custom_result->{'false'} = '~undef';
         ok( $form->process( { confirm => '0' } ), 'Form processed' );
-        is_deeply( $form->result, { confirm => 'NO!' }, 'Proper result' );
+        is_deeply( $form->result, { confirm => $Bool::false },
+            'Proper result' );
 
         ok(
             $form->field('confirm')

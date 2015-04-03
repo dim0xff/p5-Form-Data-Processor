@@ -5,14 +5,14 @@ package Form::Data::Processor::TraitFor::Field::Boolean::CustomResult;
 use Form::Data::Processor::Moose::Role;
 use namespace::autoclean;
 
-use MooseX::Types::Moose qw(Str Undef);
+use MooseX::Types::Moose qw(Any);
 use MooseX::Types::Structured qw(Dict Optional);
 
 has custom_result => (
     is  => 'rw',
     isa => Dict [
-        true  => Optional [ Str | Undef ],
-        false => Optional [ Str | Undef ],
+        true  => Optional [Any],
+        false => Optional [Any],
     ],
     clearer => 'clear_custom_result',
 );
