@@ -6,6 +6,7 @@ use lib 't/lib';
 use Test::Most;
 
 use File::Temp qw(tempfile tempdir);
+use JSON;
 use YAML ();
 
 
@@ -113,6 +114,12 @@ package main {
                 required => 1,
                 apply    => ['FullName'],
             },
+            {
+                name     => 'profession',
+                title    => 'Profession',
+                type     => 'String',
+                required => JSON->true,
+            },
         ],
         fields => [
             {
@@ -187,7 +194,7 @@ package main {
 
         is_deeply(
             [ map { $_->full_name } $form->all_fields ],
-            [ 'full_name', 'in_the_middle', 'addresses' ],
+            [ 'full_name', 'profession', 'in_the_middle', 'addresses' ],
             'Proper fields creation order'
         );
 
@@ -212,8 +219,9 @@ package main {
         is_deeply(
             $form->dump_errors,
             {
-                'addresses'   => ['Addresses must be with different types'],
-                'full_name'   => ['Each name should starts from upper case'],
+                addresses     => ['Addresses must be with different types'],
+                full_name     => ['Each name should starts from upper case'],
+                profession    => ['Field is required'],
                 in_the_middle => ['Field is required'],
             },
             '... and error messages is OK'
@@ -223,6 +231,7 @@ package main {
             $form->process(
                 {
                     full_name     => 'Dmitry Latin',
+                    profession    => 'Developer',
                     in_the_middle => 'OK',
                     addresses     => [
                         {
@@ -242,6 +251,7 @@ package main {
             $form->result,
             {
                 'First Name'       => 'Dmitry Latin',
+                'Profession'       => 'Developer',
                 'In the middle'    => 'OK',
                 'Person Addresses' => [
                     {

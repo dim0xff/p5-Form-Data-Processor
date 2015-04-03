@@ -8,7 +8,7 @@ use namespace::autoclean;
 extends 'Form::Data::Processor::Form';
 
 use Config::Any;
-use Data::Clone ();
+use Storable qw(dclone);
 
 has config => (
     is       => 'rw',
@@ -46,7 +46,7 @@ sub load_config {
 
     # Config from hash and it is ready to use
     if ( ref $self->config eq 'HASH' ) {
-        $self->_set_config( Data::Clone::clone( $self->config ) );
+        $self->_set_config( dclone( $self->config ) );
     }
 
     # Need to read config from file
