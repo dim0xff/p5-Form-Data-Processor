@@ -395,6 +395,31 @@ validation values.
 
 B<Notice:> current attribute is resettable.
 
+=head1 EXTERNAL VALIDATION
+
+In C<Repeatable> field it is possible to provide
+L<external validator|Form::Data::Processor::Field/EXTERNAL VALIDATION>
+for every part of complex field. For nested subfields you have to use
+C<contains> keyword.
+
+    package My::Form;
+    use Form::Data::Processor::Moose;
+    extends 'Form::Data::Processor::Form';
+
+    has_field 'array'                       => ( type => 'Repeatable' );
+    has_field 'array.contains'              => ( type => 'My::Compound' );
+    has_field 'array.contains.array'        => ( type => 'Repeatable' );
+    has_field 'array.contains.array.text'   => ( type => 'Text' );
+
+    sub validate_array                              { } # 5
+    sub validate_array_contains                     { } # 4
+    sub validate_array_contains_array               { } # 3
+    sub validate_array_contains_array_contains      { } # 2
+    sub validate_array_contains_array_contains_text { } # 1
+
+
+B<Notice:> external validation for fields will being run from most nested.
+
 
 =head1 CAVEATS
 
