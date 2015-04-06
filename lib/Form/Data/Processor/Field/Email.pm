@@ -2,7 +2,7 @@ package Form::Data::Processor::Field::Email;
 
 # ABSTRACT: email field
 
-use Form::Data::Processor::Moose;
+use Form::Data::Processor::Mouse;
 use namespace::autoclean;
 
 extends 'Form::Data::Processor::Field::Text';
@@ -78,7 +78,7 @@ __END__
 
     package My::Form;
 
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Form';
 
     has_field email => ( type => 'Email', email_valid_params => { -tldcheck => 1 } );

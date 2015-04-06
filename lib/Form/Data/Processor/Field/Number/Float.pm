@@ -2,7 +2,7 @@ package Form::Data::Processor::Field::Number::Float;
 
 # ABSTRACT: float number field
 
-use Form::Data::Processor::Moose;
+use Form::Data::Processor::Mouse;
 use namespace::autoclean;
 
 extends 'Form::Data::Processor::Field::Number';
@@ -82,7 +82,7 @@ __END__
 
     package My::Form;
 
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Form';
 
     has_field float         => ( type => 'Number::Float' );

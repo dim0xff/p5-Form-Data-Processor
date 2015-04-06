@@ -2,7 +2,7 @@ package Form::Data::Processor::Field::Compound;
 
 # ABSTRACT: field with subfields
 
-use Form::Data::Processor::Moose;
+use Form::Data::Processor::Mouse;
 use namespace::autoclean;
 
 extends 'Form::Data::Processor::Field';

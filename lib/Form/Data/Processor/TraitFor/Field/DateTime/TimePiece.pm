@@ -2,7 +2,7 @@ package Form::Data::Processor::TraitFor::Field::DateTime::TimePiece;
 
 # ABSTRACT: trait for datetime field to use validation via L<Time::Piece>
 
-use Form::Data::Processor::Moose::Role;
+use Form::Data::Processor::Mouse::Role;
 use namespace::autoclean;
 
 use Time::Piece;
@@ -59,7 +59,7 @@ __END__
 
     package My::Form;
 
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Form';
 
     has_field check_date => (

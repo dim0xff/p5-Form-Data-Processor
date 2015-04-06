@@ -10,11 +10,11 @@ use lib ( "$FindBin::Bin/lib", "$FindBin::Bin/../lib" );
 use Data::Dumper;
 use Time::HiRes qw(gettimeofday tv_interval);
 
-use Moose::Util::TypeConstraints;
+use Mouse::Util::TypeConstraints;
 
 
 package Form::Field::Raw {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Field';
 
     has has_fields_errors => (
@@ -26,7 +26,7 @@ package Form::Field::Raw {
 }
 
 package Base {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Form';
 
     has '+field_name_space' => ( default => sub { ['Form::Field'] } );
@@ -38,7 +38,7 @@ package Base {
 }
 
 package Form::Subform::One {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Base';
 
     has_field one_f1 => ( type => 'Text',    required => 1 );
@@ -46,7 +46,7 @@ package Form::Subform::One {
 }
 
 package Form::Subform::Two {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Base';
 
     has_field two_f1 => ( type => 'Boolean', );
@@ -67,7 +67,7 @@ package Form::Subform::Two {
 }
 
 package Form {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Base';
 
     has error_subfields => (

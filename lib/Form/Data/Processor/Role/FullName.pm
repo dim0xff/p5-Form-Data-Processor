@@ -2,7 +2,7 @@ package Form::Data::Processor::Role::FullName;
 
 # ABSTRACT: role provides C<full_name> attribute and generator
 
-use Moose::Role;
+use Mouse::Role;
 use namespace::autoclean;
 
 requires 'name', 'parent', 'has_parent';

@@ -2,11 +2,11 @@ package Form::Data::Processor::TraitFor::Field::Boolean::CustomResult;
 
 # ABSTRACT: trait for boolean field to use custom result
 
-use Form::Data::Processor::Moose::Role;
+use Form::Data::Processor::Mouse::Role;
 use namespace::autoclean;
 
-use MooseX::Types::Moose qw(Any);
-use MooseX::Types::Structured qw(Dict Optional);
+use MouseX::Types::Mouse qw(Any);
+use Types::Standard qw(Dict Optional);
 
 has custom_result => (
     is  => 'rw',
@@ -57,7 +57,7 @@ __END__
 
     package My::Form;
 
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Form';
 
     has_field confirm => (

@@ -12,10 +12,10 @@ use lib ( "$FindBin::Bin/lib", "$FindBin::Bin/../lib" );
 use Data::Dumper;
 use Time::HiRes qw(gettimeofday tv_interval);
 
-use Moose::Util::TypeConstraints;
+use Mouse::Util::TypeConstraints;
 
 package Form::Role::Ready {
-    use Form::Data::Processor::Moose::Role;
+    use Form::Data::Processor::Mouse::Role;
 
     has ready_cnt => (
         is      => 'rw',
@@ -33,7 +33,7 @@ package Form::Role::Ready {
 }
 
 package Form::TraitFor::Text {
-    use Form::Data::Processor::Moose::Role;
+    use Form::Data::Processor::Mouse::Role;
 
     apply [
         {
@@ -47,7 +47,7 @@ package Form::TraitFor::Text {
 }
 
 package Form::TraitFor::Compound {
-    use Form::Data::Processor::Moose::Role;
+    use Form::Data::Processor::Mouse::Role;
 
     sub validate_text {
         my $self  = shift;
@@ -60,7 +60,7 @@ package Form::TraitFor::Compound {
 }
 
 package Form::Field::TextCompound {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Field::Compound';
     with 'Form::TraitFor::Compound';
 
@@ -80,7 +80,7 @@ package Form::Field::TextCompound {
 }
 
 package Form {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
 
     extends 'Form::Data::Processor::Form';
     with 'Form::Role::Ready';
@@ -146,7 +146,7 @@ package Form {
 }
 
 package Form::External::OK {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
 
     extends 'Form';
 

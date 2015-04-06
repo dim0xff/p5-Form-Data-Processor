@@ -9,10 +9,10 @@ use lib ( "$FindBin::Bin/lib", "$FindBin::Bin/../lib" );
 use Benchmark qw(:all);
 use Test::More tests => 2;
 
-use Moose::Util::TypeConstraints;
+use Mouse::Util::TypeConstraints;
 
 package FDP::Field::Address {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Field::Compound';
 
     has_field zip     => ( type => 'Text', required => 1, );
@@ -23,7 +23,7 @@ package FDP::Field::Address {
 }
 
 package FDP::Form {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Form';
 
     # Addresses

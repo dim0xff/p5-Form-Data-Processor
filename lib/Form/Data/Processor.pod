@@ -6,7 +6,7 @@
 
 Yet another form data validator, which is inspired by L<HTML::FormHandler>.
 It has similar syntax and similar features, except one: it
-is B<NOT> a form renderer (but it is written using L<Moose>, so you can extend
+is B<NOT> a form renderer (but it is written using L<Mouse>, so you can extend
 it as you wish).
 
 

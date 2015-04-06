@@ -2,7 +2,7 @@ package Form::Data::Processor::Form::Config;
 
 # ABSTRACT: create form from config
 
-use Moose;
+use Mouse;
 use namespace::autoclean;
 
 extends 'Form::Data::Processor::Form';

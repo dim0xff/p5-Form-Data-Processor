@@ -2,7 +2,7 @@ package Form::Data::Processor::TraitFor::Field::List::CustomResult;
 
 # ABSTRACT: trait for list field to use custom result
 
-use Form::Data::Processor::Moose::Role;
+use Form::Data::Processor::Mouse::Role;
 use namespace::autoclean;
 
 sub _result {
@@ -38,7 +38,7 @@ __END__
 
     package My::Form;
 
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Form';
 
     has_field color => (

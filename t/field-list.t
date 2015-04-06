@@ -13,10 +13,10 @@ use Data::Dumper;
 use DateTime;
 use Time::HiRes qw(gettimeofday tv_interval);
 
-use Moose::Util::TypeConstraints;
+use Mouse::Util::TypeConstraints;
 
 package Form::Field::CheckList {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Field::Compound';
 
     has_field list => ( type => 'List' );
@@ -44,7 +44,7 @@ package Form::Field::CheckList {
 }
 
 package Form::TraitFor::Field::List {
-    use Form::Data::Processor::Moose::Role;
+    use Form::Data::Processor::Mouse::Role;
 
     sub add_error {
         my $self = shift;
@@ -63,7 +63,7 @@ package Form::TraitFor::Field::List {
 }
 
 package Form::Field::Fruits {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Field::List';
 
     sub build_options {
@@ -83,7 +83,7 @@ package Form::Field::Fruits {
 }
 
 package Form {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Form';
 
     has year => (
@@ -162,7 +162,7 @@ package Form {
 }
 
 package Form::Ext {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form';
 
     has_field '+photos'       => ( options         => ['WITHOUT+PHOTOS'] );
@@ -238,6 +238,7 @@ package main {
 
         $form->field('days_of_week')
             ->set_default_value( max_input_length => 0 );
+        $form->clear_params;
         ok( $form->process($data),
             'Form validated without errors (max_input_length = 0)' );
 
@@ -253,6 +254,7 @@ package main {
         $form->field('days_of_week')->set_default_value( uniq_input => 1 );
 
         ok( $form->process($data), 'Form validated without errors' );
+        diag explain $form->dump_errors;
 
 
         $data->{days_of_week} = [ 'Wednesday', 'Monday' ];

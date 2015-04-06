@@ -10,7 +10,7 @@ use Data::Dumper;
 use Time::HiRes qw(gettimeofday tv_interval);
 
 package Field::Compound {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
 
     extends 'Form::Data::Processor::Field::Compound';
 
@@ -67,7 +67,7 @@ package Field::Compound {
 
 
 package Form {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
 
     extends 'Form::Data::Processor::Form';
 

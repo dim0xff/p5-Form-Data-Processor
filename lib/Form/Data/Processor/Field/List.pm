@@ -2,7 +2,7 @@ package Form::Data::Processor::Field::List;
 
 # ABSTRACT: field with selectable values
 
-use Form::Data::Processor::Moose;
+use Form::Data::Processor::Mouse;
 use namespace::autoclean;
 
 use List::MoreUtils qw(uniq);
@@ -13,7 +13,7 @@ use List::MoreUtils qw(any);
 
 #<<< Type checking and coercion for options list
 {
-    use Moose::Util::TypeConstraints;
+    use Mouse::Util::TypeConstraints;
 
     subtype 'OptionsArrayRef',
         as 'ArrayRef[HashRef]',
@@ -37,7 +37,7 @@ use List::MoreUtils qw(any);
             return $options;
         };
 
-    no Moose::Util::TypeConstraints;
+    no Mouse::Util::TypeConstraints;
 }
 #>>>
 
@@ -295,7 +295,7 @@ __END__
 =head1 SYNOPSIS
 
     package My::Form::Search;
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
 
     extends 'Form::Data::Processor::Form';
 
@@ -440,7 +440,7 @@ It will set L</options_builder>.
 
     package Form::Field::Fruits;
 
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Field::List';
 
     sub build_options {

@@ -13,20 +13,20 @@ use Data::Dumper;
 use Time::HiRes qw(gettimeofday tv_interval);
 
 package Form::TraitsFor::Compound::Text {
-    use Form::Data::Processor::Moose::Role;
+    use Form::Data::Processor::Mouse::Role;
 
     has_field text => ( type => 'Text', );
 }
 
 package Form::Field::CompoundText {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
 
     extends 'Form::Data::Processor::Field::Compound';
     with 'Form::TraitsFor::Compound::Text';
 }
 
 package Form {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
 
     extends 'Form::Data::Processor::Form';
 

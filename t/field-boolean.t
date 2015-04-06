@@ -12,10 +12,10 @@ use lib ( "$FindBin::Bin/lib", "$FindBin::Bin/../lib" );
 use Data::Dumper;
 use Time::HiRes qw(gettimeofday tv_interval);
 
-use Moose::Util::TypeConstraints;
+use Mouse::Util::TypeConstraints;
 
 package Form {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
 
     extends 'Form::Data::Processor::Form';
 

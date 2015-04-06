@@ -2,10 +2,10 @@ package Form::Data::Processor::Field;
 
 # ABSTRACT: base class for each field
 
-use Form::Data::Processor::Moose;
+use Form::Data::Processor::Mouse;
 use namespace::autoclean;
 
-with 'MooseX::Traits', 'Form::Data::Processor::Role::Errors';
+with 'MouseX::Traits', 'Form::Data::Processor::Role::Errors';
 
 use List::MoreUtils qw(any);
 
@@ -259,7 +259,7 @@ sub add_actions {
     my ( $self, $actions ) = @_;
 
     for my $action ( @{$actions} ) {
-        if ( !ref $action || ref $action eq 'MooseX::Types::TypeDecorator' ) {
+        if ( !ref $action || ref $action eq 'MouseX::Types::TypeDecorator' ) {
             $action = { type => $action };
         }
 
@@ -269,18 +269,18 @@ sub add_actions {
         # Declare validation subroutine and value initiation subroutine
         my ( $v_sub, $i_sub );
 
-        # Moose type constraint
+        # Mouse type constraint
         if ( exists $action->{type} ) {
             my $action_error_message = $action->{message};
             my $tobj;
 
-            if ( ref $action->{type} eq 'MooseX::Types::TypeDecorator' ) {
+            if ( ref $action->{type} eq 'MouseX::Types::TypeDecorator' ) {
                 $tobj = $action->{type};
             }
             else {
                 my $type = $action->{type};
                 $tobj
-                    = Moose::Util::TypeConstraints::find_type_constraint($type)
+                    = Mouse::Util::TypeConstraints::find_type_constraint($type)
                     or confess "Cannot find type constraint '$type'";
             }
 
@@ -305,7 +305,9 @@ sub add_actions {
                     };
                 }
 
-                if ( $error_message ||= $tobj->validate($new_value) ) {
+                if ( $error_message || !$tobj->check($new_value) ) {
+                    $error_message ||= $tobj->get_message($new_value);
+
                     $self->add_error( $action_error_message || $error_message,
                         $new_value );
                 }
@@ -411,8 +413,10 @@ sub _find_external_validators {
         ( my $validator   = $field->full_name ) =~ s/\./_/g;
         ( my $parent_name = $self->full_name ) =~ s/\./_/g;
 
+
         $validator =~ s/^\Q$parent_name\E_//;
         $validator = 'validate_' . $validator;
+
 
         # Search validator in current obj
         if ( my $code = $self->can($validator) ) {
@@ -517,7 +521,7 @@ __END__
 =head1 SYNOPSIS
 
     package My::Form::TraitFor::Field::Ref;
-    use Form::Data::Processor::Moose::Role;
+    use Form::Data::Processor::Mouse::Role;
 
     has could_be_ref => ( is => rw, isa => 'Bool', default => 1);
 
@@ -526,7 +530,7 @@ __END__
     ...
 
     package My::Form::Field;
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
 
     extends 'Form::Data::Processor::Field';
     with 'My::Form::TraitFor::Field::Ref';
@@ -549,11 +553,11 @@ to operate with field: initialization and validation.
 If you would like to make your own field class, you can do it by extending
 current class.
 
-Every field, which is based on this class, does L<MooseX::Traits>,
+Every field, which is based on this class, does L<MouseX::Traits>,
 L<Form::Data::Processor::Role::Errors>
 and L<Form::Data::Processor::Role::FullName>.
 
-B<Notice:> default L<trait namespace|MooseX::Traits/_trait_namespace> is
+B<Notice:> default L<trait namespace|MouseX::Traits/_trait_namespace> is
 C<Form::Data::Processor::TraitFor::Field>.
 
 Field could be validated in different ways: L<actions|/add_actions>,
@@ -756,7 +760,7 @@ attribute C<apply>:
 Also actions could be defined in roles or classes via C<apply> word:
 
     package My::Field::Text::Ext;
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Field::Text';
 
     apply [
@@ -845,15 +849,15 @@ There are several types of validation actions:
 
 =over 1
 
-=item 1. Moose type validation
+=item 1. Mouse type validation
 
-You could define moose type or use existing moose types for validation.
-If message not provided, then moose validation error message will be used.
+You could define Mouse type or use existing Mouse types for validation.
+If message not provided, then Mouse validation error message will be used.
 
 Coercion will be used if it is possible and field value will be set to coerced
 value.
 
-    # Moose type
+    # Mouse type
     apply [
         {
             type    => 'Int',
@@ -861,8 +865,8 @@ value.
         }
     ];
 
-    # Own defined moose type
-    use Moose::Util::TypeConstraints;
+    # Own defined Mouse type
+    use Mouse::Util::TypeConstraints;
 
     subtype 'MyInt' => as 'Int';
     coerce 'MyInt'  => from 'Str' => via { return $1 if /(\d+)/ };
@@ -1218,7 +1222,7 @@ validation will be from parent field and only then - from form.
 =head2 Example
 
     package My::Field::Address {
-        use Form::Data::Processor::Moose;
+        use Form::Data::Processor::Mouse;
         extends 'Form::Data::Processor::Field::Compound';
 
         has_field addr1   => (type => 'Text');
@@ -1239,7 +1243,7 @@ validation will be from parent field and only then - from form.
     }
 
     package My::Field::User {
-        use Form::Data::Processor::Moose;
+        use Form::Data::Processor::Mouse;
         extends 'Form::Data::Processor::Field::Compound';
 
         has_field country => (type => 'Text');
@@ -1271,7 +1275,7 @@ validation will be from parent field and only then - from form.
     }
 
     package My::Form::Order {
-        use Form::Data::Processor::Moose;
+        use Form::Data::Processor::Mouse;
         extends 'Form::Data::Processor::Form';
 
         has_field user             => (type => '+My::Field::User');

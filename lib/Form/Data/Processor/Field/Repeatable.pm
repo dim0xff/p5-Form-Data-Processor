@@ -2,7 +2,7 @@ package Form::Data::Processor::Field::Repeatable;
 
 # ABSTRACT: repeatable fields just like array
 
-use Form::Data::Processor::Moose;
+use Form::Data::Processor::Mouse;
 use namespace::autoclean;
 
 extends 'Form::Data::Processor::Field';
@@ -237,8 +237,11 @@ sub _add_repeatable_subfield {
 
     my $clone = $self->contains->clone();
 
+    $clone->_init_external_validators;
+
     $clone->parent($self);
     $clone->name( $self->num_fields );
+
 
     $self->add_field($clone);
 }
@@ -253,7 +256,7 @@ __END__
 =head1 SYNOPSIS
 
     package My::Form {
-        use 'Form::Data::Processor::Moose';
+        use 'Form::Data::Processor::Mouse';
         extends 'Form::Data::Processor::Form';
 
         has_field 'options' => (
@@ -269,7 +272,7 @@ __END__
 
     # Or if you have your own Options field
     package My::Form::Field::Options {
-        use Form::Data::Processor::Moose;
+        use Form::Data::Processor::Mouse;
         extends 'Form::Data::Processor::Field::Compound';
 
         has_field 'option_id' => ( type => 'Number', required => 1 );
@@ -277,7 +280,7 @@ __END__
     }
 
     package My::Form {
-        use 'Form::Data::Processor::Moose';
+        use 'Form::Data::Processor::Mouse';
         extends 'Form::Data::Processor::Form';
 
         has_field 'options' => (

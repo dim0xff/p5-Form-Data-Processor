@@ -10,7 +10,7 @@ use JSON;
 use YAML ();
 
 
-use Moose::Util::TypeConstraints;
+use Mouse::Util::TypeConstraints;
 
 subtype 'FullName' => as 'Str' => where {
     !( grep {/^[[:lower:]]/} split( /\s+/, $_ ) );
@@ -18,7 +18,7 @@ subtype 'FullName' => as 'Str' => where {
 
 
 package My::TraitFor::Form::Title {
-    use Form::Data::Processor::Moose::Role;
+    use Form::Data::Processor::Mouse::Role;
 
     sub result {
         my $self = shift;
@@ -31,7 +31,7 @@ package My::TraitFor::Form::Title {
 };
 
 package My::TraitFor::Field::Title {
-    use Form::Data::Processor::Moose::Role;
+    use Form::Data::Processor::Mouse::Role;
 
     has title => ( is => 'rw', isa => 'Str' );
 
@@ -52,7 +52,7 @@ package My::TraitFor::Field::Title {
 
 
 package My::Field::Address {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Field::Compound';
 
     has_field address => (
@@ -69,7 +69,7 @@ package My::Field::Address {
 
 
 package My::Form::Person {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Form::Config';
 
     with( 'My::TraitFor::Form::Title',

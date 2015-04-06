@@ -2,7 +2,7 @@ package Form::Data::Processor::Role::Errors;
 
 # ABSTRACT: role provides error handling
 
-use Moose::Role;
+use Mouse::Role;
 use namespace::autoclean;
 
 use List::MoreUtils qw(uniq);

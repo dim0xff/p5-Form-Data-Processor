@@ -12,10 +12,10 @@ use lib ( "$FindBin::Bin/lib", "$FindBin::Bin/../lib" );
 use Data::Dumper;
 use Time::HiRes qw(gettimeofday tv_interval);
 
-use Moose::Util::TypeConstraints;
+use Mouse::Util::TypeConstraints;
 
 package Form::Field::Contains {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Field::Compound';
 
     has_field text_req => ( type => 'Text', required => 1 );
@@ -23,14 +23,14 @@ package Form::Field::Contains {
 }
 
 package Form::Field::Repeatable1 {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Field::Repeatable';
 
     has_field text => ( type => 'Text', required => 1, );
 }
 
 package Form::Field::Repeatable4 {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Field::Repeatable';
 
     has_field 'contains' => ( type => '+Form::Field::Contains' );
@@ -38,7 +38,7 @@ package Form::Field::Repeatable4 {
 
 
 package Form {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
 
     extends 'Form::Data::Processor::Form';
 
@@ -330,7 +330,7 @@ package main {
                         }
                     ],
                     text_min => 'Text' x 10,
-                }
+                },
             ],
             rep_4 => [
                 {

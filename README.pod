@@ -10,7 +10,7 @@ Form::Data::Processor - Yet another form data processor
 
     package MyForm::Field::Address;
 
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Field::Compound';
 
     has_field zip     => ( type => 'Text', required => 1 );
@@ -23,7 +23,7 @@ Form::Data::Processor - Yet another form data processor
 
     package MyForm;
 
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Form';
 
     has_field 'addresses'         => ( type => 'Repeatable' );
@@ -39,7 +39,7 @@ Form::Data::Processor - Yet another form data processor
 
 Yet another form data validator, which is inspired by L<HTML::FormHandler>.
 It has similar syntax and similar features, except one: it
-is B<NOT> a form renderer (but it is written using L<Moose>, so you can extend
+is B<NOT> a form renderer (but it is written using L<Mouse>, so you can extend
 it as you wish).
 
 =head1 Form::Data::Processor vs HTML::FormHandler

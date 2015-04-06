@@ -2,20 +2,21 @@ package Form::Data::Processor::Form;
 
 # ABSTRACT: base class for any form
 
-use Moose;
+use Mouse;
 use namespace::autoclean;
 
 with 'Form::Data::Processor::Role::Errors';
 with 'Form::Data::Processor::Role::Fields';
 
+use Data::Clone ();
 
 #
 # ATTRIBUTES
 #
 
 has _uid => (
-    is        => 'ro',
-    default   => sub {rand}
+    is      => 'ro',
+    default => sub {rand}
 );
 
 has name => (
@@ -43,6 +44,7 @@ has params => (
         clear_params => 'clear',
         has_params   => 'count',
     },
+    default => sub { {} }
 );
 
 
@@ -102,11 +104,14 @@ sub setup_form {
     my ( $self, @args ) = @_;
 
     if ( @args == 1 ) {
-        $self->params( $args[0] );
+        $self->params( Data::Clone::clone( $args[0] ) );
     }
     elsif ( @args > 1 ) {
         my %hash = @args;
         while ( my ( $key, $value ) = each %hash ) {
+            if ( $key eq 'params' ) {
+                $value = Data::Clone::clone($value);
+            }
             $self->$key($value);
         }
     }
@@ -138,10 +143,10 @@ __END__
     # Form definition
     package MyApp::Form::Customer;
 
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Form';
 
-    use Moose::Util::TypeConstraints;
+    use Mouse::Util::TypeConstraints;
     use Email::Valid;
 
     subtype 'Email'
@@ -334,7 +339,7 @@ C<\%params> contains user input, which will be placed into L</params>.
 C<%arguments> is hash of form attributes, which will be used for initialization.
 
     package My::Form
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Form';
 
     has attr1 => ( ... );

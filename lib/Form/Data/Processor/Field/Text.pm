@@ -2,7 +2,7 @@ package Form::Data::Processor::Field::Text;
 
 # ABSTRACT: text field
 
-use Form::Data::Processor::Moose;
+use Form::Data::Processor::Mouse;
 use namespace::autoclean;
 
 extends 'Form::Data::Processor::Field';
@@ -129,7 +129,7 @@ __END__
 
     package My::Form;
 
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Form';
 
     has_field just_text        => ( type => 'Text' );

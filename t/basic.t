@@ -4,14 +4,14 @@ use warnings;
 use Test::More;
 use Test::Exception;
 
-use Moose::Util::TypeConstraints;
+use Mouse::Util::TypeConstraints;
 
 subtype 'GreaterThan10' => as 'Int' => where { $_ > 10 } =>
     message {"This number ($_) is not greater than 10"};
 
 # Field with input_transform action
 package Form::Field1 {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Field';
 
     has ready_cnt => (
@@ -39,7 +39,7 @@ package Form::Field1 {
 
 # Role for field with input_transform action
 package Form::TraitFor::Field1 {
-    use Form::Data::Processor::Moose::Role;
+    use Form::Data::Processor::Mouse::Role;
 
     apply [
         {
@@ -52,7 +52,7 @@ package Form::TraitFor::Field1 {
 
 # Trait for form field_traits
 package Form::TraitFor::AllFields {
-    use Form::Data::Processor::Moose::Role;
+    use Form::Data::Processor::Mouse::Role;
 
     apply [
         {
@@ -65,9 +65,9 @@ package Form::TraitFor::AllFields {
     ];
 }
 
-# Field with moose type check action
+# Field with Mouse type check action
 package Form::Field2 {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Field';
 
     apply [
@@ -79,9 +79,9 @@ package Form::Field2 {
     ];
 }
 
-# Field role with moose type check action and custom message
+# Field role with Mouse type check action and custom message
 package Form::TraitFor::Field3 {
-    use Form::Data::Processor::Moose::Role;
+    use Form::Data::Processor::Mouse::Role;
 
     apply [
         {
@@ -101,7 +101,7 @@ package Form::TraitFor::Field3 {
 }
 
 package Form::Prev {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
 
     extends 'Form::Data::Processor::Form';
 
@@ -153,7 +153,7 @@ package Form::Prev {
 }
 
 package Form {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
 
     extends 'Form::Prev';
 

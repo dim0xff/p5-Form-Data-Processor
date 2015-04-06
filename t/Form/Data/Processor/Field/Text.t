@@ -4,10 +4,10 @@ use warnings;
 use Test::More;
 use Test::Exception;
 
-use Moose::Util::TypeConstraints;
+use Mouse::Util::TypeConstraints;
 
 package Form {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
 
     extends 'Form::Data::Processor::Form';
 

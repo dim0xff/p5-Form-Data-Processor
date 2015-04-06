@@ -2,7 +2,7 @@ package Form::Data::Processor::Field::Number::Int;
 
 # ABSTRACT: integer number field
 
-use Form::Data::Processor::Moose;
+use Form::Data::Processor::Mouse;
 use namespace::autoclean;
 
 extends 'Form::Data::Processor::Field::Number';
@@ -32,7 +32,7 @@ __END__
 
     package My::Form;
 
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Form';
 
     has_field int => ( type => 'Number::Int', required => 1, max => 10 );

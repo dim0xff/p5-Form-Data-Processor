@@ -8,10 +8,10 @@ use lib ( "$FindBin::Bin/lib", "$FindBin::Bin/../lib" );
 
 use Benchmark qw(:all);
 
-use Moose::Util::TypeConstraints;
+use Mouse::Util::TypeConstraints;
 
 package FDP::Form {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Form';
 
     has_field text => (

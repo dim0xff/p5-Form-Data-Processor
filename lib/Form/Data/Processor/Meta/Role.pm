@@ -3,10 +3,10 @@ package                                         # hide from PAUSE
 
 # ABSTRACT: field list and apply list holder
 
-# For Form::Data::Processor::Moose::Role meta
-# and Form::Data::Processor::Moose meta
+# For Form::Data::Processor::Mouse::Role meta
+# and Form::Data::Processor::Mouse meta
 
-use Moose::Role;
+use Mouse::Role;
 use namespace::autoclean;
 
 has field_list => (

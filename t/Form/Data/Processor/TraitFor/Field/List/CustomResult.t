@@ -26,7 +26,7 @@ use constant PHOTOS => [
 
 
 package Form {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Form';
 
     has_field photos => (

@@ -3,13 +3,13 @@ use warnings;
 
 use Test::Most;
 
-use Moose::Util::TypeConstraints;
+use Mouse::Util::TypeConstraints;
 
 use Data::Dumper;
 
 
 package Form {
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
 
     extends 'Form::Data::Processor::Form';
 

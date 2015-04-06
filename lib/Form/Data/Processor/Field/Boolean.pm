@@ -2,7 +2,7 @@ package Form::Data::Processor::Field::Boolean;
 
 # ABSTRACT: boolean field
 
-use Form::Data::Processor::Moose;
+use Form::Data::Processor::Mouse;
 use namespace::autoclean;
 
 extends 'Form::Data::Processor::Field';
@@ -62,7 +62,7 @@ __END__
 =head1 SYNOPSIS
 
     package My::Form::Search;
-    use Form::Data::Processor::Moose;
+    use Form::Data::Processor::Mouse;
     extends 'Form::Data::Processor::Form';
 
     has_field agree_license     => ( type => 'Boolean', required     => 1 );

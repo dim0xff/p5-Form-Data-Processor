@@ -2,7 +2,7 @@ package Form::Data::Processor::Role::Fields;
 
 # ABSTRACT: role provides subfields
 
-use Moose::Role;
+use Mouse::Role;
 use namespace::autoclean;
 
 use Class::Load qw(load_optional_class);
