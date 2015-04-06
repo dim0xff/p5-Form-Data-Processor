@@ -153,8 +153,6 @@ sub BUILD {
     $self->_build_apply_list;
     $self->add_actions( $field_attr->{apply} )
         if ref $field_attr->{apply} eq 'ARRAY';
-
-    $self->_init_external_validators;
 }
 
 sub has_fields { return 0 }                     # By default field doesn't have subfields
@@ -292,7 +290,7 @@ sub add_actions {
 
                 my $error_message;
 
-                if ( $tobj->has_coercion && $tobj->validate($value) ) {
+                if ( $tobj->has_coercion && !$tobj->check($value) ) {
                     eval {
                         $new_value = $tobj->coerce($value);
                         $self->set_value($new_value);
@@ -413,10 +411,8 @@ sub _find_external_validators {
         ( my $validator   = $field->full_name ) =~ s/\./_/g;
         ( my $parent_name = $self->full_name ) =~ s/\./_/g;
 
-
         $validator =~ s/^\Q$parent_name\E_//;
         $validator = 'validate_' . $validator;
-
 
         # Search validator in current obj
         if ( my $code = $self->can($validator) ) {

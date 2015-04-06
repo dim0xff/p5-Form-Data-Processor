@@ -15,8 +15,8 @@ use Data::Clone ();
 #
 
 has _uid => (
-    is      => 'ro',
-    default => sub {rand}
+    is        => 'ro',
+    default   => sub {rand}
 );
 
 has name => (
@@ -44,7 +44,7 @@ has params => (
         clear_params => 'clear',
         has_params   => 'count',
     },
-    default => sub { {} }
+    default => sub { {} },
 );
 
 
@@ -57,6 +57,9 @@ sub BUILD {
 
     $self->_build_fields;
     $self->_ready_fields;
+
+    $_->_init_external_validators for $self->all_fields;
+
     $self->ready;
 }
 
