@@ -9,6 +9,7 @@ extends 'Form::Data::Processor::Field';
 
 with 'Form::Data::Processor::Role::Fields';
 
+use List::Util qw(min);
 use List::MoreUtils qw(any);
 
 has fallback => (
@@ -22,12 +23,6 @@ has contains => (
     is        => 'rw',
     isa       => 'Form::Data::Processor::Field',
     predicate => 'has_contains',
-);
-
-has prebuild_subfields => (
-    is      => 'rw',
-    isa     => 'Int',
-    default => 4,
 );
 
 has max_input_length => (
@@ -65,7 +60,13 @@ sub _fallback_clear_fields {
 after _init_external_validators => sub {
     my $self = shift;
 
-    $self->contains->_init_external_validators if $self->has_contains;
+    $self->contains->_init_external_validators;
+};
+
+after generate_full_name => sub {
+    my $self = shift;
+
+    $self->contains->generate_full_name if $self->has_contains;
 };
 
 before ready => sub {
@@ -80,16 +81,6 @@ before ready => sub {
     $self->_build_contains;
 };
 
-before reset => sub {
-    my $self = shift;
-
-    return if $self->not_resettable;
-
-    if ( !$self->fallback ) {
-        $self->reset_fields;
-    }
-};
-
 before clear_value => sub {
     my $self = shift;
 
@@ -98,6 +89,23 @@ before clear_value => sub {
     }
 };
 
+before reset => sub {
+    my $self = shift;
+
+    return if $self->not_resettable;
+    return if $self->fallback;
+
+    $self->reset_fields;
+};
+
+sub reset_fields {
+    my $self = shift;
+
+    for my $idx ( 1 .. min( $self->num_fields, $self->input_length ) ) {
+        $self->fields->[ $idx - 1 ]->reset;
+        $self->fields->[ $idx - 1 ]->clear_value;
+    }
+}
 
 sub init_input {
     my ( $self, $value, $posted ) = @_;
@@ -126,7 +134,7 @@ sub init_input {
         # There are more elements provided than we expect
         # Lets create additional subfields
         if ( $input_length > $self->num_fields ) {
-            for my $idx ( $self->num_fields .. $input_length ) {
+            for my $idx ( $self->num_fields .. ( $input_length - 1 ) ) {
                 $self->_add_repeatable_subfield;
             }
         }
@@ -218,7 +226,6 @@ sub _build_contains {
 
             $contains->add_field($field);
             $field->parent($contains);
-            $field->_init_external_validators;
         }
 
         $self->contains($contains);
@@ -229,7 +236,6 @@ sub _build_contains {
     $self->clear_fields;
     $self->clear_index;
 
-    $self->_add_repeatable_subfield for ( 1 .. $self->prebuild_subfields );
 }
 
 sub _add_repeatable_subfield {
@@ -258,7 +264,6 @@ __END__
 
         has_field 'options' => (
             type               => 'Repeatable',
-            prebuild_subfields => 128,
             max_input_length   => 128,
         );
 
@@ -282,7 +287,6 @@ __END__
 
         has_field 'options' => (
             type               => 'Repeatable',
-            prebuild_subfields => 128,
             max_input_length   => 128,
         );
 
@@ -325,17 +329,15 @@ When input value is not ArrayRef, then it raises error C<invalid>.
 
 To increase validation speed C<Repeatable> creates and caches subfields
 to validate it in future. For example, you try to validate 10 values,
-then C<Repeatable> will create needed 6 subfields (by default C<Repeatable>
-already has 4 L<prebuild|/prebuild_subfields> subfields on creation).
-Next time, hen you try to validate 7 values Repeatable will reuse created
+then C<Repeatable> will create needed 10 subfields.
+Next time, when you try to validate 7 values Repeatable will reuse created
 subfields.
 
 Repeatable subfields could be described vie C<contains> key (see L</SYNOPSIS>).
 By default it is L<Compound|/Form::Data::Processor::Field::Compound> field.
 
 Subfields creation is heavy, when you validate data. So probably you need
-to limit number of validation values via L</max_input_length>
-and set L</prebuild_subfields> to optimal.
+to limit number of validation values via L</max_input_length>.
 
 Field sets own error message:
 
@@ -393,22 +395,6 @@ validation values.
 
 B<Notice:> current attribute is resettable.
 
-
-=attr prebuild_subfields
-
-=over 4
-
-=item Type: Positive or zero Int
-
-=item Default: 4
-
-=back
-
-How many subfields will be created when field is
-L<Form::Data::Processor::Field/ready>.
-
-If you will set it to zero, then any required subfield will be created
-on demand.
 
 =head1 CAVEATS
 
