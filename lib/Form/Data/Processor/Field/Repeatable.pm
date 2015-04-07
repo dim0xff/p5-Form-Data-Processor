@@ -60,7 +60,7 @@ sub _fallback_clear_fields {
 after _init_external_validators => sub {
     my $self = shift;
 
-    $self->contains->_init_external_validators;
+    $self->contains->_init_external_validators if $self->has_contains;
 };
 
 after generate_full_name => sub {
@@ -233,9 +233,11 @@ sub _build_contains {
 
     confess 'Repeatable does not contain fields' unless $self->has_contains;
 
+    # Re-init external validators for contains
+    $self->contains->_init_external_validators;
+
     $self->clear_fields;
     $self->clear_index;
-
 }
 
 sub _add_repeatable_subfield {
