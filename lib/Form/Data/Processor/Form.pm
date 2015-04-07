@@ -55,9 +55,6 @@ sub BUILD {
 
     $self->_build_fields;
     $self->_ready_fields;
-
-    $_->_init_external_validators for $self->all_fields;
-
     $self->ready;
 }
 

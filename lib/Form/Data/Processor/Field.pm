@@ -153,6 +153,8 @@ sub BUILD {
     $self->_build_apply_list;
     $self->add_actions( $field_attr->{apply} )
         if ref $field_attr->{apply} eq 'ARRAY';
+
+    $self->_init_external_validators;
 }
 
 sub has_fields { return 0 }                     # By default field doesn't have subfields
