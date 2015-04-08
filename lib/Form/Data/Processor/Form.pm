@@ -14,8 +14,8 @@ with 'Form::Data::Processor::Role::Fields';
 #
 
 has _uid => (
-    is        => 'ro',
-    default   => sub {rand}
+    is      => 'ro',
+    default => sub {rand}
 );
 
 has name => (
@@ -392,7 +392,9 @@ Return C<true> if form doesn't have errors (via L<Form::Data::Processor::Role::F
 
 =over 1
 
-=item L<Form::Data::Processor::Field>
+=item L<Form::Data::Processor::Form::Config> - build forms on the fly
+
+=item L<Form::Data::Processor::Field> - fields prototype
 
 =back
 

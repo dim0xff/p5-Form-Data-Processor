@@ -1,6 +1,6 @@
 package Form::Data::Processor::Form::Config;
 
-# ABSTRACT: create form from config
+# ABSTRACT: create form on the fly from config
 
 use Moose;
 use namespace::autoclean;

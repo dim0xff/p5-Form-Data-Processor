@@ -218,3 +218,21 @@ package main {
         );
     }
 }
+
+=head1 RESULTS
+
+Intel(R) Core(TM)2 Duo CPU E4600  @ 2.40GHz,4GB, OpenSuSE, Linux 3.11.6-4-pae (e6d4a27) i686
+
+                                   Rate Create Form::Data::Processor Create HTML::FormHandler
+    Create Form::Data::Processor 7.05/s                           --                     -42%
+    Create HTML::FormHandler     12.2/s                          74%                       --
+
+                               Rate    x1 HTML::FormHandler x1 Form::Data::Processor
+    x1 HTML::FormHandler     37.8/s                      --                     -88%
+    x1 Form::Data::Processor  321/s                    749%                       --
+
+                                Rate x32 HTML::FormHandler x32 Form::Data::Processor
+    x32 HTML::FormHandler     1.43/s                    --                      -95%
+    x32 Form::Data::Processor 29.9/s                 1987%                        --
+
+=cut

@@ -309,3 +309,19 @@ package main {
         }
     );
 }
+
+=head1 RESULTS
+
+Intel(R) Core(TM)2 Duo CPU E4600  @ 2.40GHz,4GB, OpenSuSE, Linux 3.11.6-4-pae (e6d4a27) i686
+
+                                      Rate Create HTML::FormHandler Create Form::Data::Processor Create PurePerl
+    Create HTML::FormHandler        31.0/s                       --                         -35%           -100%
+    Create Form::Data::Processor    47.6/s                      53%                           --           -100%
+    Create PurePerl              1411795/s                 4552034%                     2965856%              --
+
+                            Rate HTML::FormHandler Form::Data::Processor    PurePerl
+    HTML::FormHandler     51.8/s                --                  -95%        -99%
+    Form::Data::Processor 1019/s             1868%                    --        -73%
+    PurePerl              3719/s             7080%                  265%          --
+
+=cut
