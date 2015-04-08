@@ -1,0 +1,62 @@
+use strict;
+use warnings;
+
+use Test::More;
+use Test::Exception;
+
+use lib 't/lib';
+
+use Mouse::Util::TypeConstraints;
+
+#<<<
+subtype 'GreaterThan10'
+    => as 'Int'
+    => where { $_ > 10 }
+    => message {"This number ($_) is not greater than 10"};
+
+coerce 'GreaterThan10'
+    => from 'ArrayRef'
+    => via { $_->[0] };
+#>>>
+
+
+# Field with Mouse type check action
+package Form::Field {
+    use Form::Data::Processor::Mouse;
+    extends 'Form::Data::Processor::Field';
+
+    apply ['GreaterThan10'];
+}
+
+package Form {
+    use Form::Data::Processor::Mouse;
+    extends 'Form::Data::Processor::Form';
+
+    with 'Form::Data::Processor::TraitFor::Form::DumpErrors';
+
+    has '+field_name_space' => ( default => sub { ['Form'] } );
+
+    has_field field => ( type => 'Field' );
+}
+
+package main {
+    ok( my $form = Form->new(), 'Create form' );
+
+    ok( !$form->process( { field => 1 } ) );
+    is_deeply( $form->dump_errors,
+        { field => ['This number (1) is not greater than 10'] } );
+
+
+    ok( !$form->process( { field => [1] } ) );
+    is_deeply( $form->dump_errors,
+        { field => ['This number (1) is not greater than 10'] } );
+
+
+    ok( $form->process( { field => 11 } ) );
+    is_deeply( $form->result, { field => 11 } );
+
+    ok( $form->process( { field => [ 11, 1, 2 ] } ) );
+    is_deeply( $form->result, { field => 11 } );
+
+    done_testing();
+}

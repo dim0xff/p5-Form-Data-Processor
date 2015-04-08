@@ -231,6 +231,9 @@ sub _build_contains {
         $self->contains($contains);
     }
 
+    # Re-init external validators for contains
+    $self->contains->_init_external_validators;
+
     confess 'Repeatable does not contain fields' unless $self->has_contains;
 
     # Re-init external validators for contains
