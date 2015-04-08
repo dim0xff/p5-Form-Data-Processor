@@ -7,6 +7,7 @@ use namespace::autoclean;
 
 with 'MooseX::Traits', 'Form::Data::Processor::Role::Errors';
 
+use List::MoreUtils qw(any);
 
 #
 # ATTRIBUTES
@@ -14,6 +15,11 @@ with 'MooseX::Traits', 'Form::Data::Processor::Role::Errors';
 
 has '+_trait_namespace' =>
     ( default => 'Form::Data::Processor::TraitFor::Field' );
+
+has _uid => (
+    is      => 'ro',
+    default => sub {rand}
+);
 
 has name => (
     is       => 'rw',
@@ -211,7 +217,7 @@ sub init_input {
 
 sub is_empty {
     return 0 if @_ == 1 && length( $_[0]->value // '' );
-    return 0 if @_ == 2 && defined( $_[1] ) && length( $_[1] );
+    return 0 if @_ == 2 && length( $_[1] // '' );
     return 1;
 }
 
@@ -237,10 +243,7 @@ sub validate {
 
 
 sub validate_required {
-    my $self = shift;
-
-    return 0 unless $self->has_value && defined $self->value;
-    return 1;
+    return !( shift->is_empty );
 }
 
 
@@ -256,12 +259,7 @@ sub add_actions {
     my ( $self, $actions ) = @_;
 
     for my $action ( @{$actions} ) {
-        if ( !ref $action || ref $action eq 'MooseX::Types::TypeDecorator' ) {
-            $action = { type => $action };
-        }
-
-        confess 'Wrong action for field ' . $self->full_name
-            unless ref $action eq 'HASH';
+        $action = { type => $action } unless ref $action eq 'HASH';
 
         # Declare validation subroutine and value initiation subroutine
         my ( $v_sub, $i_sub );
@@ -269,17 +267,12 @@ sub add_actions {
         # Moose type constraint
         if ( exists $action->{type} ) {
             my $action_error_message = $action->{message};
-            my $tobj;
+            my $type                 = $action->{type};
 
-            if ( ref $action->{type} eq 'MooseX::Types::TypeDecorator' ) {
-                $tobj = $action->{type};
-            }
-            else {
-                my $type = $action->{type};
-                $tobj
-                    = Moose::Util::TypeConstraints::find_type_constraint($type)
-                    or confess "Cannot find type constraint '$type'";
-            }
+            my $tobj
+                = Moose::Util::TypeConstraints::find_or_parse_type_constraint(
+                $type)
+                or confess "Cannot find type constraint '$type'";
 
             $v_sub = sub {
                 my $self = shift;
@@ -289,7 +282,7 @@ sub add_actions {
 
                 my $error_message;
 
-                if ( $tobj->has_coercion && $tobj->validate($value) ) {
+                if ( $tobj->has_coercion && !$tobj->check($value) ) {
                     eval {
                         $new_value = $tobj->coerce($value);
                         $self->set_value($new_value);
@@ -297,12 +290,13 @@ sub add_actions {
                     } or do {
                         $error_message
                             = $tobj->has_message
-                            ? $tobj->message->($value)
+                            ? $tobj->get_message($value)
                             : 'error_occurred';
                     };
                 }
 
-                if ( $error_message ||= $tobj->validate($new_value) ) {
+                if ( $error_message || !$tobj->check($new_value) ) {
+                    $error_message ||= $tobj->get_message($new_value);
                     $self->add_error( $action_error_message || $error_message,
                         $new_value );
                 }
@@ -341,7 +335,7 @@ sub add_actions {
                     my $value = $self->value;
 
                     $self->add_error( $error_message, $value )
-                        unless grep { $value eq $_ } @{ $action->{check} };
+                        unless any { $value eq $_ } @{ $action->{check} };
                 };
             }
         }
@@ -398,19 +392,17 @@ sub _init_external_validators {
 sub _find_external_validators {
     my $self = shift;
 
+    # Recursive search validators from current fields parents to top
     my $sub;
     $sub = sub {
         my ( $self, $field ) = @_;
 
         my @validators;
 
-        ( my $validator = $field->full_name ) =~ s/\./_/g;
+        ( my $validator   = $field->full_name ) =~ s/\./_/g;
+        ( my $parent_name = $self->full_name ) =~ s/\./_/g;
 
-        if ( $self->can('full_name') ) {
-            ( my $full_name = $self->full_name ) =~ s/\./_/g;
-            $validator =~ s/^\Q$full_name\E_//;
-        }
-
+        $validator =~ s/^\Q$parent_name\E_//;
         $validator = 'validate_' . $validator;
 
         # Search validator in current obj
@@ -420,13 +412,30 @@ sub _find_external_validators {
                 sub {
                     my $field = shift;
 
-                    $code->( $self, $field );
+                    # Not always $self is one of real parents for current $field
+                    # Eg. Repeatable fields: it has "prototype" subfields, to
+                    # build real subfields.
+                    my $local_self;
+
+                    # So search real $self for current $field via field parents
+                    if ( $self->full_name ) {
+                        $local_self = $field;
+
+                        while ( $local_self = $local_self->parent ) {
+                            last if $local_self->_uid == $self->_uid;
+                        }
+                    }
+                    else {
+                        $local_self = $self;
+                    }
+
+                    $code->( $local_self, $field );
                 }
             );
         }
 
         # Search validator in parent objects
-        if ( $self->can('parent') && $self->has_parent ) {
+        if ( $self->has_parent ) {
             push( @validators, $sub->( $self->parent, $field ) );
         }
 
@@ -687,7 +696,7 @@ When short notation is used, then Form::Data::Processor tries to find
 extension package (C<Form::Data::ProcessorX::Field::>),
 internal package (C<Form::Data::Processor::Field::>),
 or package with provided field name space
-(via L<Form::Data::Processor::Form/field_name_space>).
+(via L<Form::Data::Processor::Form::Role::Fields/field_name_space>).
 
 When long notation is used, then Form::Data::Processor tries to find package,
 which corresponds to package name provided in field L</type>
@@ -829,8 +838,9 @@ There are several types of validation actions:
 
 =item 1. Moose type validation
 
-You could define moose type or use existing moose types for validation.
-If message not provided, then moose validation error message will be used.
+You could define Moose type or use existing Moosified
+(L<Moose>, L<Mouse>, L<Type::Tiny>, etc) types for validation.
+If message not provided, Moosified validation error message will be used.
 
 Coercion will be used if it is possible and field value will be set to coerced
 value.
@@ -854,6 +864,7 @@ value.
         => where { $_ > 10 }
         => message { "This number ($_) is not greater than 10" };
 
+    # With "default" message, which is provided by type
     has_field 'text_gt' => ( apply=> [ 'GreaterThan10' ] );
 
     # or with specified for field error message
@@ -1056,7 +1067,7 @@ before L<empty|/is_empty> checking.
 
 =back
 
-Indicate if C<$value> is not empty (defined and length is positive).
+Indicate if C<$value> is empty (defined and length is positive).
 
 If C<$value> is omitted, then check current field L</value>.
 
@@ -1180,7 +1191,7 @@ validation stops with C<required> error.
 
 =back
 
-When field is L</required> check if field has defined value.
+When field is L</required> check if field is not L<empty|/is_empty>.
 
 Return C<true> on success and C<false> when fail.
 

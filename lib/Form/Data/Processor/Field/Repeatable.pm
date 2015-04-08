@@ -9,17 +9,20 @@ extends 'Form::Data::Processor::Field';
 
 with 'Form::Data::Processor::Role::Fields';
 
+use List::Util qw(min);
+use List::MoreUtils qw(any);
+
+has fallback => (
+    is      => 'rw',
+    isa     => 'Bool',
+    default => 0,
+    trigger => \&_fallback_clear_fields,
+);
 
 has contains => (
     is        => 'rw',
     isa       => 'Form::Data::Processor::Field',
     predicate => 'has_contains',
-);
-
-has prebuild_subfields => (
-    is      => 'rw',
-    isa     => 'Int',
-    default => 4,
 );
 
 has max_input_length => (
@@ -45,27 +48,37 @@ sub BUILD {
     $self->set_error_message( max_input_length => 'Input exceeds max length' );
 }
 
+sub _fallback_clear_fields {
+    my $self = shift;
+
+    # When value changed
+    if ( $_[0] != $_[1] ) {
+        $self->clear_fields;
+    }
+}
+
 after _init_external_validators => sub {
     my $self = shift;
 
     $self->contains->_init_external_validators if $self->has_contains;
 };
 
+after generate_full_name => sub {
+    my $self = shift;
+
+    $self->contains->generate_full_name if $self->has_contains;
+};
+
 before ready => sub {
     my $self = shift;
 
-    $self->set_default_value( max_input_length => $self->max_input_length );
+    $self->set_default_value(
+        fallback         => $self->fallback,
+        max_input_length => $self->max_input_length,
+    );
 
     $self->_ready_fields;
     $self->_build_contains;
-};
-
-before reset => sub {
-    my $self = shift;
-
-    return if $self->not_resettable;
-
-    $self->reset_fields;
 };
 
 before clear_value => sub {
@@ -76,13 +89,30 @@ before clear_value => sub {
     }
 };
 
+before reset => sub {
+    my $self = shift;
+
+    return if $self->not_resettable;
+    return if $self->fallback;
+
+    $self->reset_fields;
+};
+
+sub reset_fields {
+    my $self = shift;
+
+    for my $idx ( 1 .. min( $self->num_fields, $self->input_length ) ) {
+        $self->fields->[ $idx - 1 ]->reset;
+        $self->fields->[ $idx - 1 ]->clear_value;
+    }
+}
 
 sub init_input {
     my ( $self, $value, $posted ) = @_;
 
     # Default init_input logic
     return if $self->disabled;
-    return unless $posted || $value;
+    return unless $posted || defined($value);
 
     for my $sub ( $self->all_init_input_actions ) {
         $sub->( $self, \$value );
@@ -98,10 +128,13 @@ sub init_input {
             if $self->max_input_length
             && $input_length > $self->max_input_length;
 
+        # Fallback to HFH
+        $self->clear_fields if $self->fallback;
+
         # There are more elements provided than we expect
         # Lets create additional subfields
         if ( $input_length > $self->num_fields ) {
-            for my $idx ( $self->num_fields .. $input_length ) {
+            for my $idx ( $self->num_fields .. ( $input_length - 1 ) ) {
                 $self->_add_repeatable_subfield;
             }
         }
@@ -135,7 +168,7 @@ around is_empty => sub {
     return 0 unless ref $value eq 'ARRAY';
 
     # Seems it is ArrayRef. Look for defined value
-    return !( grep {defined} @{$value} );
+    return !( any {defined} @{$value} );
 };
 
 around validate => sub {
@@ -160,7 +193,7 @@ sub _result {
     my $self = shift;
 
     return [
-        map      { $self->fields->[$_]->_result }
+        map      { $self->fields->[$_]->result }
             grep { defined $self->fields->[$_] }
             ( 0 .. ( $self->input_length - 1 ) )
     ];
@@ -196,18 +229,15 @@ sub _build_contains {
         }
 
         $self->contains($contains);
-
     }
 
-    $self->clear_fields;
-    $self->clear_index;
-
-    $self->contains->name('');
+    # Re-init external validators for contains
     $self->contains->_init_external_validators;
 
     confess 'Repeatable does not contain fields' unless $self->has_contains;
 
-    $self->_add_repeatable_subfield for ( 1 .. $self->prebuild_subfields );
+    $self->clear_fields;
+    $self->clear_index;
 }
 
 sub _add_repeatable_subfield {
@@ -236,7 +266,6 @@ __END__
 
         has_field 'options' => (
             type               => 'Repeatable',
-            prebuild_subfields => 128,
             max_input_length   => 128,
         );
 
@@ -260,7 +289,6 @@ __END__
 
         has_field 'options' => (
             type               => 'Repeatable',
-            prebuild_subfields => 128,
             max_input_length   => 128,
         );
 
@@ -301,20 +329,52 @@ and does L<Form::Data::Processor::Role::Fields>.
 
 When input value is not ArrayRef, then it raises error C<invalid>.
 
-To increase validation speed C<Repeatable> creates and stores subfields
+To increase validation speed C<Repeatable> creates and caches subfields
 to validate it in future. For example, you try to validate 10 values,
-then C<Repeatable> will create needed 6 subfields (by default C<Repeatable>
-already has 4 L<prebuild|/prebuild_subfields> subfields on creation).
-Next time, hen you try to validate 7 values Repeatable will reuse created
+then C<Repeatable> will create needed 10 subfields.
+Next time, when you try to validate 7 values Repeatable will reuse created
 subfields.
 
+Repeatable subfields could be described vie C<contains> key (see L</SYNOPSIS>).
+By default it is L<Compound|/Form::Data::Processor::Field::Compound> field.
+
 Subfields creation is heavy, when you validate data. So probably you need
-to limit number of validation values via L</max_input_length>
-and set L</prebuild_subfields> to optimal.
+to limit number of validation values via L</max_input_length>.
 
 Field sets own error message:
 
     'max_input_length' => 'Input exceeds max length'
+
+
+=attr contains
+
+=over 4
+
+=item Type: Form::Data::Processor::Field
+
+=back
+
+Actually is being set via Form::Data::Processor internals.
+
+Here is stored prototype for repeatable subfields.
+
+
+=attr fallback
+
+=over 4
+
+=item Type: Bool
+
+=item Default: false
+
+=back
+
+Fall back to L<HTML::FormHandler> behaviour: subfields are not being cached and
+will be recreated on every L<input initialization|Form::Data::Processor::Field/init_inpu>.
+
+B<Notice:> current attribute is resettable.
+
+B<Notice:> look to </CAVEATS> for more info.
 
 
 =attr max_input_length
@@ -337,21 +397,82 @@ validation values.
 
 B<Notice:> current attribute is resettable.
 
+=head1 EXTERNAL VALIDATION
 
-=attr prebuild_subfields
+In C<Repeatable> field it is possible to provide
+L<external validator|Form::Data::Processor::Field/EXTERNAL VALIDATION>
+for every part of complex field. For nested subfields you have to use
+C<contains> keyword.
 
-=over 4
+    package My::Form;
+    use Form::Data::Processor::Moose;
+    extends 'Form::Data::Processor::Form';
 
-=item Type: Positive or zero Int
+    has_field 'array'                       => ( type => 'Repeatable' );
+    has_field 'array.contains'              => ( type => 'My::Compound' );
+    has_field 'array.contains.array'        => ( type => 'Repeatable' );
+    has_field 'array.contains.array.text'   => ( type => 'Text' );
 
-=item Default: 4
+    sub validate_array                              { } # 5
+    sub validate_array_contains                     { } # 4
+    sub validate_array_contains_array               { } # 3
+    sub validate_array_contains_array_contains      { } # 2
+    sub validate_array_contains_array_contains_text { } # 1
 
-=back
 
-How many subfields will be created when field is
-L<Form::Data::Processor::Field/ready>.
+B<Notice:> external validation for fields will being run from most nested.
 
-If you will set it to zero, then any required subfield will be created
-on demand.
+
+=head1 CAVEATS
+
+Sometimes I faced with situations when subfields should not be validated
+on some conditions. And it is really headache to link all parent contains
+attributes to its children. So I use L</fallback>.
+
+B<Example.> You have a form with Repeatable categories: with required category id
+and required category position. Also form has marker C<to_delete>, which
+indicates that categories with provided ids should be removed (so you don't need
+C<required> validation on category position). But changing C<disabled> attribute
+on C<contains> won't give effect.
+
+    has to_delete => ( is => 'rw', isa => 'Bool' );
+
+    has_fields 'categories'          => ( type => 'Repeatable',  required => 1 );
+    has_fields 'categories.id'       => ( type => 'Number::Int', required => 1 );
+    has_fields 'categories.position' => ( type => 'Number::Int', required => 1 );
+
+    after 'setup_form' => sub {
+        my $self = shift;
+
+        if ( $self->to_delete ) {
+
+            # XXX - will not work as expected
+            $self->field('categories')->contains->field('position')->disabled(1);
+
+            # Need to set disabled on all Repeatable subfields
+            # Will work!
+            for ( $self->field('categories')->all_fields ) {
+                $_->field('position')->disabled(1)
+            }
+        }
+    };
+
+The other way is to user L</fallback> option.
+
+    ...
+
+    after 'setup_form' => sub {
+        my $self = shift;
+
+        if ( $self->to_delete ) {
+
+            # Will work... but slower
+            $self->field('categories')->fallback(1);
+            $self->field('categories')->contains->field('position')->disabled(1);
+        }
+        else {
+            $self->field('categories')->contains->field('position')->disabled(0);
+        }
+    };
 
 =cut

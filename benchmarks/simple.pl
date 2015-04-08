@@ -117,3 +117,17 @@ package main {
         }
     );
 }
+
+=head1 RESULTS
+
+Intel(R) Core(TM)2 Duo CPU 6700 @ 2.66GHz, 4GB, openSUSE 13.2 x86_64, perl v5.20.2, Moose v2.1403
+
+                                  Rate Create HTML::FormHandler Create Form::Data::Processor
+    Create HTML::FormHandler     202/s                       --                         -54%
+    Create Form::Data::Processor 440/s                     118%                           --
+
+                            Rate     HTML::FormHandler Form::Data::Processor
+    HTML::FormHandler      509/s                    --                  -81%
+    Form::Data::Processor 2734/s                  437%                    --
+
+=cut

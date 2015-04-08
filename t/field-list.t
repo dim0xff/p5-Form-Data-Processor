@@ -30,11 +30,11 @@ package Form::Field::CheckList {
                 ok(
                     ( ref $args[0] )
                     ->isa('Form::Data::Processor::Field::Compound'),
-                    'Has proper first arguments'
+                    'Has proper first arguments ($self)'
                 );
                 ok(
                     ( ref $args[1] )->isa('Form::Data::Processor::Field::List'),
-                    'Has proper second arguments'
+                    'Has proper second arguments ($field)'
                 );
             }
         );
@@ -70,11 +70,11 @@ package Form::Field::Fruits {
         my (@args) = @_;
         use Test::More;
         subtest(
-            'Arguments in field vie `build_options`' => sub {
+            'Arguments in field via `build_options`' => sub {
                 cmp_ok( ~~ @args, '==', 1, 'One argument' );
                 ok(
                     ( ref $args[0] )->isa('Form::Data::Processor::Field::List'),
-                    'Has proper first arguments'
+                    'Has proper first arguments ($field)'
                 );
             }
         );
@@ -240,8 +240,13 @@ package main {
             ->set_default_value( max_input_length => 0 );
         ok( $form->process($data),
             'Form validated without errors (max_input_length = 0)' );
+
         $form->field('days_of_week')
-            ->set_default_value( max_input_length => 32 );
+            ->set_default_value( max_input_length => undef );
+        ok( !$form->process($data),
+            'Form validated without errors (max_input_length = undef)' );
+        ok( $form->process($result),
+            'Form validated without errors (max_input_length = undef)' );
 
 
         # Uniq input
@@ -257,6 +262,9 @@ package main {
         $data->{photos} = [];
         is_deeply( $form->result, $result,
             'Form result is fine after validation' );
+
+        $form->field('days_of_week')
+            ->set_default_value( max_input_length => 32 );
     };
 
     subtest 'multiple required' => sub {

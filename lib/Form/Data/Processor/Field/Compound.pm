@@ -15,6 +15,18 @@ sub BUILD {
     $self->_build_fields;
 }
 
+after _init_external_validators => sub {
+    my $self = shift;
+
+    $_->_init_external_validators for $self->all_fields;
+};
+
+after generate_full_name => sub {
+    my $self = shift;
+
+    $_->generate_full_name for $self->all_fields;
+};
+
 before ready => sub { $_[0]->_ready_fields };
 
 before reset => sub {
@@ -23,14 +35,6 @@ before reset => sub {
     return if $self->not_resettable;
 
     $self->reset_fields;
-};
-
-after _init_external_validators => sub {
-    my $self = shift;
-
-    for my $field ( $self->all_fields ) {
-        $field->_init_external_validators;
-    }
 };
 
 before clear_value => sub {
@@ -48,7 +52,7 @@ sub init_input {
 
     # Default init_input logic
     return if $self->disabled;
-    return unless $posted || $value;
+    return unless $posted || defined($value);
 
     for my $sub ( $self->all_init_input_actions ) {
         $sub->( $self, \$value );
@@ -116,7 +120,7 @@ around validate => sub {
 
 sub _result {
     return {
-        map { $_->name => $_->_result }
+        map { $_->name => $_->result }
         grep { $_->has_value } shift->all_fields
     };
 }
@@ -131,14 +135,14 @@ __END__
 
     ...
     # In form definition
-    has_field 'address'               => (type => 'Comound');
+    has_field 'address'               => (type => 'Compound');
     has_field 'address.country'       => (type => 'Text', required => 1);
     has_field 'address.state'         => (type => 'Text');
     has_field 'address.city'          => (type => 'Text', required => 1);
     has_field 'address.address1'      => (type => 'Text', required => 1);
     has_field 'address.address2'      => (type => 'Text');
     has_field 'address.zip'           => (type => 'Text', required => 1);
-    has_field 'address.phones'        => (type => 'Comound');
+    has_field 'address.phones'        => (type => 'Compound');
     has_field 'address.phones.home'   => (type => 'Text');
     has_field 'address.phones.mobile' => (type => 'Text');
 

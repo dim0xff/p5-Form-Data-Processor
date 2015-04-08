@@ -9,6 +9,7 @@ use List::MoreUtils qw(uniq);
 
 extends 'Form::Data::Processor::Field';
 
+use List::MoreUtils qw(any);
 
 #<<< Type checking and coercion for options list
 {
@@ -20,7 +21,7 @@ extends 'Form::Data::Processor::Field';
             my $val = $_;
 
             # Look if some option doesn't have 'value' attribute
-            return !grep( { !( exists $_->{value} ) } @{$val} );
+            return !(any { !( exists $_->{value} ) } @{$val} );
         },
         message { "Value is not provided for option" };
 
@@ -53,16 +54,22 @@ has multiple => (
 );
 
 has max_input_length => (
-    is      => 'rw',
-    isa     => 'Int',
-    default => 10_000,
+    is        => 'rw',
+    isa       => 'Int|Undef',
+    predicate => 'has_max_input_length',
+    clearer   => 'clear_max_input_length',
+    trigger   => sub { $_[0]->clear_max_input_length unless defined $_[1] },
 );
 
 has options => (
     is      => 'rw',
     isa     => 'OptionsArrayRef',
+    traits  => ['Array'],
     trigger => \&_set_options_index,
     coerce  => 1,
+    handles => {
+        num_options => 'count',
+    },
 );
 
 has options_builder => (
@@ -151,7 +158,7 @@ around is_empty => sub {
     return 0 unless ref $value eq 'ARRAY';
 
     # Seems it is ArrayRef. Look for defined value
-    return !grep( {defined} @{$value} );
+    return !( any {defined} @{$value} );
 };
 
 
@@ -166,12 +173,14 @@ around validate => sub {
     my $values = ref $self->value ? $self->value : [ $self->value ];
 
     # Value must be ArrayRef
-    return $self->add_error( 'invalid', $values )
-        unless ref $values eq 'ARRAY';
+    return $self->add_error( 'invalid', $values ) unless ref $values eq 'ARRAY';
 
     # Check input length
+    # Number of input values must not be great
+    # than max_input_length or num_options
     return $self->add_error( 'max_input_length', $values )
-        if $self->max_input_length && @{$values} > $self->max_input_length;
+        if @{$values}
+        > ( ( $self->max_input_length // $self->num_options ) || @{$values} );
 
     # If is not multiple and more than one value
     return $self->add_error( 'is_not_multiple', $values )
@@ -180,7 +189,7 @@ around validate => sub {
     # If no errors, then check each value
 EACH_VALUE:
     for my $value ( @{$values} ) {
-        next unless defined $value;             # skip not defined
+        next EACH_VALUE unless defined $value;
 
         if ( ref $value ) {
             $self->add_error( 'wrong_value', $value );
@@ -195,19 +204,6 @@ EACH_VALUE:
             $self->add_error( 'not_allowed', $value );
         }
     }
-};
-
-
-around validate_required => sub {
-    my $orig = shift;
-    my $self = shift;
-
-    return 0 unless $self->$orig();
-    return 0
-        if ref $self->value eq 'ARRAY'
-        && !grep( {defined} @{ $self->value } );
-
-    return 1;
 };
 
 
@@ -354,20 +350,22 @@ B<Notice:> current attribute is resettable.
 
 =over 4
 
-=item Type: Int
-
-=item Default: 10_000
+=item Type: Int|Undef
 
 =back
 
-It answers the question "how many input values List could validate?".
-Zero means no limit.
+Indicate max number of input values, which could be provided to validate.
+C<Undef> means no limit. C<Zero> means, that max number is equal
+to C<num_options>.
 
-B<Notice:> when you set it to zero and try to validate huge number
+B<Notice:> when you set it to C<undef> and try to validate huge number
 of non unique values, this could take a lot of time.
 
 When input length is greater than C<max_input_length>, then error
 C<max_input_length> will be added to field.
+
+Also provided clearer C<clear_max_input_length> and predicator
+C<has_max_input_length>.
 
 B<Notice:> current attribute is resettable.
 
@@ -460,11 +458,11 @@ It will set L</options_builder>.
         # $_[1] - field
 
         # Must return ArrayRef
-        return [
+        return (
             'apples',
             'oranges',
             'kiwi',
-        ];
+        );
     }
 
 B<Notice:> the "top" method will be used, this means that if you have

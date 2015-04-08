@@ -25,30 +25,30 @@ sub validate_datetime {
     return $self->_set_result($dt);
 }
 
-sub validate_dt_start {
+sub validate_min {
     my ( $self, $result ) = @_;
 
-    return 1 unless $self->has_dt_start && defined $result;
+    return 1 unless $self->has_min && defined $result;
 
     # Don't show Time::Piece warnings
     local $SIG{__WARN__} = sub { };
 
-    my $dt_start = Time::Piece->strptime( $self->dt_start, $self->format );
+    my $min = Time::Piece->strptime( $self->min, $self->format );
 
-    return !!( $result >= $dt_start );
+    return !!( $result >= $min );
 }
 
-sub validate_dt_end {
+sub validate_max {
     my ( $self, $result ) = @_;
 
-    return 1 unless $self->has_dt_end && defined $result;
+    return 1 unless $self->has_max && defined $result;
 
     # Don't show Time::Piece warnings
     local $SIG{__WARN__} = sub { };
 
-    my $dt_end = Time::Piece->strptime( $self->dt_end, $self->format );
+    my $max = Time::Piece->strptime( $self->max, $self->format );
 
-    return !!( $result <= $dt_end );
+    return !!( $result <= $max );
 }
 
 1;
@@ -63,10 +63,10 @@ __END__
     extends 'Form::Data::Processor::Form';
 
     has_field check_date => (
-        type     => 'DateTime',
-        dt_start => '2014-01-01',
-        dt_end   => '2014-12-31T17:00:00',
-        traits   => ['DateTime::TimePiece']
+        type   => 'DateTime',
+        min    => '2014-01-01',
+        max    => '2014-12-31T17:00:00',
+        traits => ['DateTime::TimePiece']
     );
 
 

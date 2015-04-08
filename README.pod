@@ -4,7 +4,7 @@
 
 =head1 NAME
 
-Form::Data::Processor - Yet another form data processor
+Form::Data::Processor - Yet another form data validator
 
 =head1 SYNOPSIS
 
@@ -35,67 +35,40 @@ Form::Data::Processor - Yet another form data processor
         multiple       => 0,
     );
 
+
+    ...
+
+    # later in your controller
+    my $form = MyForm->new;
+    die 'Not valid' $unless form->process( $ctx->params );
+
 =head1 DESCRIPTION
 
 Yet another form data validator, which is inspired by L<HTML::FormHandler>.
-It has similar syntax and similar features, except one: it
-is B<NOT> a form renderer (but it is written using L<Moose>, so you can extend
-it as you wish).
+
+It has similar syntax and similar features, but it is B<NOT> a form generator.
+Anyway you can extend it as you wish.
 
 =head1 Form::Data::Processor vs HTML::FormHandler
 
-I don't like Repeatable field in HFH - it is too slow (as the whole HFH is). But
-I like its syntax. So FDP should be a little bit faster than HFH.
+I don't like Repeatable field in HFH - it is too slow (as the whole HFH is).
+But I like its syntax. So FDP should be a little bit faster than HFH.
 
 Please look at benchmarks (C<benchmarks> folder).
 
-On my desktop "Intel(R) Core(TM)2 Duo CPU E4600  @ 2.40GHz,4GB, OpenSuSE, Linux 3.11.6-4-pae
-(e6d4a27) i686" it looks like:
+=head1 START HERE
 
-    $> perl benchmarks/simple.pl
-                                  Rate Create HTML::FormHandler Create Form::Data::Processor
-    Create HTML::FormHandler     100/s                       --                         -78%
-    Create Form::Data::Processor 455/s                     353%                           --
-                            Rate     HTML::FormHandler Form::Data::Processor
-    HTML::FormHandler      378/s                    --                  -79%
-    Form::Data::Processor 1774/s                  369%                    --
+=over 1
 
+=item L<Form::Data::Processor::Form>
 
-    -----------------------------------------------------------------------------------------------------------
+=item L<Form::Data::Processor::Field>
 
-    $> perl benchmarks/medium.pl
-    1..2
-                                      Rate Create HTML::FormHandler Create Form::Data::Processor Create PurePerl
-    Create HTML::FormHandler        31.0/s                       --                         -35%           -100%
-    Create Form::Data::Processor    47.6/s                      53%                           --           -100%
-    Create PurePerl              1411795/s                 4552034%                     2965856%              --
-    ok 1 - Form::Data::Processor "result()" equals to HTML::FormHandler "values()"
-    ok 2 - Form::Data::Processor "result()" equals to PurePerl result
-                            Rate HTML::FormHandler Form::Data::Processor    PurePerl
-    HTML::FormHandler     51.8/s                --                  -95%        -99%
-    Form::Data::Processor 1019/s             1868%                    --        -73%
-    PurePerl              3719/s             7080%                  265%          --
-
-
-    ----------------------------------------------------------------------------------------------------------
-
-    $> perl benchmarks/complex.pl
-    1..2
-                                   Rate Create Form::Data::Processor Create HTML::FormHandler
-    Create Form::Data::Processor 7.05/s                           --                     -42%
-    Create HTML::FormHandler     12.2/s                          74%                       --
-    ok 1 - Form::Data::Processor "result()" equals to HTML::FormHandler "values()"
-                               Rate    x1 HTML::FormHandler x1 Form::Data::Processor
-    x1 HTML::FormHandler     37.8/s                      --                     -88%
-    x1 Form::Data::Processor  321/s                    749%                       --
-    ok 2 - Form::Data::Processor "result()" equals to HTML::FormHandler "values()"
-                                Rate x32 HTML::FormHandler x32 Form::Data::Processor
-    x32 HTML::FormHandler     1.43/s                    --                      -95%
-    x32 Form::Data::Processor 29.9/s                 1987%                        --
+=back
 
 =head1 SEE ALSO
 
-L<HTML::FormHandler> - form validator and renderer.
+L<HTML::FormHandler> - HTML form validator and generator.
 
 =head1 AUTHOR
 
@@ -103,7 +76,7 @@ Dmitry "dim0xff" Latin <dim0xff@gmail.com>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2014 by Dmitry Latin.
+This software is copyright (c) 2015 by Dmitry Latin.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

@@ -186,7 +186,7 @@ package main {
             'Field is required message'
         );
 
-        ok( !$form->process( { compound => '', } ),
+        ok( !$form->process( { compound => [], } ),
             'Form validated with errors' );
         is_deeply(
             $form->dump_errors,
@@ -250,9 +250,7 @@ package main {
 
     $data->{compound}{compound}{text_max} =~ s/^\s+|\s+$//igs;
     is_deeply( $form->values, $data, 'Correct form values' );
-    $data->{compound}{compound}{text_max} =~ s/\s+/ /igs;
-    is_deeply( $form->field('compound')->_result,
-        $data->{compound}, 'Correct field _result' );
+
     is( $form->result,                    undef, 'Form result is undef' );
     is( $form->field('compound')->result, undef, 'Field result is undef' );
 
@@ -358,6 +356,21 @@ package main {
         ok( !$f->has_value, 'OK, field doesnt have value on empty input' );
 
         $f->clear_empty(0);
+    };
+
+    subtest 'required' => sub {
+        $form->field('compound')->set_default_value( required => 1 );
+
+        ok( !$form->process( { compound => {} } ),
+            'Form validated with errors' );
+
+        is_deeply(
+            $form->dump_errors,
+            {
+                'compound' => ['Field is required'],
+            },
+            'OK, right error messages'
+        );
     };
 
     done_testing();

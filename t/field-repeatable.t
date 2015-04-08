@@ -82,9 +82,12 @@ package Form {
     # }
 
 #<<<
-    has_field 'rep_1'                    => ( type => '+Form::Field::Repeatable1', prebuild_subfields => 10, max_input_length => 10);
+    has_field 'rep_1' => (
+        type             => '+Form::Field::Repeatable1',
+        max_input_length => 10,
+    );
 
-    has_field 'rep_2'                    => (
+    has_field 'rep_2' => (
         type => 'Repeatable',
         apply  => [
             {
@@ -102,9 +105,9 @@ package Form {
             },
         ],
     );
+
     has_field 'rep_2.contains'           => ( type => 'Compound', );
     has_field 'rep_2.contains.text_min'  => ( type => 'Text', minlength => 10, );
-
 
     has_field 'rep_3'                    => ( type => 'Repeatable' );
     has_field 'rep_3.rep'                => ( type => 'Repeatable' );
@@ -123,17 +126,17 @@ package Form {
                 shift->all_error_fields };
     }
 
-    sub validate_rep_3_rep_text {
+    sub validate_rep_3_contains_rep_contains_text {
         my $self  = shift;
         my $field = shift;
 
         return if $field->has_errors;
 
-        $field->add_error('validate_rep_3_rep_text')
+        $field->add_error('validate_rep_3_contains_rep_contains_text')
             if ( $field->value || '' ) =~ /try/;
     }
 
-    sub validate_rep_4_text_req {
+    sub validate_rep_4_contains_text_req {
         my $self  = shift;
         my $field = shift;
 
@@ -147,56 +150,53 @@ package Form {
 package main {
     my $form = Form->new();
 
-    subtest numfields => sub {
-        is( $form->field('rep_1')->num_fields,
-            10, 'rep_1 has 10 subfields (via prebuild_subfields)' );
-        is( $form->field('rep_2')->num_fields,
-            4, 'rep_2 has 4 subfields (by default)' );
-
-        ok( !$form->field('rep_1.text'), 'Form: no subfields for repeatable' );
-        ok(
-            !$form->field('rep_1')->subfield('text'),
-            'Fields: no subfields for repeatable'
-        );
-
-        is( $form->field('rep_1')->contains->num_fields,
-            1, 'rep_1: num fields is ok' );
-        is( $form->field('rep_1')->contains->fields->[0]->name,
-            'text', 'rep_1 contains: text' );
-
-        is( $form->field('rep_2')->contains->num_fields,
-            1, 'rep_2: num fields is ok' );
-        is( $form->field('rep_2')->contains->fields->[0]->name,
-            'text_min', 'rep_2 contains: text' );
-
-        is( $form->field('rep_3')->contains->num_fields,
-            2, 'rep_3: num fields is ok' );
-        is( $form->field('rep_3')->contains->fields->[0]->name,
-            'rep', 'rep_3 contains: rep' );
-        is( $form->field('rep_3')->contains->fields->[1]->name,
-            'text_min', 'rep_3 contains: text_min' );
-
-        is( $form->field('rep_3')->contains->num_fields,
-            2, 'rep_3.rep: num fields is ok' );
-
-        is(
-            $form->field('rep_3')->contains->fields->[0]->contains->fields->[0]
-                ->name,
-            'text', 'rep_3.rep contains: text'
-        );
-
-        is( $form->field('rep_4')->contains->num_fields,
-            2, 'rep_4.rep: num fields is ok' );
-
-        is( $form->field('rep_4')->contains->fields->[0]->name,
-            'text_req', 'rep_4 contains: text_req' );
-        is( $form->field('rep_4')->contains->fields->[1]->name,
-            'text', 'rep_4 contains: text' );
-
-        is( $form->field('rep_1')->num_fields, 10, 'rep_1 has 10 subfields' );
-        is( $form->field('rep_2')->num_fields, 4,  'rep_2 has 4 subfields' );
+    my $data = {
+        rep_1 => [
+            (
+                {
+                    text => 'Text'
+                }
+            ) x 10
+        ],
+        rep_2 => [
+            (
+                {
+                    text_min => 'Text' x 3,
+                }
+            ) x 32
+        ],
+        rep_3 => [
+            (
+                {
+                    rep => [
+                        (
+                            {
+                                text => 'Text',
+                            }
+                        ) x 32
+                    ],
+                    text_min => 'Text' x 3,
+                }
+            ) x 32
+        ],
+        rep_4 => [
+            (
+                {
+                    text_req => 'Required',
+                },
+                {
+                    text_req => 'Required',
+                    text     => 'Text',
+                }
+            ) x 32
+        ],
     };
 
+    for ( 1 .. ( $ENV{DO_BENCH} ? 10 : 1 ) ) {
+        my $t0 = [gettimeofday];
+        $form->process($data);
+        diag tv_interval( $t0, [gettimeofday] );
+    }
 
     subtest 'FDP::Field::clone' => sub {
         ok(
@@ -211,12 +211,12 @@ package main {
         is( $form->field('rep_1.9')->full_name,
             'rep_1.9', 'Last subfield for rep_1 found' );
 
-        ok( !$form->field('rep_1.10'),
+        ok( !$form->field('rep_1.11'),
             'Subfield rep_1.10 not found for rep_1' );
 
         $form->field('rep_1.9')->disabled(1);
         $form->field('rep_1')->init_input( [ (undef) x 10 ], 1 );
-        $form->clear_form;
+        $form->reset_fields;
         is( $form->field('rep_1.9')->disabled,
             0, 'Subfield is reset after clear form' );
 
@@ -226,13 +226,15 @@ package main {
             { map { +"rep_1.$_.text" => ['Field is required'] } ( 0 .. 2 ) },
             'Subfield names are fine for errors'
         );
+
     };
+
 
     subtest 'FDP::Repeatable::max_input_length' => sub {
         ok( $form->field('rep_1')->has_fields, 'rep_1 has fields' );
         $form->field('rep_1')->clear_fields;
         ok( !$form->field('rep_1')->has_fields, 'rep_1 does not have fields' );
-        $form->field('rep_1')->set_default_value( max_input_length => 0 );
+        $form->field('rep_1')->set_default_value( max_input_length => 128 );
 
         ok( $form->process( { rep_1 => [ ( { text => 'str' } ) x 128 ] } ),
             'Form validated without errors' );
@@ -256,55 +258,6 @@ package main {
         'Only two fields returned'
     );
 
-    my $data = {
-        rep_1 => [
-            (
-                {
-                    text => 'Text'
-                }
-            ) x 10
-        ],
-        rep_2 => [
-            (
-                {
-                    text_min => 'Text',
-                }
-            ) x 32
-        ],
-        rep_3 => [
-            (
-                {
-                    rep => [
-                        (
-                            {
-                                text => 'Text',
-                            }
-                        ) x 32,
-                    ],
-                    text_min => 'Text',
-                }
-            ) x 32,
-        ],
-        rep_4 => [
-            (
-                {
-                    text_req => 'Required',
-                },
-                {
-                    text_req => 'Required',
-                    text     => 'Text',
-                }
-            ) x 32,
-        ],
-    };
-
-    if ( $ENV{DO_BENCH} ) {
-        for ( 1 .. 10 ) {
-            my $t0 = [gettimeofday];
-            $form->process($data);
-            diag tv_interval( $t0, [gettimeofday] );
-        }
-    }
 
     subtest 'external_validators' => sub {
         my $data = {
@@ -346,8 +299,9 @@ package main {
         is_deeply(
             $form->dump_errors,
             {
-                'rep_3.0.rep.1.text' => ['validate_rep_3_rep_text'],
-                'rep_4.1.text_req'   => ['validate_rep_4_text_req'],
+                'rep_3.0.rep.1.text' =>
+                    ['validate_rep_3_contains_rep_contains_text'],
+                'rep_4.1.text_req' => ['validate_rep_4_text_req'],
             },
             'OK, right error messages'
         );
@@ -426,6 +380,58 @@ package main {
         $f->validate();
         ok( !$f->has_errors, 'field validated' );
         is_deeply( $f->result, undef, 'field result OK' );
+    };
+
+    subtest 'required' => sub {
+        $form->field('rep_1')->contains->field('text')->disabled(1);
+        $form->field('rep_1')->set_default_value( fallback => 1 );
+
+        ok(
+            $form->process(
+                {
+                    rep_1 => [ { text => [] } ]
+                }
+            ),
+            'Form validated without errors on fallback(1)'
+        );
+
+        $form->field('rep_1')->set_default_value( fallback => 0 );
+        $form->field('rep_1')->contains->field('text')->disabled(0);
+        ok(
+            !$form->process(
+                {
+                    rep_1 => [ { text => [] } ]
+                }
+            ),
+            'Form validated with errors on fallback(0)'
+        );
+
+
+        $form->field('rep_1')->set_default_value( fallback => 0 );
+
+        $form->field('rep_1')->set_default_value( required => 1 );
+        $form->field('rep_3')->set_default_value( required => 1 );
+        $form->field('rep_4')->set_default_value( required => 1 );
+        $form->field('rep_5')
+            ->set_default_value( required => 1, disabled => 0 );
+
+        my $data = {
+            rep_1 => [],
+            rep_3 => [],
+            rep_4 => undef,
+        };
+        ok( !$form->process($data), 'Form validated with errors' );
+
+        is_deeply(
+            $form->dump_errors,
+            {
+                'rep_1' => ['Field is required'],
+                'rep_3' => ['Field is required'],
+                'rep_4' => ['Field is required'],
+                'rep_5' => ['Field is required'],
+            },
+            'OK, right error messages'
+        );
     };
 
     done_testing();

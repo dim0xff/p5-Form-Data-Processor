@@ -220,14 +220,12 @@ sub all_error_fields {
     # Use 'num_errors' here instead of 'has_errors'
     #
     # Field (parent) 'has_errors' is TRUE when children have errors.
-    # But it doesn't mean than field (parent) has own errors.
+    # But it doesn't mean that field (parent) has own errors.
     return (
         grep { $_->num_errors } map {
             (
                 $_,
-                $_->DOES('Form::Data::Processor::Role::Fields')
-                ? $_->all_error_fields
-                : ()
+                $_->can('all_error_fields') ? $_->all_error_fields : ()    #
             );
         } $self->all_fields
     );
@@ -378,7 +376,7 @@ sub _find_parent {
         my $simple_name = pop(@names);
         my $parent_name = join( '.', @names );
 
-        if ( $parent = $self->field( $parent_name, undef, $self ) ) {
+        if ( $parent = $self->field( $parent_name, $self ) ) {
             confess "Parent field '$parent_name' can't contain fields for '"
                 . $field_attr->{name} . "'"
                 unless $parent->DOES('Form::Data::Processor::Role::Fields');

@@ -20,16 +20,16 @@ package Form {
     );
 
     has_field format_start => (
-        type     => 'DateTime',
-        format   => '%d-%m-%y',
-        dt_start => '1-12-13',
+        type   => 'DateTime',
+        format => '%d-%m-%y',
+        min    => '1-12-13',
         traits => ['DateTime::TimePiece'],
     );
 
     has_field format_end => (
         type   => 'DateTime',
         format => '%d %b, %Y',
-        dt_end => '01 Dec, 2012',
+        max    => '01 Dec, 2012',
         traits => ['DateTime::TimePiece'],
     );
 

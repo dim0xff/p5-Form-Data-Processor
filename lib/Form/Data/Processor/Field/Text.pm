@@ -45,12 +45,12 @@ apply [
         message => 'text_invalid',
     },
     {
-        check => sub { return $_[1]->validate_maxlength( $_[0] ) },
-        message => 'text_maxlength'
+        check   => sub { return $_[1]->validate_maxlength( $_[0] ) },
+        message => 'maxlength'
     },
     {
-        check => sub { return $_[1]->validate_minlength( $_[0] ) },
-        message => 'text_minlength'
+        check   => sub { return $_[1]->validate_minlength( $_[0] ) },
+        message => 'minlength'
     },
 ];
 
@@ -59,9 +59,9 @@ sub BUILD {
     my $self = shift;
 
     $self->set_error_message(
-        text_invalid   => 'Field value is not a valid text',
-        text_maxlength => 'Field is too long',
-        text_minlength => 'Field is too short',
+        text_invalid => 'Field value is not a valid text',
+        maxlength    => 'Field is too long',
+        minlength    => 'Field is too short',
     );
 }
 
@@ -90,17 +90,6 @@ around init_input => sub {
         && !$self->not_nullable;                # and field is nullable
 
     return $value;
-};
-
-
-around validate_required => sub {
-    my $orig = shift;
-    my $self = shift;
-
-    return 0 unless $self->$orig();
-    return 0 if $self->is_empty( $self->value );
-
-    return 1;
 };
 
 
@@ -156,14 +145,11 @@ This field validates any data, which looks like text.
 
 This field is directly inherited from L<Form::Data::Processor::Field>.
 
-In addition to L<Form::Data::Processor::Field/required>, required also means
-that value must not be L<empty|Form::Data::Processor::Field/is_empty>.
-
 Field sets own error messages:
 
-    'text_invalid'   => 'Field value is not a valid text',
-    'text_maxlength' => 'Field is too long',
-    'text_minlength' => 'Field is too short',
+    'text_invalid' => 'Field value is not a valid text',
+    'maxlength'    => 'Field is too long',
+    'minlength'    => 'Field is too short',
 
 Error C<text_invalid> will be raised when field value is not look like text
 (actually when value is reference).
@@ -210,7 +196,7 @@ input value is empty, then field value will be set as C<undef>.
 =back
 
 When defined and field value length is exceed C<maxlength>, then error
-C<text_maxlength> raised.
+C<maxlength> raised.
 
 Also provided clearer C<clear_maxlength> and predicator C<has_maxlength>.
 
@@ -224,7 +210,7 @@ Also provided clearer C<clear_maxlength> and predicator C<has_maxlength>.
 =back
 
 When defined and field value length is less than C<minlength>, then error
-C<text_minlength> raised.
+C<minlength> raised.
 
 Also provided clearer C<clear_minlength> and predicator C<has_minlength>.
 
