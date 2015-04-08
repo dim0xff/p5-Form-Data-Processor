@@ -40,6 +40,8 @@
 
 =head1 DESCRIPTION
 
+B<Now with L<Mouse>!>
+
 Yet another form data validator, which is inspired by L<HTML::FormHandler>.
 
 It has similar syntax and similar features, but it is B<NOT> a form generator.
@@ -52,6 +54,14 @@ I don't like Repeatable field in HFH - it is too slow (as the whole HFH is).
 But I like its syntax. So FDP should be a little bit faster than HFH.
 
 Please look at benchmarks (C<benchmarks> folder).
+
+
+=head1 MOUSE
+
+Now it is even more faster than with FHF.
+
+In compare to C<Moose> version, using L<Mouse> makes possible to increase performance
+up to B<50%> (according to benchmarks)!
 
 
 =head1 START HERE

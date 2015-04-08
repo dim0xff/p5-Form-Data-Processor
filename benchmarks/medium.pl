@@ -88,7 +88,7 @@ package HFH::Field::Address {
 }
 
 package HFH::Form {
-    use HTML::FormHandler::Mouse;
+    use HTML::FormHandler::Moose;
     extends 'HTML::FormHandler';
 
     has_field 'addresses' => ( type => 'Repeatable', );
@@ -312,16 +312,16 @@ package main {
 
 =head1 RESULTS
 
-Intel(R) Core(TM)2 Duo CPU E4600  @ 2.40GHz,4GB, OpenSuSE, Linux 3.11.6-4-pae (e6d4a27) i686
+Intel(R) Core(TM)2 Duo CPU 6700 @ 2.66GHz, 4GB, openSUSE 13.2 x86_64, perl v5.20.2, Mouse v2.4.1
 
                                       Rate Create HTML::FormHandler Create Form::Data::Processor Create PurePerl
-    Create HTML::FormHandler        31.0/s                       --                         -35%           -100%
-    Create Form::Data::Processor    47.6/s                      53%                           --           -100%
-    Create PurePerl              1411795/s                 4552034%                     2965856%              --
+    Create HTML::FormHandler        62.1/s                       --                         -62%           -100%
+    Create Form::Data::Processor     165/s                     166%                           --           -100%
+    Create PurePerl              1524571/s                 2455362%                      922401%              --
 
                             Rate HTML::FormHandler Form::Data::Processor    PurePerl
-    HTML::FormHandler     51.8/s                --                  -95%        -99%
-    Form::Data::Processor 1019/s             1868%                    --        -73%
-    PurePerl              3719/s             7080%                  265%          --
+    HTML::FormHandler     60.2/s                --                  -96%        -99%
+    Form::Data::Processor 1571/s             2510%                    --        -70%
+    PurePerl              5239/s             8604%                  233%          --
 
 =cut

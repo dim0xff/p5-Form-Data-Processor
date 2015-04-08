@@ -49,7 +49,7 @@ package FDP::Form {
 }
 
 package HFH::Form {
-    use HTML::FormHandler::Mouse;
+    use HTML::FormHandler::Moose;
     extends 'HTML::FormHandler';
 
     has_field text => ( type => 'Text', );
@@ -120,14 +120,14 @@ package main {
 
 =head1 RESULTS
 
-Intel(R) Core(TM)2 Duo CPU E4600  @ 2.40GHz,4GB, OpenSuSE, Linux 3.11.6-4-pae (e6d4a27) i686
+Intel(R) Core(TM)2 Duo CPU 6700 @ 2.66GHz, 4GB, openSUSE 13.2 x86_64, perl v5.20.2, Mouse v2.4.1
 
                                   Rate Create HTML::FormHandler Create Form::Data::Processor
-    Create HTML::FormHandler     100/s                       --                         -78%
-    Create Form::Data::Processor 455/s                     353%                           --
+    Create HTML::FormHandler     202/s                       --                         -69%
+    Create Form::Data::Processor 647/s                     221%                           --
 
                             Rate     HTML::FormHandler Form::Data::Processor
-    HTML::FormHandler      378/s                    --                  -79%
-    Form::Data::Processor 1774/s                  369%                    --
+    HTML::FormHandler      507/s                    --                  -83%
+    Form::Data::Processor 2933/s                  478%                    --
 
 =cut

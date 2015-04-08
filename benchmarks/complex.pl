@@ -74,7 +74,7 @@ package FDP::Form {
 
 
 package HFH::Field::Address {
-    use HTML::FormHandler::Mouse;
+    use HTML::FormHandler::Moose;
     extends 'HTML::FormHandler::Field::Compound';
 
     has_field zip     => ( type => 'Text', required => 1, );
@@ -85,7 +85,7 @@ package HFH::Field::Address {
 }
 
 package HFH::Form {
-    use HTML::FormHandler::Mouse;
+    use HTML::FormHandler::Moose;
     extends 'HTML::FormHandler';
 
     # Addresses
@@ -221,18 +221,18 @@ package main {
 
 =head1 RESULTS
 
-Intel(R) Core(TM)2 Duo CPU E4600  @ 2.40GHz,4GB, OpenSuSE, Linux 3.11.6-4-pae (e6d4a27) i686
+Intel(R) Core(TM)2 Duo CPU 6700 @ 2.66GHz, 4GB, openSUSE 13.2 x86_64, perl v5.20.2, Mouse v2.4.1
 
-                                   Rate Create Form::Data::Processor Create HTML::FormHandler
-    Create Form::Data::Processor 7.05/s                           --                     -42%
-    Create HTML::FormHandler     12.2/s                          74%                       --
+                                   Rate Create HTML::FormHandler Create Form::Data::Processor
+    Create HTML::FormHandler     27.2/s                       --                         -54%
+    Create Form::Data::Processor 59.3/s                     119%                           --
 
                                Rate    x1 HTML::FormHandler x1 Form::Data::Processor
-    x1 HTML::FormHandler     37.8/s                      --                     -88%
-    x1 Form::Data::Processor  321/s                    749%                       --
+    x1 HTML::FormHandler     47.7/s                      --                     -95%
+    x1 Form::Data::Processor  904/s                   1794%                       --
 
                                 Rate x32 HTML::FormHandler x32 Form::Data::Processor
-    x32 HTML::FormHandler     1.43/s                    --                      -95%
-    x32 Form::Data::Processor 29.9/s                 1987%                        --
+    x32 HTML::FormHandler     1.75/s                    --                      -96%
+    x32 Form::Data::Processor 48.4/s                 2659%                        --
 
 =cut
