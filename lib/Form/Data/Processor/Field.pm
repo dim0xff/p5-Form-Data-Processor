@@ -259,12 +259,7 @@ sub add_actions {
     my ( $self, $actions ) = @_;
 
     for my $action ( @{$actions} ) {
-        if ( !ref $action || ref $action eq 'MouseX::Types::TypeDecorator' ) {
-            $action = { type => $action };
-        }
-
-        confess 'Wrong action for field ' . $self->full_name
-            unless ref $action eq 'HASH';
+        $action = { type => $action } unless ref $action eq 'HASH';
 
         # Declare validation subroutine and value initiation subroutine
         my ( $v_sub, $i_sub );
@@ -272,17 +267,12 @@ sub add_actions {
         # Mouse type constraint
         if ( exists $action->{type} ) {
             my $action_error_message = $action->{message};
-            my $tobj;
+            my $type                 = $action->{type};
 
-            if ( ref $action->{type} eq 'MouseX::Types::TypeDecorator' ) {
-                $tobj = $action->{type};
-            }
-            else {
-                my $type = $action->{type};
-                $tobj
-                    = Mouse::Util::TypeConstraints::find_type_constraint($type)
-                    or confess "Cannot find type constraint '$type'";
-            }
+            my $tobj
+                = Mouse::Util::TypeConstraints::find_or_parse_type_constraint(
+                $type)
+                or confess "Cannot find type constraint '$type'";
 
             $v_sub = sub {
                 my $self = shift;
@@ -300,7 +290,7 @@ sub add_actions {
                     } or do {
                         $error_message
                             = $tobj->has_message
-                            ? $tobj->message->($value)
+                            ? $tobj->get_message($value)
                             : 'error_occurred';
                     };
                 }
@@ -849,8 +839,9 @@ There are several types of validation actions:
 
 =item 1. Mouse type validation
 
-You could define Mouse type or use existing Mouse types for validation.
-If message not provided, then Mouse validation error message will be used.
+You could define Moose type or use existing Moosified
+(L<Moose>, L<Mouse>, L<Type::Tiny>, etc) types for validation.
+If message not provided, Moosified validation error message will be used.
 
 Coercion will be used if it is possible and field value will be set to coerced
 value.
@@ -874,6 +865,7 @@ value.
         => where { $_ > 10 }
         => message { "This number ($_) is not greater than 10" };
 
+    # With "default" message, which is provided by type
     has_field 'text_gt' => ( apply=> [ 'GreaterThan10' ] );
 
     # or with specified for field error message
