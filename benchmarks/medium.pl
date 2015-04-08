@@ -312,16 +312,16 @@ package main {
 
 =head1 RESULTS
 
-Intel(R) Core(TM)2 Duo CPU E4600  @ 2.40GHz,4GB, OpenSuSE, Linux 3.11.6-4-pae (e6d4a27) i686
+Intel(R) Core(TM)2 Duo CPU 6700 @ 2.66GHz, 4GB, openSUSE 13.2 x86_64, perl v5.20.2, Moose v2.1403
 
                                       Rate Create HTML::FormHandler Create Form::Data::Processor Create PurePerl
-    Create HTML::FormHandler        31.0/s                       --                         -35%           -100%
-    Create Form::Data::Processor    47.6/s                      53%                           --           -100%
-    Create PurePerl              1411795/s                 4552034%                     2965856%              --
+    Create HTML::FormHandler        59.7/s                       --                         -46%           -100%
+    Create Form::Data::Processor     110/s                      85%                           --           -100%
+    Create PurePerl              1562803/s                 2619178%                     1414251%              --
 
                             Rate HTML::FormHandler Form::Data::Processor    PurePerl
-    HTML::FormHandler     51.8/s                --                  -95%        -99%
-    Form::Data::Processor 1019/s             1868%                    --        -73%
-    PurePerl              3719/s             7080%                  265%          --
+    HTML::FormHandler     60.5/s                --                  -95%        -99%
+    Form::Data::Processor 1249/s             1965%                    --        -76%
+    PurePerl              5180/s             8463%                  315%          --
 
 =cut
