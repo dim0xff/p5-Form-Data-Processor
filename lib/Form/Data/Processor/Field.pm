@@ -158,7 +158,7 @@ sub BUILD {
 }
 
 sub has_fields { return 0 }                     # By default field doesn't have subfields
-sub is_form    { return 0 }                     # Field is not form
+sub is_form    { return 0 }                     # Field is not a form
 
 sub ready { $_[0]->populate_defaults }
 

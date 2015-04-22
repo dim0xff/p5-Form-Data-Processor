@@ -57,6 +57,14 @@ sub _fallback_clear_fields {
     }
 }
 
+around all_fields => sub {
+    my $orig = shift;
+    my $self = shift;
+
+    my @fields = $self->$orig(@_);
+    return @fields[ 0 .. ( min( $self->num_fields, $self->input_length ) - 1 ) ];
+};
+
 after _init_external_validators => sub {
     my $self = shift;
 
@@ -97,15 +105,6 @@ before reset => sub {
 
     $self->reset_fields;
 };
-
-sub reset_fields {
-    my $self = shift;
-
-    for my $idx ( 1 .. min( $self->num_fields, $self->input_length ) ) {
-        $self->fields->[ $idx - 1 ]->reset;
-        $self->fields->[ $idx - 1 ]->clear_value;
-    }
-}
 
 sub init_input {
     my ( $self, $value, $posted ) = @_;
@@ -148,12 +147,7 @@ sub init_input {
         return $self->set_value($value);
     }
 
-    return $self->set_value(
-        [
-            map { $self->fields->[$_]->value }
-                ( 0 .. ( $self->input_length - 1 ) )
-        ]
-    );
+    return $self->set_value( [ map { $_->value } $self->all_fields ] );
 }
 
 around is_empty => sub {
@@ -192,12 +186,16 @@ around validate => sub {
 sub _result {
     my $self = shift;
 
-    return [
-        map      { $self->fields->[$_]->result }
-            grep { defined $self->fields->[$_] }
-            ( 0 .. ( $self->input_length - 1 ) )
-    ];
+    return [ map { $_->result } $self->all_fields ];
 }
+
+sub _ready_fields {
+    my $self = shift;
+
+    # Don't use all_fields (because there are no input yet)
+    $_->ready for @{ $self->fields };
+}
+
 
 # Field has subfield 'contains'.
 # Each array subfield is based on 'contains'. So when you change some shared
@@ -221,7 +219,8 @@ sub _build_contains {
         );
         $contains->ready();
 
-        for my $field ( $self->all_fields ) {
+        for my $field ( @{ $self->fields } ) {
+
             next if $field->name eq 'contains';
 
             $contains->add_field($field);
@@ -233,8 +232,6 @@ sub _build_contains {
 
     # Re-init external validators for contains
     $self->contains->_init_external_validators;
-
-    confess 'Repeatable does not contain fields' unless $self->has_contains;
 
     $self->clear_fields;
     $self->clear_index;
@@ -396,6 +393,14 @@ pre-cached for next validation. So probably you need to limit number of
 validation values.
 
 B<Notice:> current attribute is resettable.
+
+
+=method all_fields
+
+Overridden method from L<Form::Data::Processor::Role::Fields>.
+
+Returns all subfields with input.
+
 
 =head1 EXTERNAL VALIDATION
 
