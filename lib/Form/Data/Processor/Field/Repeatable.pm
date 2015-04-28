@@ -57,12 +57,32 @@ sub _fallback_clear_fields {
     }
 }
 
+
+around clone => sub {
+    my $orig = shift;
+    my $self = shift;
+
+    my $clone = $self->$orig(@_);
+
+    if ( $self->has_contains ) {
+        my $contains
+            = $self->contains->clone( form => $clone->form, contains => undef );
+
+        $contains->parent($clone);
+        $clone->contains($contains);
+    }
+
+    return $clone;
+};
+
 around all_fields => sub {
     my $orig = shift;
     my $self = shift;
 
     my @fields = $self->$orig(@_);
-    return @fields[ 0 .. ( min( $self->num_fields, $self->input_length ) - 1 ) ];
+    my $last_index = min( $self->num_fields, $self->input_length ) - 1;
+
+    return @fields[ 0 .. $last_index ];
 };
 
 after _init_external_validators => sub {
@@ -89,14 +109,6 @@ before ready => sub {
     $self->_build_contains;
 };
 
-before clear_value => sub {
-    my $self = shift;
-
-    for my $field ( $self->all_fields ) {
-        $field->clear_value if $field->has_value;
-    }
-};
-
 before reset => sub {
     my $self = shift;
 
@@ -105,6 +117,15 @@ before reset => sub {
 
     $self->reset_fields;
 };
+
+before clear_value => sub {
+    my $self = shift;
+
+    for my $field ( $self->all_fields ) {
+        $field->clear_value if $field->has_value;
+    }
+};
+
 
 sub init_input {
     my ( $self, $value, $posted ) = @_;
@@ -247,7 +268,6 @@ sub _add_repeatable_subfield {
 
     $self->add_field($clone);
 }
-
 
 __PACKAGE__->meta->make_immutable;
 

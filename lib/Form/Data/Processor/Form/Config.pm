@@ -40,6 +40,16 @@ around _build_fields => sub {
     $self->_build_config_fields('fields');
 };
 
+around clone => sub {
+    my $orig = shift;
+    my $self = shift;
+
+    my $clone = $self->$orig( config => dclone( $self->config ), @_ );
+    $clone->_set_config( dclone( $self->_config ) );
+
+    return $clone;
+};
+
 
 sub load_config {
     my $self = shift;

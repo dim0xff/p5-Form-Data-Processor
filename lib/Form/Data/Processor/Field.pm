@@ -392,6 +392,8 @@ sub _init_external_validators {
 sub _find_external_validators {
     my $self = shift;
 
+    return () unless $self->has_parent;
+
     # Recursive search validators from current fields parents to top
     my $sub;
     $sub = sub {
@@ -1002,7 +1004,8 @@ Return clone of current field.
 Cloned fields have proper L</parent> reference. If field has subfields, then
 subfields will be cloned too.
 
-You can set custom attributes for clone: it could be passed via C<%replacement>.
+You can set custom attributes for clone: it could be passed via C<%replacement>
+(see Moose L<clone_object|Class::MOP::Class/Object_instance_construction_and_cloning>).
 But B<note>: replacement will be passed to subfields clones too.
 
     $field->disabled(0);

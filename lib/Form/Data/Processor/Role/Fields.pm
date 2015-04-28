@@ -149,8 +149,9 @@ around clone => sub {
     );
 
     for my $subfield ( $self->all_fields ) {
-        my $cloned_subfield = $subfield->clone(@_);
+        my $cloned_subfield = $subfield->clone( form => $clone->form, @_ );
 
+        # Need explicit call to trigger
         $cloned_subfield->parent($clone);
 
         $clone->add_field($cloned_subfield);
@@ -649,7 +650,11 @@ Return all subfields with errors.
 
 =back
 
-Tries to find field by field's C<$full_name> inside C<$field> (when provided), or inside form.
+Tries to find field by field's C<$full_name>.
+
+When C<$field> is provided, then search inside provided C<$field>.
+Otherwise, search inside current field/form (C<$self>) when C<$full_name> is simple (without dots),
+or when C<$full_name> is complex (with dots) search inside current form.
 
     package My::Form;
     ...
