@@ -392,6 +392,8 @@ sub _init_external_validators {
 sub _find_external_validators {
     my $self = shift;
 
+    return () unless $self->has_parent;
+
     # Recursive search validators from current fields parents to top
     my $sub;
     $sub = sub {
