@@ -103,10 +103,31 @@ package main {
         );
     }
 
-    ok(my $clone = $form->clone, 'Form cloned');
+    ok( my $clone = $form->clone, 'Form cloned' );
 
-    ok($form->config ne $clone->config, 'FDP::Form::Config->config');
-    ok($form->_config ne $clone->_config, 'FDP::Form::Config->_config');
+    ok( $form->config ne $clone->config,   'FDP::Form::Config->config' );
+    ok( $form->_config ne $clone->_config, 'FDP::Form::Config->_config' );
+
+    subtest 'Deep FDP::Field->form' => sub {
+        ok(
+            $form->field('compound.text')->form eq
+                $form->field('compound.compound.text')->form,
+            '... original'
+        );
+
+        ok(
+            $clone->field('compound.text')->form eq
+                $clone->field('compound.compound.text')->form,
+            '... clone'
+        );
+
+        ok(
+            $form->field('compound.text')->form ne
+                $clone->field('compound.text')->form,
+            '... original vs clone'
+        );
+    };
+
 
     done_testing();
 };

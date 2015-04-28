@@ -149,7 +149,7 @@ around clone => sub {
     );
 
     for my $subfield ( $self->all_fields ) {
-        my $cloned_subfield = $subfield->clone(@_);
+        my $cloned_subfield = $subfield->clone( form => $clone->form, @_ );
 
         # Need explicit call to trigger
         $cloned_subfield->parent($clone);
