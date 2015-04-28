@@ -224,38 +224,42 @@ sub _result {
 sub _find_options_builders {
     my $self = shift;
 
-    # Recursive search for options builder
-    my $sub;
-    $sub = sub {
-        my ( $self, $field ) = @_;
+    if ( $self->has_parent ) {
 
-        my $code;
+        # Recursive search for options builder
+        my $sub;
+        $sub = sub {
+            my ( $self, $field ) = @_;
 
-        $code = $sub->( $self->parent, $field )
-            if $self->can('parent') && $self->has_parent;
+            my $code;
 
-        if ( !$code ) {
-            my $builder = $field->full_name;
+            $code = $sub->( $self->parent, $field )
+                if $self->can('parent') && $self->has_parent;
 
-            if ( $self->can('full_name') ) {
-                my $full_name = $self->full_name;
-                $builder =~ s/^\Q$full_name\E\.//;
+            if ( !$code ) {
+                my $builder = $field->full_name;
+
+                if ( $self->can('full_name') ) {
+                    my $full_name = $self->full_name;
+                    $builder =~ s/^\Q$full_name\E\.//;
+                }
+
+                $builder =~ s/\./_/g;
+
+                $code = $self->can("options_$builder");
             }
 
-            $builder =~ s/\./_/g;
+            return $code ? sub { $code->( $self, pop ) } : undef;
+        };
 
-            $code = $self->can("options_$builder");
-        }
+        # Search recursively
+        my $code = $sub->( $self->parent, $self );
 
-        return $code ? sub { $code->( $self, pop ) } : undef;
-    };
-
-    # Search recursively
-    my $code = $sub->( $self->parent, $self );
-    return $code if $code;
+        return $code if $code;
+    }
 
     # Not found, try build_options for field inherited from FDP::Field::List
-    $code = $self->can('build_options');
+    my $code = $self->can('build_options');
     return $code if $code;
 
     # Not found

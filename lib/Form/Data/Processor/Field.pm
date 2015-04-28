@@ -158,7 +158,7 @@ sub BUILD {
 }
 
 sub has_fields { return 0 }                     # By default field doesn't have subfields
-sub is_form    { return 0 }                     # Field is not form
+sub is_form    { return 0 }                     # Field is not a form
 
 sub ready { $_[0]->populate_defaults }
 
@@ -391,6 +391,8 @@ sub _init_external_validators {
 
 sub _find_external_validators {
     my $self = shift;
+
+    return () unless $self->has_parent;
 
     # Recursive search validators from current fields parents to top
     my $sub;
@@ -1002,7 +1004,8 @@ Return clone of current field.
 Cloned fields have proper L</parent> reference. If field has subfields, then
 subfields will be cloned too.
 
-You can set custom attributes for clone: it could be passed via C<%replacement>.
+You can set custom attributes for clone: it could be passed via C<%replacement>
+(see Moose L<clone_object|Class::MOP::Class/Object_instance_construction_and_cloning>).
 But B<note>: replacement will be passed to subfields clones too.
 
     $field->disabled(0);
