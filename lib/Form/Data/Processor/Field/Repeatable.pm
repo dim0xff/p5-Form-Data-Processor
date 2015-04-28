@@ -57,6 +57,24 @@ sub _fallback_clear_fields {
     }
 }
 
+
+around clone => sub {
+    my $orig = shift;
+    my $self = shift;
+
+    my $clone = $self->$orig(@_);
+
+    if ( $self->has_contains ) {
+        my $contains
+            = $self->contains->clone( form => $clone->form, contains => undef );
+
+        $contains->parent($clone);
+        $clone->contains($contains);
+    }
+
+    return $clone;
+};
+
 around all_fields => sub {
     my $orig = shift;
     my $self = shift;

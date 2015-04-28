@@ -80,25 +80,22 @@ package main {
     for ( 1 .. 2 ) {
         $form->process(
             {
-                data => {
-                    text     => {},
-                    compound => {
-                        text       => [],
-                        repeatable => [
-                            (
-                                {
-                                    list     => [ '1O', '2O' ],
-                                    text     => {},
-                                    compound => {
-                                        int   => 1.23,
-                                        float => 'abc',
-                                    }
+                text     => {},
+                compound => {
+                    text       => [],
+                    repeatable => [
+                        (
+                            {
+                                list     => [ '1O', '2O' ],
+                                text     => {},
+                                compound => {
+                                    int   => 1.23,
+                                    float => 'abc',
                                 }
-                            ) x 1,
-                        ],
-                    }
-                },
-                validator => 'F1',
+                            }
+                        ) x 1,
+                    ],
+                }
             }
         );
     }
@@ -128,6 +125,62 @@ package main {
         );
     };
 
+
+    subtest 'FDP::Field::Repeatable' => sub {
+        ok(
+            $form->field('compound.repeatable')->contains ne
+                $clone->field('compound.repeatable')->contains,
+            '... contains'
+        );
+
+        ok(
+            $form->field('compound.repeatable')->contains->form ne
+                $clone->field('compound.repeatable')->contains->form,
+            '... contains form'
+        );
+
+
+        ok(
+            $form->field('compound.repeatable.0')->parent ne
+                $clone->field('compound.repeatable.0')->parent,
+            '... 0 parent'
+        );
+
+
+        $_->process(
+            {
+                text     => {},
+                compound => {
+                    text       => [],
+                    repeatable => [
+                        (
+                            {
+                                list     => [ '1O', '2O' ],
+                                text     => {},
+                                compound => {
+                                    int   => 1.23,
+                                    float => 'abc',
+                                }
+                            }
+                        ) x 3,
+                    ],
+                }
+            }
+        ) for ( $form, $clone );
+
+
+        ok(
+            $form->field('compound.repeatable.1')->parent ne
+                $clone->field('compound.repeatable.1')->parent,
+            '... 1 parent'
+        );
+
+        ok(
+            $form->field('compound.repeatable.1')->form ne
+                $clone->field('compound.repeatable.1')->form,
+            '... subfields form'
+        );
+    };
 
     done_testing();
 };
