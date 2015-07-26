@@ -302,7 +302,8 @@ Method which normally should be called after all fields are L<Form::Data::Proces
 
 By default it does nothing, but you can use it when extending form.
 
-B<Notice>: don't overload this method! Use C<before>, C<after> and C<around> hooks instead.
+B<Notice>: don't overload this method, unless you know what you do.
+Use C<before>, C<after> and C<around> hooks instead.
 
 
 =method result
