@@ -1,3 +1,8 @@
+Split Field validation into several subroutines (internal, external, actions, etc.)
+Check uid on cloning
+Remove `apply` in fields (move it into `around validate`)
+Move to String::Numeric for Field::Number
+Field::Number vs Field::Number::Int: number_invalid vs integer_invalid
 Tests for Form::Data::Processor::Field::clear_empty
 Tests for Form::Data::Processor::Field::Repeatable
 Tests for actions
@@ -11,3 +16,28 @@ I hate FDP::Field::Repeatable/fallback!
     Have an idea.
     For each field there are should exist prototypes.
     And $field->attr actually should do $field->proto->attr
+
+Add actions namespace
+    FDP::Actions
+        trim
+        lc
+        uc
+
+    extends 'FDP::Form';
+
+    has '+actions_namespace" => (
+        default => [
+            '+My::Actions',     # For My::Actions
+            'My',               # For FDP::Actions::My
+        ]
+    );
+
+    has_field 'allowed_email' => (
+        apply => [
+            { input_transform => 'trim' },
+
+            { check     => 'email' },
+            { check     => 'domain_blacklisted', args => [ 'mailinator.com', 'blacklisted.ru ] },
+            { transform => 'do_transform', args => [ 'with, 'args' ] },
+        ]
+    );
