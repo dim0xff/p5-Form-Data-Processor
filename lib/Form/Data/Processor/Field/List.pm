@@ -87,7 +87,7 @@ has do_not_reload => (
 
 has _options_index => (
     is      => 'rw',
-    isa     => 'HashRef[ArrayRef]',
+    isa     => 'HashRef',
     default => sub { {} },
 );
 
