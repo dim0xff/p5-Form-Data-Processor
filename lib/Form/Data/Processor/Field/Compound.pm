@@ -121,7 +121,7 @@ around validate => sub {
 sub _result {
     return {
         map { $_->name => $_->result }
-        grep { $_->has_value } shift->all_fields
+        grep { $_->has_result } shift->all_fields
     };
 }
 
