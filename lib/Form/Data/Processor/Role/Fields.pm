@@ -189,15 +189,7 @@ sub validate_fields {
     my $self = shift;
 
     for my $field ( $self->all_fields ) {
-        next if $field->disabled;
-
-        $field->validate;
-
-        next unless $field->has_value;
-
-        for my $code ( $field->all_external_validators ) {
-            $code->($field);
-        }
+        $field->validate unless $field->disabled;
     }
 }
 
@@ -739,7 +731,7 @@ For each not L<Form::Data::Processor::Field/disabled> subfield does
     $subfield->validate();
 
 End else does subfield "L<external validation|Form::Data::Processor::Field/EXTERNAL VALIDATION>"
-when subfield has value.
+B<when> subfield has value.
 
 
 =method values
