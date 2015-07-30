@@ -73,12 +73,11 @@ __END__
 =head1 DESCRIPTION
 
 This field validates datetime input data.
-This field use parsing via L<Time::Piece/strptime>.
+This field uses parsing via L<Time::Piece/strptime>.
 
 This field is directly inherited from L<Form::Data::Processor::Field::DateTime>.
 
 Attributes L<Form::Data::Processor::Field::DateTime/locale> and
-L<Form::Data::Processor::Field::DateTime/time_zone> is not being used
-by this field.
+L<Form::Data::Processor::Field::DateTime/time_zone> are ignored.
 
 =cut
