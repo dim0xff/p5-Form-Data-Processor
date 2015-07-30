@@ -7,7 +7,7 @@ use namespace::autoclean;
 
 extends 'Form::Data::Processor::Field';
 
-use Scalar::Util ('looks_like_number');
+use String::Numeric ('is_numeric');
 
 has min => (
     is        => 'rw',
@@ -74,7 +74,7 @@ sub _result { return ( 0 + shift->value ) }
 # $_[1] - value
 
 sub validate_number {
-    return !!looks_like_number( $_[1] );
+    return is_numeric( $_[1] );
 }
 
 sub validate_zero {
@@ -206,7 +206,7 @@ Validate if value is greater or equal than L</min>.
 
 =back
 
-Validate if value is look like number via L<Scalar::Util/looks_like_number>.
+Validate if value is look like number via L<String::Numeric/is_numeric>.
 
 
 =method validate_zero

@@ -7,6 +7,8 @@ use namespace::autoclean;
 
 extends 'Form::Data::Processor::Field::Number';
 
+use String::Numeric ('is_integer');
+
 sub BUILD {
     my $self = shift;
 
@@ -20,7 +22,7 @@ before internal_validation => sub {
     return if $self->has_errors || !$self->has_value || !defined $self->value;
 
     return $self->add_error('integer_invalid')
-        unless $self->validate_int($self->value);
+        unless $self->validate_int( $self->value );
 };
 
 
@@ -28,8 +30,7 @@ before internal_validation => sub {
 # $_[1] - value
 
 sub validate_int {
-    return 1 if $_[1] =~ /^-? [0-9]+$/x;
-    return 0;
+    return is_integer( $_[1] );
 }
 
 sub validate_number {1}
@@ -52,7 +53,8 @@ __END__
 
 =head1 DESCRIPTION
 
-This field validates any data, which looks like number without decimal part.
+This field validates any data, which looks like number without decimal part
+via L</validate_int>.
 
 This field is directly inherited from L<Form::Data::Processor::Field::Number>.
 
@@ -61,7 +63,7 @@ Field sets own error messages:
     integer_invalid => 'Field value is not a valid integer'
 
 
-=method validate_max
+=method validate_int
 
 =over 4
 
@@ -71,6 +73,6 @@ Field sets own error messages:
 
 =back
 
-Validate if value is a valid integer.
+Validate if value is a valid integer number via L<String::Numeric/is_integer>.
 
 =cut

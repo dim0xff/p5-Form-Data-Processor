@@ -7,6 +7,8 @@ use namespace::autoclean;
 
 extends 'Form::Data::Processor::Field::Number';
 
+use String::Numeric ('is_decimal');
+
 # $1 integer part
 # $2 decimal part with dot
 # $3 decimal part
@@ -52,30 +54,34 @@ before internal_validation => sub {
 
     return if $self->has_errors || !$self->has_value || !defined $self->value;
 
-    my @parts = ( $self->value =~ FLOAT_RE );
+    my @parts = ( $self->value, ( $self->value =~ FLOAT_RE ) );
 
+    #<<< no tidy
     return $self->add_error('float_invalid')   unless $self->validate_float(@parts);
     return $self->add_error('float_precision') unless $self->validate_precision(@parts);
+    #>>>
 };
 
 # $_[0] - self
-# $_[1] - integer part
-# $_[2] - decimal part with dot
-# $_[3] - decimal part
+# $_[1] - value
+# $_[2] - integer part
+# $_[3] - decimal part with dot
+# $_[4] - decimal part
 
 sub validate_float {
+    return 0 unless is_decimal( $_[1] );
 
     # Strong validation: at least dot should present
-    return 1 if $_[2] || !$_[0]->strong_float;
+    return 1 if $_[3] || !$_[0]->strong_float;
 
     return 0;
 }
 
 sub validate_precision {
     return 0
-        if defined $_[3]
+        if defined $_[4]
         && $_[0]->has_precision
-        && length( $_[3] ) > $_[0]->precision;
+        && length( $_[4] ) > $_[0]->precision;
 
     return 1;
 }
@@ -102,7 +108,8 @@ __END__
 
 =head1 DESCRIPTION
 
-This field validates any data, which looks like number with (maybe) decimal part.
+This field validates any data, which looks like a float number
+with (maybe) decimal part via L</validate_float> and L</validate_precision>.
 
 This field is directly inherited from L<Form::Data::Processor::Field::Number>.
 
@@ -151,21 +158,22 @@ So, when C<false>, then integer number is also valid value.
 
 =over 4
 
-=item Arguments: $integer_part, $dot_with_decimal_part, $decimal_part
+=item Arguments: $value, $integer_part, $dot_with_decimal_part, $decimal_part
 
 =item Return: bool
 
 =back
 
-When L</strong_float>, validate that field value is a valid float number
-(at least dot should present). Otherwise, always C<true>.
+Validate that field value is a valid float number via
+L<String::Numeric/is_decimal>. When L</strong_float>, then decimal part should
+present.
 
 
 =method validate_precision
 
 =over 4
 
-=item Arguments: $integer_part, $dot_with_decimal_part, $decimal_part
+=item Arguments: $value, $integer_part, $dot_with_decimal_part, $decimal_part
 
 =item Return: bool
 

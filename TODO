@@ -1,5 +1,4 @@
 Check uid on cloning
-Move to String::Numeric for Field::Number
 Tests for Form::Data::Processor::Field::clear_empty
 Tests for Form::Data::Processor::Field::Repeatable
 Tests for actions

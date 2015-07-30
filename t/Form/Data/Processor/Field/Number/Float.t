@@ -64,7 +64,7 @@ package main {
     ok(
         $form->process(
             {
-                min     => "-.0",
+                min     => "-0.0",
                 max     => 999.9,
                 wo_prec => 1000,
             },
