@@ -7,20 +7,32 @@ use namespace::autoclean;
 
 extends 'Form::Data::Processor::Field::Number';
 
-apply [
-    {
-        check   => sub { $_[0] =~ /^[-+]?[0-9]+$/ },
-        message => 'integer_invalid',
-    }
-];
-
-
 sub BUILD {
     my $self = shift;
 
     $self->set_error_message(
         integer_invalid => 'Field value is not a valid integer number' );
 }
+
+before internal_validation => sub {
+    my $self = shift;
+
+    return if $self->has_errors || !$self->has_value || !defined $self->value;
+
+    return $self->add_error('integer_invalid')
+        unless $self->validate_int($self->value);
+};
+
+
+# $_[0] - self
+# $_[1] - value
+
+sub validate_int {
+    return 1 if $_[1] =~ /^-? [0-9]+$/x;
+    return 0;
+}
+
+sub validate_number {1}
 
 __PACKAGE__->meta->make_immutable;
 
@@ -47,5 +59,18 @@ This field is directly inherited from L<Form::Data::Processor::Field::Number>.
 Field sets own error messages:
 
     integer_invalid => 'Field value is not a valid integer'
+
+
+=method validate_max
+
+=over 4
+
+=item Arguments: $value
+
+=item Return: bool
+
+=back
+
+Validate if value is a valid integer.
 
 =cut
