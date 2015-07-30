@@ -5,7 +5,7 @@ package Form::Data::Processor::Field::Email;
 use Form::Data::Processor::Moose;
 use namespace::autoclean;
 
-extends 'Form::Data::Processor::Field::Text';
+extends 'Form::Data::Processor::Field';
 
 use Email::Valid;
 
@@ -32,12 +32,6 @@ has _result => (
     clearer  => '_clear_result',
 );
 
-apply [
-    {
-        check   => sub { return $_[1]->validate_email( $_[0] ) },
-        message => 'email_invalid',
-    }
-];
 
 sub BUILD {
     my $self = shift;
@@ -49,6 +43,16 @@ sub BUILD {
 before reset => sub {
     $_[0]->_clear_reason;
     $_[0]->_clear_result;
+};
+
+
+sub internal_validation {
+    my $self = shift;
+
+    return if $self->has_errors || !$self->has_value || !defined $self->value;
+
+    return $self->add_error('email_invalid')
+        unless $self->validate_email( $self->value );
 };
 
 sub validate_email {
@@ -88,7 +92,7 @@ __END__
 
 This field validates email via L<Email::Valid>.
 
-This field is directly inherited from L<Form::Data::Processor::Field::Text>.
+This field is directly inherited from L<Form::Data::Processor::Field>.
 
 Field sets own error messages:
 
