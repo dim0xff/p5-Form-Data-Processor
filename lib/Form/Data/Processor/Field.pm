@@ -199,7 +199,9 @@ sub reset {
 }
 
 
-sub init_input {
+sub init_input { shift->_init_input(@_) }
+
+sub _init_input {
     my ( $self, $value, $posted ) = @_;
 
     return if $self->disabled;
