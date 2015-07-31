@@ -77,7 +77,7 @@ package FDP::Form {
 
 
 package HFH::Field::Address {
-    use HTML::FormHandler::Mouse;
+    use HTML::FormHandler::Moose;
     extends 'HTML::FormHandler::Field::Compound';
 
     has_field zip     => ( type => 'Text', required => 1, );
