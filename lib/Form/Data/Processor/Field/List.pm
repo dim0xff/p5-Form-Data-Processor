@@ -87,19 +87,23 @@ has do_not_reload => (
 
 has _options_index => (
     is      => 'rw',
-    isa     => 'HashRef[ArrayRef]',
+    isa     => 'HashRef',
     default => sub { {} },
 );
 
 
 apply [
     {
-        input_transform => sub {
-            return $_[0] unless ref $_[0] eq 'ARRAY' && $_[1]->uniq_input;
-            return [ uniq grep {defined} @{ $_[0] } ];
-        },
-    },
+        input_transform => sub { return $_[1]->uniquify_input( $_[0] ) }
+    }
 ];
+
+sub uniquify_input {
+    my ( $self, $value ) = @_;
+
+    return $value unless ref $value eq 'ARRAY' && $self->uniq_input;
+    return [ uniq grep {defined} @{$value} ];
+}
 
 
 sub BUILD {
@@ -162,11 +166,8 @@ around is_empty => sub {
 };
 
 
-around validate => sub {
-    my $orig = shift;
+sub internal_validation {
     my $self = shift;
-
-    $self->$orig();
 
     return if $self->has_errors || !$self->has_value || !defined $self->value;
 
@@ -187,16 +188,13 @@ around validate => sub {
         if !$self->multiple && @{$values} > 1;
 
     # If no errors, then check each value
-EACH_VALUE:
     for my $value ( @{$values} ) {
-        next EACH_VALUE unless defined $value;
+        next unless defined $value;
 
         if ( ref $value ) {
             $self->add_error( 'wrong_value', $value );
-            next EACH_VALUE;
         }
-
-        if ( my $option = $self->_options_index->{$value} ) {
+        elsif ( my $option = $self->_options_index->{$value} ) {
             $self->add_error( 'disabled_value', $value )
                 if $option->{disabled};
         }
@@ -204,7 +202,7 @@ EACH_VALUE:
             $self->add_error( 'not_allowed', $value );
         }
     }
-};
+}
 
 
 sub _result {
@@ -356,13 +354,15 @@ B<Notice:> current attribute is resettable.
 
 =item Type: Int|Undef
 
+=item Default: undef
+
 =back
 
 Indicate max number of input values, which could be provided to validate.
-C<Undef> means no limit. C<Zero> means, that max number is equal
+C<Zero> means no limit. C<Undef> means, that max number is equal
 to C<num_options>.
 
-B<Notice:> when you set it to C<undef> and try to validate huge number
+B<Notice:> when you set it to C<zero> and try to validate huge number
 of non unique values, this could take a lot of time.
 
 When input length is greater than C<max_input_length>, then error
@@ -514,12 +514,26 @@ be rebuilt before using (see L</do_not_reload>).
 
 =back
 
-Field has input L<action|Form::Data::Processor::Field/Input initialization level action>,
-which removes duplicated and undefined input values, when there are more
-than one input value.
+Indicate if input value should be uniquified via L</uniquify_input>.
 
 B<Notice:> current attribute is resettable.
 
+
+=method uniquify_input
+
+=over 4
+
+=item Arguments: $value
+
+=item Return: $value or ArrayRef
+
+=back
+
+By default it is being used in
+L<input transform action|Form::Data::Processor::Field/Input initialization level action>.
+
+When C<$value> is ArrayRef, then remove duplicated and undefined elements
+via L<List::MoreUtils/uniq>. Otherwise return C<$value>.
 
 =head1 SEE ALSO
 

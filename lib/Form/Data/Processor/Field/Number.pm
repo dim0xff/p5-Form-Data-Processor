@@ -7,7 +7,7 @@ use namespace::autoclean;
 
 extends 'Form::Data::Processor::Field';
 
-use Scalar::Util ('looks_like_number');
+use String::Numeric ('is_numeric');
 
 has min => (
     is        => 'rw',
@@ -31,15 +31,6 @@ has allow_zero => (
     default => 1,
 );
 
-
-apply [
-    {
-        check   => sub { return !!( looks_like_number( $_[0] ) ) },
-        message => 'number_invalid',
-    }
-];
-
-
 sub BUILD {
     my $self = shift;
 
@@ -61,27 +52,30 @@ after populate_defaults => sub {
     );
 };
 
-around validate => sub {
-    my $orig = shift;
+sub internal_validation {
     my $self = shift;
 
-    $self->$orig(@_);
-
-    # Skip further validation if value doesn't look like number
     return if $self->has_errors || !$self->has_value || !defined $self->value;
 
     my $value = $self->value;
 
-    return $self->add_error('zero') unless $self->validate_zero($value);
-    return $self->add_error('max')  unless $self->validate_max($value);
-    return $self->add_error('min')  unless $self->validate_min($value);
-};
+    #<<< no tidy
+    return $self->add_error('number_invalid') unless $self->validate_number($value);
+    return $self->add_error('zero')           unless $self->validate_zero($value);
+    return $self->add_error('max')            unless $self->validate_max($value);
+    return $self->add_error('min')            unless $self->validate_min($value);
+    #>>>
+}
 
 sub _result { return ( 0 + shift->value ) }
 
 
 # $_[0] - self
 # $_[1] - value
+
+sub validate_number {
+    return is_numeric( $_[1] );
+}
 
 sub validate_zero {
     return 1 if $_[0]->allow_zero;
@@ -90,12 +84,12 @@ sub validate_zero {
 
 sub validate_max {
     return 1 unless $_[0]->has_max;
-    return !!( ref( $_[1] ) || $_[1] <= $_[0]->max );
+    return ( ref( $_[1] ) || $_[1] <= $_[0]->max );
 }
 
 sub validate_min {
     return 1 unless $_[0]->has_min;
-    return !!( ref( $_[1] ) || $_[1] >= $_[0]->min );
+    return ( ref( $_[1] ) || $_[1] >= $_[0]->min );
 }
 
 __PACKAGE__->meta->make_immutable;
@@ -119,10 +113,7 @@ __END__
 
 =head1 DESCRIPTION
 
-This field validates any data, which looks like number.
-
-The basic validation is performed via L<Scalar::Util/looks_like_number>.
-
+This field validates any data, which looks like number via L</validate_number>.
 
 This field is directly inherited from L<Form::Data::Processor::Field>.
 
@@ -203,6 +194,19 @@ Validate if value is less or equal than L</max>.
 =back
 
 Validate if value is greater or equal than L</min>.
+
+
+=method validate_number
+
+=over 4
+
+=item Arguments: $value
+
+=item Return: bool
+
+=back
+
+Validate if value is look like number via L<String::Numeric/is_numeric>.
 
 
 =method validate_zero

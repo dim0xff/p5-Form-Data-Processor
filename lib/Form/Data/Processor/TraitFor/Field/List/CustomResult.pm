@@ -5,6 +5,8 @@ package Form::Data::Processor::TraitFor::Field::List::CustomResult;
 use Form::Data::Processor::Moose::Role;
 use namespace::autoclean;
 
+use Storable qw(dclone);
+
 sub _result {
     my $self = shift;
 
@@ -24,8 +26,10 @@ sub _result_for {
     my ( $self, $value ) = @_;
 
     return
-        exists $self->_options_index->{$value}{result}
-        ? $self->_options_index->{$value}{result}
+          exists $self->_options_index->{$value}{result}
+        ? ref $self->_options_index->{$value}{result}
+            ? dclone( $self->_options_index->{$value}{result} )
+            : $self->_options_index->{$value}{result}
         : $value;
 }
 
@@ -65,6 +69,6 @@ __END__
 
 =head1 DESCRIPTION
 
-Add custom result for List field.
+Add custom result for L<List|Form::Data::Processor::Field::List> field.
 
 =cut

@@ -68,7 +68,7 @@ package main {
         $form->process(
             {
                 min => "-0",
-                max => "+100",
+                max => "100",
             },
         ),
         'Form validated without errors'

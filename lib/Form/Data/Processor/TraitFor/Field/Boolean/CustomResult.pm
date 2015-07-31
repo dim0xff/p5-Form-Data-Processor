@@ -5,6 +5,7 @@ package Form::Data::Processor::TraitFor::Field::Boolean::CustomResult;
 use Form::Data::Processor::Moose::Role;
 use namespace::autoclean;
 
+use Storable qw(dclone);
 use MooseX::Types::Moose qw(Any);
 use MooseX::Types::Structured qw(Dict Optional);
 
@@ -32,6 +33,7 @@ after reset => sub {
     my $self = shift;
 
     my $custom_result = $self->get_default_value('custom_result') or return;
+    $custom_result = dclone($custom_result) if ref $custom_result;
 
     $self->custom_result(
         {
