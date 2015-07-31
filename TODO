@@ -1,8 +1,7 @@
+Check uid on cloning
 Tests for Form::Data::Processor::Field::clear_empty
 Tests for Form::Data::Processor::Field::Repeatable
 Tests for actions
-
-Form::Data::Processor::Role::Fields/init_input remove 'confess'
 
 POD: add info for read only attributes
 POD: Form::Data::Processor::Role::Fields add info about has_errors vs num_errors
@@ -11,3 +10,28 @@ I hate FDP::Field::Repeatable/fallback!
     Have an idea.
     For each field there are should exist prototypes.
     And $field->attr actually should do $field->proto->attr
+
+Add actions namespace
+    FDP::Actions
+        trim
+        lc
+        uc
+
+    extends 'FDP::Form';
+
+    has '+actions_namespace" => (
+        default => [
+            '+My::Actions',     # For My::Actions
+            'My',               # For FDP::Actions::My
+        ]
+    );
+
+    has_field 'allowed_email' => (
+        apply => [
+            { input_transform => 'trim' },
+
+            { check     => 'email' },
+            { check     => 'domain_blacklisted', args => [ 'mailinator.com', 'blacklisted.ru ] },
+            { transform => 'do_transform', args => [ 'with, 'args' ] },
+        ]
+    );

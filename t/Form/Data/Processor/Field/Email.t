@@ -57,8 +57,8 @@ package main {
     ok(
         $form->process(
             {
-                email    => "email\@test.domain\f",
-                email_mx => "\tdim0xff \@ gmail . com\n\r",
+                email    => "email\@test.domain",
+                email_mx => "\tdim0xff \@ gmail . com\n",
             },
         ),
         'Form validated without errors'
@@ -75,7 +75,7 @@ package main {
 
     is(
         $form->field('email_mx')->value,
-        'dim0xff @ gmail . com',
+        "\tdim0xff \@ gmail . com\n",
         'email_mx, value'
     );
 

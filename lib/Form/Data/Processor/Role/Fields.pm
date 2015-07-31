@@ -149,8 +149,9 @@ around clone => sub {
     );
 
     for my $subfield ( $self->all_fields ) {
-        my $cloned_subfield = $subfield->clone(@_);
+        my $cloned_subfield = $subfield->clone( form => $clone->form, @_ );
 
+        # Need explicit call to trigger
         $cloned_subfield->parent($clone);
 
         $clone->add_field($cloned_subfield);
@@ -175,7 +176,9 @@ sub clear_fields_errors {
 sub init_input {
     my ( $self, $params ) = @_;
 
-    confess 'Input params must be a HashRef' unless ref $params eq 'HASH';
+    return unless defined $params;
+
+    confess 'Input params must be a HashRef' if ref $params ne 'HASH';
 
     for my $field ( $self->all_fields ) {
         my $field_name = $field->name;
@@ -188,15 +191,7 @@ sub validate_fields {
     my $self = shift;
 
     for my $field ( $self->all_fields ) {
-        next if $field->disabled;
-
-        $field->validate;
-
-        next unless $field->has_value;
-
-        for my $code ( $field->all_external_validators ) {
-            $code->($field);
-        }
+        $field->validate unless $field->disabled;
     }
 }
 
@@ -649,7 +644,11 @@ Return all subfields with errors.
 
 =back
 
-Tries to find field by field's C<$full_name> inside C<$field> (when provided), or inside form.
+Tries to find field by field's C<$full_name>.
+
+When C<$field> is provided, then search inside provided C<$field>.
+Otherwise, search inside current field/form (C<$self>) when C<$full_name> is simple (without dots),
+or when C<$full_name> is complex (with dots) search inside current form.
 
     package My::Form;
     ...
@@ -734,7 +733,7 @@ For each not L<Form::Data::Processor::Field/disabled> subfield does
     $subfield->validate();
 
 End else does subfield "L<external validation|Form::Data::Processor::Field/EXTERNAL VALIDATION>"
-when subfield has value.
+B<when> subfield has value.
 
 
 =method values

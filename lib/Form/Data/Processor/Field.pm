@@ -158,7 +158,7 @@ sub BUILD {
 }
 
 sub has_fields { return 0 }                     # By default field doesn't have subfields
-sub is_form    { return 0 }                     # Field is not form
+sub is_form    { return 0 }                     # Field is not a form
 
 sub ready { $_[0]->populate_defaults }
 
@@ -199,7 +199,9 @@ sub reset {
 }
 
 
-sub init_input {
+sub init_input { shift->_init_input(@_) }
+
+sub _init_input {
     my ( $self, $value, $posted ) = @_;
 
     return if $self->disabled;
@@ -230,6 +232,20 @@ sub validate {
     return $self->add_error( 'required', $self->value )
         if $self->required && !$self->validate_required;
 
+    $self->internal_validation;
+    $self->actions_validation;
+    $self->external_validation;
+}
+
+sub validate_required {
+    return !( shift->is_empty );
+}
+
+sub internal_validation { }
+
+sub actions_validation {
+    my $self = shift;
+
     # Don't do actions validation for undefined value
     return unless defined $self->value;
 
@@ -241,11 +257,16 @@ sub validate {
     }
 }
 
+sub external_validation {
+    my $self = shift;
 
-sub validate_required {
-    return !( shift->is_empty );
+    # Don't do external validation when field doesn't have value
+    return unless $self->has_value;
+
+    for my $code ( $self->all_external_validators ) {
+        $code->($self);
+    }
 }
-
 
 sub clone {
     my $self   = shift;
@@ -392,6 +413,8 @@ sub _init_external_validators {
 
 sub _find_external_validators {
     my $self = shift;
+
+    return () unless $self->has_parent;
 
     # Recursive search validators from current fields parents to top
     my $sub;
@@ -548,10 +571,37 @@ and L<Form::Data::Processor::Role::FullName>.
 B<Notice:> default L<trait namespace|MouseX::Traits/_trait_namespace> is
 C<Form::Data::Processor::TraitFor::Field>.
 
-Field could be validated in different ways: L<actions|/add_actions>,
-L<internal validation|/validate> or L<external validation|/EXTERNAL VALIDATION>.
-These ways could be mixed.
+Field is being L<validated|/validate> in different ways:
+L<internal validation|/internal_validation>, L<actions|/add_actions>
+or L<external validation|/EXTERNAL VALIDATION>. These ways could be mixed.
 
+=head1 FIELD VALIDATION FLOW
+
+                Start
+                  |
+             _ Disabled? _
+     _ yes _/             \_ no __________
+    |                                     |
+    |                               _ Required? _
+    |                       _ yes _/             \_ no _
+    |                      |                            |
+    |                      |                            |
+    |            _ Validate "required" _                |
+    |   _ fail _/                       \_ success _    |
+    |  |                                            |   |
+    |  |                        ____________________|___|
+    |  |                       |
+    |  |           Internal field validation
+    |  |                       |
+    |  |                       |
+    |  |              Actions validation
+    |  |                       |
+    |  |                       |
+    |  |           External field validation
+    |  |                       |
+    |__|_______________________|
+                               |
+                              End
 
 =attr clear_empty
 
@@ -578,7 +628,7 @@ Indicate if field input value will be cleared when it is L<empty|/is_empty>.
 
 Indicate if field is disabled.
 
-When field is disabled, then there are no any validation or input initialization
+B<Notice:> when field is disabled, then there are no any validation or input initialization
 on this field.
 
 
@@ -592,8 +642,9 @@ on this field.
 
 =back
 
-Indicate if all validation actions should be performed.
-Otherwise, actions validation will be stopped on first error.
+Indicate if all validation L<actions|/Validation level action>
+should be performed. Otherwise, actions validation will be stopped
+on first error.
 
 
 =attr form
@@ -712,6 +763,12 @@ and predicator C<has_value>
 B<Notice:> normally is being set by Form::Data::Processor internals.
 
 
+=method actions_validation
+
+Perform L<actions|/Validation level action> validation.
+Also see L</force_validation_actions>.
+
+
 =method add_actions
 
 =over 4
@@ -812,10 +869,11 @@ C<$@> after L</init_input>.
 
 =head4 Validation level action
 
-These actions will be applied for defined field values B<before>
-L<external validation|/EXTERNAL VALIDATION>.
+These actions will be applied B<only> for defined L</value>,
+B<after> L<internal validation|/internal_validation>
+and B<before> L<external validation|/EXTERNAL VALIDATION>.
 
-For each validation action could be provided custom error message. Message
+For each validation action a custom error message could be provided. Message
 could be provided via C<message> key. If it is not provided, then default error
 message will be used.
 
@@ -1003,7 +1061,8 @@ Return clone of current field.
 Cloned fields have proper L</parent> reference. If field has subfields, then
 subfields will be cloned too.
 
-You can set custom attributes for clone: it could be passed via C<%replacement>.
+You can set custom attributes for clone: it could be passed via C<%replacement>
+(see Moose L<clone_object|Class::MOP::Class/Object_instance_construction_and_cloning>).
 But B<note>: replacement will be passed to subfields clones too.
 
     $field->disabled(0);
@@ -1051,11 +1110,22 @@ and L<has value|/value>.
 Initialize fields value with user input.
 
 When field is L</disabled>, or when C<$posted> is C<false> and C<$value> is not
-defined, then it does nothing. Otherwise fields value will be set to C<$value>, when
-value is L<not empty|/is_empty> and field allows L<empty values|/clear_empty>.
+defined, then it does nothing.
 
-Also L<input initialization actions|/Input initialization level action> will be applied
-before L<empty|/is_empty> checking.
+Otherwise apply L<input initialization actions|/Input initialization level action>,
+and then set field value to C<$value>, when C<$value> is L<not empty|/is_empty>
+and field allows L<empty values|/clear_empty>.
+
+
+=method internal_validation
+
+Perform specified for field internal validation.
+
+By default does nothing. But each FDP::Field::* could perform own internal validation,
+eg. validate max/min length, trimming string, etc.
+
+B<Notice>: don't overload this method, unless you know what you do.
+Use C<before>, C<after>, C<around> hooks instead.
 
 
 =method is_empty
@@ -1138,7 +1208,8 @@ for L</parent> are ready.
 
 By default it does nothing, but you can use it when extend fields.
 
-B<Notice>: don't overload this method! Use C<before>, C<after>, C<around> hooks instead.
+B<Notice>: don't overload this method, unless you know what you do.
+Use C<before>, C<after>, C<around> hooks instead.
 
 
 =method reset
@@ -1163,12 +1234,10 @@ then return C<undef> too.
 
 Validate input value.
 
-B<Notice:> calling this method doesn't perform
-"L<external validation|/EXTERNAL VALIDATION>".
+Validating contains next steps
+(also look L<validation flow|/FIELD VALIDATION FLOW>):
 
-Validating contains next steps:
-
-=over 1
+=over 4
 
 =item 1. Check L</disabled>
 
@@ -1179,7 +1248,17 @@ Disabled fields are not being validated and validation stops if field is disable
 If field is required and L<doesn't have value|/validate_required> then field
 validation stops with C<required> error.
 
-=item 3. Apply validation L<actions|/add_actions>
+=item 3. Internal validation
+
+Field will be validated via L</internal_validation>.
+
+=item 4. Apply L<actions|/add_actions> validation
+
+If field has a value, then L</actions_validation> will be performed.
+
+=item 5. External validation
+
+Field will be validated via L</external_validation>.
 
 =back
 

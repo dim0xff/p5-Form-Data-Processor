@@ -56,14 +56,6 @@ has _result => (
 );
 
 
-apply [
-    {
-        check => sub { return $_[1]->validate_datetime( $_[0] ) },
-        message => 'datetime_invalid',
-    }
-];
-
-
 sub BUILD {
     my $self = shift;
 
@@ -87,22 +79,21 @@ after populate_defaults => sub {
     );
 };
 
-around validate => sub {
-    my $orig = shift;
+before reset => sub { $_[0]->_clear_result };
+
+sub internal_validation {
     my $self = shift;
 
-    $self->$orig(@_);
-
     return if $self->has_errors || !$self->has_value || !defined $self->value;
+
+    return $self->add_error('datetime_invalid')
+        unless $self->validate_datetime( $self->value );
 
     my $value = $self->_result;
 
     return $self->add_error('min') unless $self->validate_min($value);
     return $self->add_error('max') unless $self->validate_max($value);
-};
-
-before reset => sub { $_[0]->_clear_result };
-
+}
 
 sub validate_datetime {
     my ( $self, $value ) = @_;

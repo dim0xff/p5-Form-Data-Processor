@@ -27,6 +27,21 @@ package Form {
             false => $Bool::false,
         },
     );
+
+    has_field confirm_ref => (
+        type          => 'Boolean',
+        traits        => ['Boolean::CustomResult'],
+        custom_result => {
+            true => {
+                title => 'Success',
+                value => 1,
+            },
+            false => {
+                title => 'Failed',
+                value => 0,
+            },
+        },
+    );
 }
 
 package main {
@@ -37,26 +52,48 @@ package main {
         is_deeply( $form->result, {}, 'Proper result' );
     };
 
-    subtest 'conform' => sub {
-        ok( $form->process( { confirm => 1 } ), 'Form processed' );
+    subtest 'confirm' => sub {
+        ok( $form->process( { confirm => 1, confirm_ref => 1 } ),
+            'Form processed' );
         is_deeply(
             $form->result,
-            { confirm => 'Yes, confirmed' },
+            {
+                confirm     => 'Yes, confirmed',
+                confirm_ref => { title => 'Success', value => 1 },
+            },
             'Proper result'
         );
     };
 
     subtest 'no result' => sub {
-        ok( $form->process( { confirm => '0' } ), 'Form processed' );
-        is_deeply( $form->result, { confirm => $Bool::false },
-            'Proper result' );
+        ok( $form->process( { confirm => '0', confirm_ref => 0 } ),
+            'Form processed' );
+        is_deeply(
+            $form->result,
+            {
+                confirm     => $Bool::false,
+                confirm_ref => { title => 'Failed', value => 0 },
+            },
+            'Proper result'
+        );
     };
 
     subtest 'reset' => sub {
+        # Change data in result
+        $form->result->{confirm_ref}{title} = 'Success';
+
         $form->field('confirm')->custom_result->{'false'} = '~undef';
-        ok( $form->process( { confirm => '0' } ), 'Form processed' );
-        is_deeply( $form->result, { confirm => $Bool::false },
-            'Proper result' );
+
+        ok( $form->process( { confirm => '0', confirm_ref => 0 } ),
+            'Form processed' );
+        is_deeply(
+            $form->result,
+            {
+                confirm     => $Bool::false,
+                confirm_ref => { title => 'Failed', value => 0 },
+            },
+            'Proper result'
+        );
 
         ok(
             $form->field('confirm')

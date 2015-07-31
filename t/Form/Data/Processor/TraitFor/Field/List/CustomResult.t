@@ -22,6 +22,13 @@ use constant PHOTOS => [
     {
         value => 'ANY',
     },
+    {
+        value  => 'REF',
+        result => {
+            title => 'Reference',
+            value => 'REF',
+        }
+    }
 ];
 
 
@@ -38,6 +45,31 @@ package Form {
 
 package main {
     ok( my $form = Form->new(), 'Form created' );
+
+    subtest reference => sub {
+        ok( $form->process( { photos => 'REF' } ), 'Form processed' );
+
+        my $result = $form->result;
+        is_deeply(
+            $result,
+            {
+                photos => [ PHOTOS->[-1]{result} ]
+            },
+            'Proper result'
+        );
+
+        $result->{photos}[0]{title} = undef;
+
+
+        ok( $form->process( { photos => 'REF' } ), 'Form processed' );
+        is_deeply(
+            $form->result,
+            {
+                photos => [ PHOTOS->[-1]{result} ]
+            },
+            'still proper result'
+        );
+    };
 
     subtest 'multiple => 0' => sub {
         $form->field('photos')->set_default_value( multiple => 0 );

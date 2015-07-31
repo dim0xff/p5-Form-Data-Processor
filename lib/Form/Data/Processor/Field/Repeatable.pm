@@ -52,10 +52,38 @@ sub _fallback_clear_fields {
     my $self = shift;
 
     # When value changed
-    if ( $_[0] != $_[1] ) {
+    if ( $_[0] ne $_[1] ) {
         $self->clear_fields;
     }
 }
+
+
+around clone => sub {
+    my $orig = shift;
+    my $self = shift;
+
+    my $clone = $self->$orig(@_);
+
+    if ( $self->has_contains ) {
+        my $contains
+            = $self->contains->clone( form => $clone->form, contains => undef );
+
+        $contains->parent($clone);
+        $clone->contains($contains);
+    }
+
+    return $clone;
+};
+
+around all_fields => sub {
+    my $orig = shift;
+    my $self = shift;
+
+    my @fields = $self->$orig(@_);
+    my $last_index = min( $self->num_fields, $self->input_length ) - 1;
+
+    return @fields[ 0 .. $last_index ];
+};
 
 after _init_external_validators => sub {
     my $self = shift;
@@ -81,14 +109,6 @@ before ready => sub {
     $self->_build_contains;
 };
 
-before clear_value => sub {
-    my $self = shift;
-
-    for my $field ( $self->all_fields ) {
-        $field->clear_value if $field->has_value;
-    }
-};
-
 before reset => sub {
     my $self = shift;
 
@@ -98,62 +118,45 @@ before reset => sub {
     $self->reset_fields;
 };
 
-sub reset_fields {
+before clear_value => sub {
     my $self = shift;
 
-    for my $idx ( 1 .. min( $self->num_fields, $self->input_length ) ) {
-        $self->fields->[ $idx - 1 ]->reset;
-        $self->fields->[ $idx - 1 ]->clear_value;
+    for my $field ( $self->all_fields ) {
+        $field->clear_value if $field->has_value;
     }
-}
+};
 
 sub init_input {
-    my ( $self, $value, $posted ) = @_;
+    my $self = shift;
 
-    # Default init_input logic
-    return if $self->disabled;
-    return unless $posted || defined($value);
+    my $value = $self->_init_input(@_);
 
-    for my $sub ( $self->all_init_input_actions ) {
-        $sub->( $self, \$value );
-    }
-
-    return $self->clear_value if $self->clear_empty && $self->is_empty($value);
+    return unless ref $value eq 'ARRAY';
 
     # Specified for Repeatable field logic
-    if ( ref $value eq 'ARRAY' ) {
-        $self->_set_input_length( my $input_length = @{$value} );
+    $self->_set_input_length( my $input_length = @{$value} );
 
-        return $self->set_value($value)
-            if $self->max_input_length
-            && $input_length > $self->max_input_length;
+    return $self->set_value($value)
+        if $self->max_input_length
+        && $input_length > $self->max_input_length;
 
-        # Fallback to HFH
-        $self->clear_fields if $self->fallback;
+    # Fallback to HFH
+    $self->clear_fields if $self->fallback;
 
-        # There are more elements provided than we expect
-        # Lets create additional subfields
-        if ( $input_length > $self->num_fields ) {
-            for my $idx ( $self->num_fields .. ( $input_length - 1 ) ) {
-                $self->_add_repeatable_subfield;
-            }
-        }
-
-        # Init input for repeatable subfields
-        for my $idx ( 0 .. ( $input_length - 1 ) ) {
-            $self->fields->[$idx]->init_input( $value->[$idx], 1 );
+    # There are more elements provided than we expect
+    # Lets create additional subfields
+    if ( $input_length > $self->num_fields ) {
+        for my $idx ( $self->num_fields .. ( $input_length - 1 ) ) {
+            $self->_add_repeatable_subfield;
         }
     }
-    else {
-        return $self->set_value($value);
+
+    # Init input for repeatable subfields
+    for my $idx ( 0 .. ( $input_length - 1 ) ) {
+        $self->fields->[$idx]->init_input( $value->[$idx], 1 );
     }
 
-    return $self->set_value(
-        [
-            map { $self->fields->[$_]->value }
-                ( 0 .. ( $self->input_length - 1 ) )
-        ]
-    );
+    return $self->set_value( [ map { $_->value } $self->all_fields ] );
 }
 
 around is_empty => sub {
@@ -171,11 +174,8 @@ around is_empty => sub {
     return !( any {defined} @{$value} );
 };
 
-around validate => sub {
-    my $orig = shift;
+sub internal_validation {
     my $self = shift;
-
-    $self->$orig(@_);
 
     return if $self->has_errors || !$self->has_value || !defined $self->value;
 
@@ -192,12 +192,16 @@ around validate => sub {
 sub _result {
     my $self = shift;
 
-    return [
-        map      { $self->fields->[$_]->result }
-            grep { defined $self->fields->[$_] }
-            ( 0 .. ( $self->input_length - 1 ) )
-    ];
+    return [ map { $_->result } $self->all_fields ];
 }
+
+sub _ready_fields {
+    my $self = shift;
+
+    # Don't use all_fields (because there are no input yet)
+    $_->ready for @{ $self->fields };
+}
+
 
 # Field has subfield 'contains'.
 # Each array subfield is based on 'contains'. So when you change some shared
@@ -221,7 +225,8 @@ sub _build_contains {
         );
         $contains->ready();
 
-        for my $field ( $self->all_fields ) {
+        for my $field ( @{ $self->fields } ) {
+
             next if $field->name eq 'contains';
 
             $contains->add_field($field);
@@ -230,11 +235,6 @@ sub _build_contains {
 
         $self->contains($contains);
     }
-
-    # Re-init external validators for contains
-    $self->contains->_init_external_validators;
-
-    confess 'Repeatable does not contain fields' unless $self->has_contains;
 
     # Re-init external validators for contains
     $self->contains->_init_external_validators;
@@ -253,7 +253,6 @@ sub _add_repeatable_subfield {
 
     $self->add_field($clone);
 }
-
 
 __PACKAGE__->meta->make_immutable;
 
@@ -399,6 +398,14 @@ pre-cached for next validation. So probably you need to limit number of
 validation values.
 
 B<Notice:> current attribute is resettable.
+
+
+=method all_fields
+
+Overridden method from L<Form::Data::Processor::Role::Fields>.
+
+Returns all subfields with input.
+
 
 =head1 EXTERNAL VALIDATION
 
