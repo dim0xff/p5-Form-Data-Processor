@@ -38,20 +38,8 @@ has minlength => (
 
 apply [
     {
-        input_transform => sub { return $_[1]->trim( $_[0] ) },
-    },
-    {
-        check   => sub { return !( ref $_[0] ) },
-        message => 'text_invalid',
-    },
-    {
-        check   => sub { return $_[1]->validate_maxlength( $_[0] ) },
-        message => 'maxlength'
-    },
-    {
-        check   => sub { return $_[1]->validate_minlength( $_[0] ) },
-        message => 'minlength'
-    },
+        input_transform => sub { return $_[1]->trim( $_[0] ) }
+    }
 ];
 
 
@@ -85,16 +73,28 @@ around init_input => sub {
     my $value = $self->$orig(@_);
 
     return $self->set_value(undef)              # set value to `undef`
-        if defined($value)
-        && $value eq ''                         # if value is empty
-        && !$self->not_nullable;                # and field is nullable
+        if defined($value)                      # if value is defined
+        && $value eq ''                         # and it is an empty string
+        && !$self->not_nullable;                # when field is nullable
 
     return $value;
 };
 
+sub internal_validation {
+    my $self = shift;
 
-# Apply actions
-#
+    return if $self->has_errors || !$self->has_value || !defined $self->value;
+
+    my $value = $self->value;
+
+    #<<< no tidy
+    return $self->add_error('text_invalid') unless $self->validate_text($value);
+    return $self->add_error('maxlength')    unless $self->validate_maxlength($value);
+    return $self->add_error('minlength')    unless $self->validate_minlength($value);
+    #>>>
+}
+
+
 # $_[0] - self
 # $_[1] - value
 
@@ -107,6 +107,11 @@ sub trim {
     }
 
     return $_[1];
+}
+
+sub validate_text {
+    return 0 if ref $_[1];
+    return 1;
 }
 
 sub validate_maxlength {
@@ -225,7 +230,8 @@ Also provided clearer C<clear_minlength> and predicator C<has_minlength>.
 
 =back
 
-By default it is using in C<input_transform> action.
+By default it is being used in
+L<input transform action|Form::Data::Processor::Field/Input initialization level action>.
 
 
 =method validate_maxlength
@@ -254,20 +260,16 @@ Validate if C<$value> length is less than L</maxlength> or equal to it.
 Validate if C<$value> length is greater than L</minlength> or equal to it.
 
 
-=head1 ACTIONS
+=method validate_text
 
-Field has default actions:
+=over 4
 
-=over 1
+=item Arguments: $value
 
-=item L</trim> on input transform
-
-=item C<text_invalid> checking
-
-=item L</validate_maxlength>
-
-=item L</validate_minlength>
+=item Return: Bool
 
 =back
+
+Validate if C<$value> is not reference.
 
 =cut

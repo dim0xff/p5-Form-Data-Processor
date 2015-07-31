@@ -7,14 +7,6 @@ use namespace::autoclean;
 
 extends 'Form::Data::Processor::Field::Text';
 
-apply [
-    {
-        check   => sub { return !( $_[0] =~ /[\f\n\r]/ ) },
-        message => 'string_invalid',
-    }
-];
-
-
 sub BUILD {
     my $self = shift;
 
@@ -23,6 +15,13 @@ sub BUILD {
     );
 }
 
+before internal_validation => sub {
+    my $self = shift;
+
+    return if $self->has_errors || !$self->has_value || !defined $self->value;
+
+    return $self->add_error('string_invalid') if $self->value =~ /[\f\n\r]/;
+};
 
 __PACKAGE__->meta->make_immutable;
 
@@ -44,7 +43,17 @@ __END__
 
 =head1 DESCRIPTION
 
-This field validates any data, which looks like one line string.
+This field validates any data, which looks like one line string:
+
+=over 4
+
+=item no new lines (\n)
+
+=item no return characters (\r)
+
+=item no form feeds/page breakes (\f)
+
+=back
 
 This field is directly inherited from L<Form::Data::Processor::Field::Text>.
 

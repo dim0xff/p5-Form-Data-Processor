@@ -48,34 +48,19 @@ before clear_value => sub {
 
 
 sub init_input {
-    my ( $self, $value, $posted ) = @_;
+    my $self = shift;
 
-    # Default init_input logic
-    return if $self->disabled;
-    return unless $posted || defined($value);
+    my $value = $self->_init_input(@_);
 
-    for my $sub ( $self->all_init_input_actions ) {
-        $sub->( $self, \$value );
+    return unless ref $value eq 'HASH';
+
+    # init_input for all subfields
+    for my $subfield ( $self->all_fields ) {
+        my $subfield_name = $subfield->name;
+
+        $subfield->init_input( $value->{$subfield_name},
+            exists( $value->{$subfield_name} ) );
     }
-
-    return $self->clear_value if $self->clear_empty && $self->is_empty($value);
-
-
-    # Specified for Compound field logic
-    if ( ref $value eq 'HASH' ) {
-
-        # init_input for all subfields
-        for my $subfield ( $self->all_fields ) {
-            my $subfield_name = $subfield->name;
-
-            $subfield->init_input( $value->{$subfield_name},
-                exists( $value->{$subfield_name} ) );
-        }
-    }
-    else {
-        return $self->set_value($value);
-    }
-
 
     return $self->set_value(
         {
@@ -102,11 +87,8 @@ around is_empty => sub {
 };
 
 
-around validate => sub {
-    my $orig = shift;
+sub internal_validation {
     my $self = shift;
-
-    $self->$orig(@_);
 
     return if $self->has_errors || !$self->has_value || !defined $self->value;
 
@@ -115,13 +97,13 @@ around validate => sub {
 
     # Validate subfields
     $self->validate_fields;
-};
+}
 
 
 sub _result {
     return {
         map { $_->name => $_->result }
-        grep { $_->has_value } shift->all_fields
+        grep { $_->has_result } shift->all_fields
     };
 }
 
