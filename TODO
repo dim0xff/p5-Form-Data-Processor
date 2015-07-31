@@ -1,13 +1,7 @@
-Split Field validation into several subroutines (internal, external, actions, etc.)
 Check uid on cloning
-Remove `apply` in fields (move it into `around validate`)
-Move to String::Numeric for Field::Number
-Field::Number vs Field::Number::Int: number_invalid vs integer_invalid
 Tests for Form::Data::Processor::Field::clear_empty
 Tests for Form::Data::Processor::Field::Repeatable
 Tests for actions
-
-Form::Data::Processor::Role::Fields/init_input remove 'confess'
 
 POD: add info for read only attributes
 POD: Form::Data::Processor::Role::Fields add info about has_errors vs num_errors

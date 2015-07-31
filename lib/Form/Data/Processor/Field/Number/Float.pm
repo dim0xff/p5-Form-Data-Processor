@@ -7,10 +7,12 @@ use namespace::autoclean;
 
 extends 'Form::Data::Processor::Field::Number';
 
+use String::Numeric ('is_decimal');
+
 # $1 integer part
 # $2 decimal part with dot
 # $3 decimal part
-use constant FLOAT_RE => qr/^[-+]? ([0-9]+)? (\. ([0-9]+)? )?$/x;
+use constant FLOAT_RE => qr/^-? ([0-9]+)? (\. ([0-9]+)? )?$/x;
 
 
 has strong_float => (
@@ -47,30 +49,44 @@ after populate_defaults => sub {
     );
 };
 
-around validate => sub {
-    my $orig = shift;
+before internal_validation => sub {
     my $self = shift;
-
-    $self->$orig(@_);
 
     return if $self->has_errors || !$self->has_value || !defined $self->value;
 
+    my @parts = ( $self->value, ( $self->value =~ FLOAT_RE ) );
 
-    my ( $int, $dot_dec, $dec ) = ( $self->value =~ FLOAT_RE );
+    #<<< no tidy
+    return $self->add_error('float_invalid')   unless $self->validate_float(@parts);
+    return $self->add_error('float_precision') unless $self->validate_precision(@parts);
+    #>>>
+};
+
+# $_[0] - self
+# $_[1] - value
+# $_[2] - integer part
+# $_[3] - decimal part with dot
+# $_[4] - decimal part
+
+sub validate_float {
+    return 0 unless is_decimal( $_[1] );
 
     # Strong validation: at least dot should present
-    if ( !defined($dot_dec) && $self->strong_float ) {
-        return $self->add_error('float_invalid');
-    }
+    return 1 if $_[3] || !$_[0]->strong_float;
 
-    # Check precision length
-    if (   defined $dec
-        && $self->has_precision
-        && length($dec) > $self->precision )
-    {
-        $self->add_error('float_precision');
-    }
-};
+    return 0;
+}
+
+sub validate_precision {
+    return 0
+        if defined $_[4]
+        && $_[0]->has_precision
+        && length( $_[4] ) > $_[0]->precision;
+
+    return 1;
+}
+
+sub validate_number {1}
 
 __PACKAGE__->meta->make_immutable;
 
@@ -92,7 +108,8 @@ __END__
 
 =head1 DESCRIPTION
 
-This field validates any data, which looks like number with (maybe) decimal part.
+This field validates any data, which looks like a float number
+with (maybe) decimal part via L</validate_float> and L</validate_precision>.
 
 This field is directly inherited from L<Form::Data::Processor::Field::Number>.
 
@@ -133,7 +150,36 @@ C<0> means any precision.
 =back
 
 Indicate if field value must contain dot at least, otherwise error
-C<float_precision> raised.
+C<float_invalid> raised.
 So, when C<false>, then integer number is also valid value.
+
+
+=method validate_float
+
+=over 4
+
+=item Arguments: $value, $integer_part, $dot_with_decimal_part, $decimal_part
+
+=item Return: bool
+
+=back
+
+Validate that field value is a valid float number via
+L<String::Numeric/is_decimal>. When L</strong_float>, then decimal part should
+present.
+
+
+=method validate_precision
+
+=over 4
+
+=item Arguments: $value, $integer_part, $dot_with_decimal_part, $decimal_part
+
+=item Return: bool
+
+=back
+
+when L<precision> is set, validate that C<$decimal_part> is less or equal
+than L</precision>. Otherwise, always C<true>.
 
 =cut

@@ -52,7 +52,7 @@ sub _fallback_clear_fields {
     my $self = shift;
 
     # When value changed
-    if ( $_[0] != $_[1] ) {
+    if ( $_[0] ne $_[1] ) {
         $self->clear_fields;
     }
 }
@@ -126,46 +126,34 @@ before clear_value => sub {
     }
 };
 
-
 sub init_input {
-    my ( $self, $value, $posted ) = @_;
+    my $self = shift;
 
-    # Default init_input logic
-    return if $self->disabled;
-    return unless $posted || defined($value);
+    my $value = $self->_init_input(@_);
 
-    for my $sub ( $self->all_init_input_actions ) {
-        $sub->( $self, \$value );
-    }
-
-    return $self->clear_value if $self->clear_empty && $self->is_empty($value);
+    return unless ref $value eq 'ARRAY';
 
     # Specified for Repeatable field logic
-    if ( ref $value eq 'ARRAY' ) {
-        $self->_set_input_length( my $input_length = @{$value} );
+    $self->_set_input_length( my $input_length = @{$value} );
 
-        return $self->set_value($value)
-            if $self->max_input_length
-            && $input_length > $self->max_input_length;
+    return $self->set_value($value)
+        if $self->max_input_length
+        && $input_length > $self->max_input_length;
 
-        # Fallback to HFH
-        $self->clear_fields if $self->fallback;
+    # Fallback to HFH
+    $self->clear_fields if $self->fallback;
 
-        # There are more elements provided than we expect
-        # Lets create additional subfields
-        if ( $input_length > $self->num_fields ) {
-            for my $idx ( $self->num_fields .. ( $input_length - 1 ) ) {
-                $self->_add_repeatable_subfield;
-            }
-        }
-
-        # Init input for repeatable subfields
-        for my $idx ( 0 .. ( $input_length - 1 ) ) {
-            $self->fields->[$idx]->init_input( $value->[$idx], 1 );
+    # There are more elements provided than we expect
+    # Lets create additional subfields
+    if ( $input_length > $self->num_fields ) {
+        for my $idx ( $self->num_fields .. ( $input_length - 1 ) ) {
+            $self->_add_repeatable_subfield;
         }
     }
-    else {
-        return $self->set_value($value);
+
+    # Init input for repeatable subfields
+    for my $idx ( 0 .. ( $input_length - 1 ) ) {
+        $self->fields->[$idx]->init_input( $value->[$idx], 1 );
     }
 
     return $self->set_value( [ map { $_->value } $self->all_fields ] );
@@ -186,11 +174,8 @@ around is_empty => sub {
     return !( any {defined} @{$value} );
 };
 
-around validate => sub {
-    my $orig = shift;
+sub internal_validation {
     my $self = shift;
-
-    $self->$orig(@_);
 
     return if $self->has_errors || !$self->has_value || !defined $self->value;
 
