@@ -176,7 +176,9 @@ sub clear_fields_errors {
 sub init_input {
     my ( $self, $params ) = @_;
 
-    confess 'Input params must be a HashRef' unless ref $params eq 'HASH';
+    return unless defined $params;
+
+    confess 'Input params must be a HashRef' if ref $params ne 'HASH';
 
     for my $field ( $self->all_fields ) {
         my $field_name = $field->name;
