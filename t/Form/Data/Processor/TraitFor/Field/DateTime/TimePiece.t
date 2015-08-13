@@ -3,8 +3,9 @@ use warnings;
 
 use Test::Most;
 use Time::Piece;
-use Mouse::Util::TypeConstraints;
+use Test::Memory::Cycle;
 
+use Mouse::Util::TypeConstraints;
 use Data::Dumper;
 
 
@@ -41,6 +42,7 @@ package Form {
 
 package main {
     my $form = Form->new();
+    memory_cycle_ok( $form, 'No memory cycles on ->new' );
 
     my $warnings;
     $SIG{__WARN__} = sub {
@@ -143,5 +145,6 @@ package main {
 
     is( $warnings, 1, 'warnings at the end' );
 
+    memory_cycle_ok( $form, 'Still no memory cycles' );
     done_testing();
 }

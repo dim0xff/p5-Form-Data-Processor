@@ -9,6 +9,7 @@ use List::MoreUtils qw(uniq);
 
 extends 'Form::Data::Processor::Field';
 
+use Scalar::Util qw(weaken);
 use List::MoreUtils qw(any);
 
 #<<< Type checking and coercion for options list
@@ -228,6 +229,7 @@ sub _find_options_builders {
         my $sub;
         $sub = sub {
             my ( $self, $field ) = @_;
+            weaken($self);
 
             my $code;
 

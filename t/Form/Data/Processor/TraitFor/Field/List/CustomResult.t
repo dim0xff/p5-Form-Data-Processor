@@ -4,6 +4,7 @@ use warnings;
 use lib 't/lib';
 
 use Test::Most;
+use Test::Memory::Cycle;
 
 
 use constant PHOTOS => [
@@ -45,6 +46,7 @@ package Form {
 
 package main {
     ok( my $form = Form->new(), 'Form created' );
+    memory_cycle_ok( $form, 'No memory cycles on ->new' );
 
     subtest reference => sub {
         ok( $form->process( { photos => 'REF' } ), 'Form processed' );
@@ -112,5 +114,6 @@ package main {
         );
     };
 
+    memory_cycle_ok( $form, 'Still no memory cycles' );
     done_testing();
 }

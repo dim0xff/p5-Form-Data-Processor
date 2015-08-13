@@ -5,6 +5,7 @@ use utf8;
 
 use Test::More;
 use Test::Exception;
+use Test::Memory::Cycle;
 
 use FindBin;
 use lib ( "$FindBin::Bin/lib", "$FindBin::Bin/../lib" );
@@ -75,8 +76,9 @@ package main {
     my $t0 = [gettimeofday];
 
     my $form = Form->new( params_args => { separator => '{}' } );
-
     diag tv_interval( $t0, [gettimeofday] );
+
+    memory_cycle_ok( $form, 'No memory cycles on ->new' );
 
     my @form_fields = $form->all_fields;
     is( @form_fields, 2, 'Form has only first two top level fields' );
@@ -152,5 +154,6 @@ package main {
         [ map { $_->full_name => [ $_->all_errors ] } $form->all_error_fields ]
     );
 
+    memory_cycle_ok( $form, 'Still no memory cycles' );
     done_testing();
 }

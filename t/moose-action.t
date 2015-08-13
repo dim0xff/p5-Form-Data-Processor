@@ -3,6 +3,7 @@ use warnings;
 
 use Test::More;
 use Test::Exception;
+use Test::Memory::Cycle;
 
 use lib 't/lib';
 
@@ -41,6 +42,7 @@ package Form {
 
 package main {
     ok( my $form = Form->new(), 'Create form' );
+    memory_cycle_ok( $form, 'No memory cycles on ->new' );
 
     ok( !$form->process( { field => 1 } ) );
     is_deeply( $form->dump_errors,
@@ -58,5 +60,6 @@ package main {
     ok( $form->process( { field => [ 11, 1, 2 ] } ) );
     is_deeply( $form->result, { field => 11 } );
 
+    memory_cycle_ok( $form, 'Still no memory cycles' );
     done_testing();
 }

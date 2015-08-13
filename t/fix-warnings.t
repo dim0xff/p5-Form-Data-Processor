@@ -2,6 +2,7 @@ use strict;
 use warnings;
 
 use Test::Most;
+use Test::Memory::Cycle;
 
 use Mouse::Util::TypeConstraints;
 
@@ -21,6 +22,7 @@ package Form {
 
 package main {
     my $form = Form->new;
+    memory_cycle_ok( $form, 'No memory cycles on ->new' );
 
     $SIG{__WARN__} = sub {
         fail('Catch warning! ' . shift);
@@ -49,5 +51,6 @@ package main {
 
     pass('No warnings!');
 
+    memory_cycle_ok( $form, 'Still no memory cycles' );
     done_testing();
 }

@@ -3,6 +3,7 @@ use warnings;
 
 use Test::More;
 use Test::Exception;
+use Test::Memory::Cycle;
 
 use Mouse::Util::TypeConstraints;
 
@@ -56,6 +57,7 @@ package Form {
 
 package main {
     my $form = Form->new();
+    memory_cycle_ok( $form, 'No memory cycles on ->new' );
 
     ok(
         !$form->process(
@@ -318,5 +320,6 @@ package main {
         'Disabled value is not present in result'
     );
 
+    memory_cycle_ok( $form, 'Still no memory cycles' );
     done_testing();
 }

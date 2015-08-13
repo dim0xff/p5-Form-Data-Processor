@@ -5,6 +5,7 @@ use utf8;
 
 use Test::More;
 use Test::Exception;
+use Test::Memory::Cycle;
 
 use FindBin;
 use lib ( "$FindBin::Bin/lib", "$FindBin::Bin/../lib" );
@@ -158,6 +159,7 @@ package Form::External::OK {
 
 package main {
     my $form = Form->new();
+    memory_cycle_ok( $form, 'No memory cycles on ->new' );
 
 #<<<
     subtest 'ready()' => sub {
@@ -373,5 +375,7 @@ package main {
         );
     };
 
+
+    memory_cycle_ok( $form, 'Still no memory cycles' );
     done_testing();
 }

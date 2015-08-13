@@ -5,6 +5,7 @@ use utf8;
 
 use Test::More;
 use Test::Exception;
+use Test::Memory::Cycle;
 
 use FindBin;
 use lib ( "$FindBin::Bin/lib", "$FindBin::Bin/../lib" );
@@ -182,6 +183,8 @@ package Form::Ext {
 package main {
     my $form = Form->new();
     my $now  = DateTime->now();
+
+    memory_cycle_ok( $form, 'No memory cycles on ->new' );
 
     subtest 'basic' => sub {
         ok(
@@ -402,5 +405,6 @@ package main {
         );
     };
 
+    memory_cycle_ok( $form, 'Still no memory cycles' );
     done_testing();
 }

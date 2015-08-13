@@ -4,6 +4,7 @@ use warnings;
 use lib 't/lib';
 
 use Test::Most;
+use Test::Memory::Cycle;
 
 package Bool {
     use overload (
@@ -46,6 +47,7 @@ package Form {
 
 package main {
     ok( my $form = Form->new(), 'Form created' );
+    memory_cycle_ok( $form, 'No memory cycles on ->new' );
 
     subtest 'no result' => sub {
         ok( $form->process( {} ), 'Form processed' );
@@ -104,6 +106,6 @@ package main {
         is_deeply( $form->result, { confirm => 0 }, '...proper result' );
     };
 
-
+    memory_cycle_ok( $form, 'Still no memory cycles' );
     done_testing();
 }
