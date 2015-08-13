@@ -3,6 +3,7 @@ use warnings;
 
 use Test::More;
 use Test::Exception;
+use Test::Memory::Cycle;
 
 use lib 't/lib';
 
@@ -106,6 +107,7 @@ package Form {
 
 package main {
     my $form = Form->new();
+    memory_cycle_ok( $form, 'No memory cycles on ->new' );
 
     my @warns;
     $SIG{__WARN__} = sub {
@@ -207,5 +209,6 @@ package main {
 #    diag explain \@warns;
 #    diag explain $form->dump_errors;
 
+    memory_cycle_ok( $form, 'Still no memory cycles' );
     done_testing();
 }

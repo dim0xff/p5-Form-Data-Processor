@@ -2,11 +2,10 @@ use strict;
 use warnings;
 
 use Test::Most;
+use Test::Memory::Cycle;
 
 use Moose::Util::TypeConstraints;
-
 use Data::Dumper;
-
 
 package Form {
     use Form::Data::Processor::Moose;
@@ -28,6 +27,7 @@ package Form {
 
 package main {
     my $form = Form->new();
+    memory_cycle_ok( $form, 'No memory cycles on ->new' );
 
     ok(
         !$form->process(
@@ -82,5 +82,6 @@ package main {
     is( $form->field('email')->reason,    undef, 'email, reason empty' );
     is( $form->field('email_mx')->reason, undef, 'email_mx, reason empty' );
 
+    memory_cycle_ok( $form, 'Still no memory cycles' );
     done_testing();
 }
