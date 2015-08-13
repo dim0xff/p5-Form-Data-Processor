@@ -7,6 +7,7 @@ use namespace::autoclean;
 
 with 'MooseX::Traits', 'Form::Data::Processor::Role::Errors';
 
+use Scalar::Util qw(weaken);
 use List::MoreUtils qw(any);
 
 #
@@ -419,6 +420,7 @@ sub _find_external_validators {
     my $sub;
     $sub = sub {
         my ( $self, $field ) = @_;
+        weaken($self);
 
         my @validators;
 
@@ -900,7 +902,7 @@ You could define Moose type or use existing Moosified
 (L<Moose>, L<Mouse>, L<Type::Tiny>, etc) types for validation.
 If message not provided, Moosified validation error message will be used.
 
-Coercion will be used if it is possible and field value will be set to coerced
+Coercion will be used if it is needed and field value will be set to coerced
 value.
 
     # Moose type
