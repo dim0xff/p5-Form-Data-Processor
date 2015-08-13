@@ -2,9 +2,9 @@ use strict;
 use warnings;
 
 use Test::Most;
+use Test::Memory::Cycle;
 
 use Moose::Util::TypeConstraints;
-
 use Data::Dumper;
 
 
@@ -25,6 +25,7 @@ package Form {
 
 package main {
     my $form = Form->new();
+    memory_cycle_ok( $form, 'No memory cycles on ->new' );
 
     subtest 'basic' => sub {
         ok(
@@ -68,5 +69,6 @@ package main {
         );
     };
 
+    memory_cycle_ok( $form, 'Still no memory cycles' );
     done_testing();
 }

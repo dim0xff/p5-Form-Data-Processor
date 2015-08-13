@@ -4,6 +4,7 @@ use warnings;
 use lib 't/lib';
 
 use Test::Most;
+use Test::Memory::Cycle;
 
 use File::Temp qw(tempfile tempdir);
 use JSON;
@@ -191,6 +192,7 @@ package main {
 
     subtest 'form process' => sub {
         my $form = My::Form::Person->new( config => $filename );
+        memory_cycle_ok( $form, 'No memory cycles on ->new' );
 
         is_deeply(
             [ map { $_->full_name } $form->all_fields ],
@@ -266,6 +268,8 @@ package main {
             },
             '... and result is OK'
         );
+
+        memory_cycle_ok( $form, 'Still no memory cycles' );
     };
 
     done_testing();

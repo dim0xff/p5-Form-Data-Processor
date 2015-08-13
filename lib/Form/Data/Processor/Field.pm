@@ -7,6 +7,7 @@ use namespace::autoclean;
 
 with 'MooseX::Traits', 'Form::Data::Processor::Role::Errors';
 
+use Scalar::Util qw(weaken);
 use List::MoreUtils qw(any);
 
 #
@@ -419,6 +420,7 @@ sub _find_external_validators {
     my $sub;
     $sub = sub {
         my ( $self, $field ) = @_;
+        weaken($self);
 
         my @validators;
 
