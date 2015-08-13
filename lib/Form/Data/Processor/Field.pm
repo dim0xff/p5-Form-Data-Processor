@@ -902,7 +902,7 @@ You could define Moose type or use existing Moosified
 (L<Moose>, L<Mouse>, L<Type::Tiny>, etc) types for validation.
 If message not provided, Moosified validation error message will be used.
 
-Coercion will be used if it is possible and field value will be set to coerced
+Coercion will be used if it is needed and field value will be set to coerced
 value.
 
     # Moose type
