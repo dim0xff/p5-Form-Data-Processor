@@ -240,7 +240,6 @@ sub _build_contains {
     $self->contains->_init_external_validators;
 
     $self->clear_fields;
-    $self->clear_index;
 }
 
 sub _add_repeatable_subfield {
@@ -451,21 +450,32 @@ on C<contains> won't give effect.
     has_fields 'categories.id'       => ( type => 'Number::Int', required => 1 );
     has_fields 'categories.position' => ( type => 'Number::Int', required => 1 );
 
+    # XXX - will not work as expected
     after 'setup_form' => sub {
         my $self = shift;
 
         if ( $self->to_delete ) {
-
-            # XXX - will not work as expected
             $self->field('categories')->contains->field('position')->disabled(1);
+        }
 
-            # Also you need to set "disabled" on all created Repeatable subfields
-            # Will work!
+        # Manual revert, because contains is not resettable
+        else {
+            $self->field('categories')->contains->field('position')->disabled(0);
+        }
+    }
+
+    # Also you need to set "disabled" on all created Repeatable subfields
+    after 'init_input' => sub {
+        my $self = shift;
+
+        if ( $self->to_delete ) {
             for ( $self->field('categories')->all_fields ) {
-                $_->field('position')->disabled(1)
+                $_->field('position')->disabled(1);
             }
         }
     };
+
+    # Will work!
 
 The other way is using L</fallback> option.
 
