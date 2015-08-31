@@ -376,7 +376,7 @@ will be recreated on every L<input initialization|Form::Data::Processor::Field/i
 
 B<Notice:> current attribute is resettable.
 
-B<Notice:> look to </CAVEATS> for more info.
+B<Notice:> look to L</CAVEATS> for more info.
 
 
 =attr max_input_length
@@ -459,7 +459,7 @@ on C<contains> won't give effect.
             # XXX - will not work as expected
             $self->field('categories')->contains->field('position')->disabled(1);
 
-            # Need to set disabled on all Repeatable subfields
+            # Also you need to set "disabled" on all created Repeatable subfields
             # Will work!
             for ( $self->field('categories')->all_fields ) {
                 $_->field('position')->disabled(1)
@@ -467,7 +467,7 @@ on C<contains> won't give effect.
         }
     };
 
-The other way is to user L</fallback> option.
+The other way is using L</fallback> option.
 
     ...
 
