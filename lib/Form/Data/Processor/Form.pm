@@ -8,6 +8,7 @@ use namespace::autoclean;
 with 'Form::Data::Processor::Role::Errors';
 with 'Form::Data::Processor::Role::Fields';
 
+use Data::Clone ();
 
 #
 # ATTRIBUTES
@@ -102,11 +103,14 @@ sub setup_form {
     my ( $self, @args ) = @_;
 
     if ( @args == 1 ) {
-        $self->params( $args[0] );
+        $self->params( Data::Clone::clone( $args[0] ) );
     }
     elsif ( @args > 1 ) {
         my %hash = @args;
         while ( my ( $key, $value ) = each %hash ) {
+            if ( $key eq 'params' ) {
+                $value = Data::Clone::clone($value);
+            }
             $self->$key($value);
         }
     }
