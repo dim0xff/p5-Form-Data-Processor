@@ -446,9 +446,9 @@ on C<contains> won't give effect.
 
     has to_delete => ( is => 'rw', isa => 'Bool' );
 
-    has_fields 'categories'          => ( type => 'Repeatable',  required => 1 );
-    has_fields 'categories.id'       => ( type => 'Number::Int', required => 1 );
-    has_fields 'categories.position' => ( type => 'Number::Int', required => 1 );
+    has_field 'categories'          => ( type => 'Repeatable',  required => 1 );
+    has_field 'categories.id'       => ( type => 'Number::Int', required => 1 );
+    has_field 'categories.position' => ( type => 'Number::Int', required => 1 );
 
     # XXX - will not work as expected
     after 'setup_form' => sub {
@@ -476,6 +476,7 @@ on C<contains> won't give effect.
     };
 
     # Will work!
+    # So, you need both: "after 'setup_form'" and "after 'init_input'"
 
 The other way is using L</fallback> option.
 
