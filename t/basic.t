@@ -1,14 +1,20 @@
 use strict;
 use warnings;
 
+use lib 't/lib';
+
 use Test::More;
 use Test::Exception;
 use Test::Memory::Cycle;
 
 use Moose::Util::TypeConstraints;
 
-subtype 'GreaterThan10' => as 'Int' => where { $_ > 10 } =>
-    message {"This number ($_) is not greater than 10"};
+#<<<
+subtype 'GreaterThan10'
+    => as 'Int'
+    => where { $_ > 10 }
+    => message {"This number ($_) is not greater than 10"};
+#>>>
 
 # Field with input_transform action
 package Form::Field1 {
@@ -71,12 +77,16 @@ package Form::Field2 {
     use Form::Data::Processor::Moose;
     extends 'Form::Data::Processor::Field';
 
+    use Form::TraitFor::AllFields;
+
+    use Form::Types ('DeclaredGreaterThan10');
+
     apply [
         {
             check   => sub { return ( shift > 10 ) },
             message => 'Number is too small'
         },
-        'GreaterThan10'
+        DeclaredGreaterThan10
     ];
 }
 
