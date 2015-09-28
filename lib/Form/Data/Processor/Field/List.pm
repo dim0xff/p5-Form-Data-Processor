@@ -56,7 +56,7 @@ has multiple => (
 
 has max_input_length => (
     is        => 'rw',
-    isa       => 'Int|Undef',
+    isa       => 'Maybe[Int]',
     predicate => 'has_max_input_length',
     clearer   => 'clear_max_input_length',
     trigger   => sub { $_[0]->clear_max_input_length unless defined $_[1] },
@@ -354,14 +354,12 @@ B<Notice:> current attribute is resettable.
 
 =over 4
 
-=item Type: Int|Undef
-
-=item Default: undef
+=item Type: Int
 
 =back
 
 Indicate max number of input values, which could be provided to validate.
-C<Zero> means no limit. C<Undef> means, that max number is equal
+C<Zero> means no limit. If undefined, then max number is equal
 to C<num_options>.
 
 B<Notice:> when you set it to C<zero> and try to validate huge number

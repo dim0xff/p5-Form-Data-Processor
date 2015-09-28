@@ -21,7 +21,7 @@ has not_nullable => (
 
 has maxlength => (
     is        => 'rw',
-    isa       => 'Int|Undef',
+    isa       => 'Maybe[Int]',
     predicate => 'has_maxlength',
     clearer   => 'clear_maxlength',
     trigger   => sub { $_[0]->clear_maxlength unless defined $_[1] },
@@ -29,7 +29,7 @@ has maxlength => (
 
 has minlength => (
     is        => 'rw',
-    isa       => 'Int|Undef',
+    isa       => 'Maybe[Int]',
     predicate => 'has_minlength',
     clearer   => 'clear_minlength',
     trigger   => sub { $_[0]->clear_minlength unless defined $_[1] },
