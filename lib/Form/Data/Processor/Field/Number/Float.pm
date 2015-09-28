@@ -12,7 +12,7 @@ use String::Numeric ('is_decimal');
 # $1 integer part
 # $2 decimal part with dot
 # $3 decimal part
-use constant FLOAT_RE => qr/^-? ([0-9]+)? (\. ([0-9]+)? )?$/x;
+use constant FLOAT_RE => qr/^-? ([0-9]+) (\. ([0-9]+)? )?$/x;
 
 
 has strong_float => (
@@ -23,7 +23,7 @@ has strong_float => (
 
 has precision => (
     is        => 'rw',
-    isa       => 'Int|Undef',
+    isa       => 'Maybe[Int]',
     default   => 2,
     predicate => 'has_precision',
     clearer   => 'clear_precision',

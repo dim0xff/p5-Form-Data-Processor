@@ -21,12 +21,6 @@ after _init_external_validators => sub {
     $_->_init_external_validators for $self->all_fields;
 };
 
-after generate_full_name => sub {
-    my $self = shift;
-
-    $_->generate_full_name for $self->all_fields;
-};
-
 before ready => sub { $_[0]->_ready_fields };
 
 before reset => sub {

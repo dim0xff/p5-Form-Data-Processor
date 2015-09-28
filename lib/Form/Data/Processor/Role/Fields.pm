@@ -137,6 +137,7 @@ after clear_errors => sub {
     shift->clear_fields_errors;
 };
 
+after clear_fields => sub { shift->clear_index };
 
 around clone => sub {
     my $orig = shift;
@@ -522,7 +523,9 @@ Also provides methods:
 
 =item all_fields
 
-=item clear_field
+=item clear_fields
+
+Also L</clear_index>.
 
 =item add_field(field)
 

@@ -436,6 +436,60 @@ package main {
         );
     };
 
+
+    subtest "reset CAVEATS" => sub {
+        subtest 'after setup_form' => sub {
+            $form->field('rep_1')->clear_fields;
+
+            # 1
+            $form->process( { rep_1 => [ ( { text => 'Text' } ) x 5 ] } );
+
+            # 2 Emulate process with less repeatable count
+            $form->clear_form;
+
+            $form->setup_form({ rep_1 => [ ( { text => 'Text' } ) x 3 ] });
+            $_->field('text')->disabled(1) for $form->field('rep_1')->all_fields;
+
+            $form->init_input( $form->params );
+            $form->validate_fields;
+
+            # 3 Process with more repeatable count than on #2
+            $form->process( { rep_1 => [ ( { text => 'Text' } ) x 5 ] } );
+
+            ok( ! $form->field("rep_1.$_.text")->disabled, "#$_ is not disabled" ) for (0, 1, 2);
+            ok(   $form->field("rep_1.$_.text")->disabled, "#$_ is disabled" )     for (3, 4);
+        };
+
+        subtest 'after init_input' => sub {
+            $form->field('rep_1')->clear_fields;
+
+            # 1
+            $form->process( { rep_1 => [ ( { text => 'Text' } ) x 5 ] } );
+
+            # 2 Emulate process with less repeatable count
+            $form->clear_form;
+
+            $form->setup_form({ rep_1 => [ ( { text => 'Text' } ) x 3 ] });
+            $form->field('rep_1')->contains->field('text')->disabled(1);
+
+            $form->init_input( $form->params );
+            $_->field('text')->disabled(1) for $form->field('rep_1')->all_fields;
+
+            $form->validate_fields;
+
+            # 3 Emulate process with more repeatable count than on #1
+            $form->clear_form;
+
+            $form->setup_form({ rep_1 => [ ( { text => 'Text' } ) x 6 ] });
+            $form->field('rep_1')->contains->field('text')->disabled(0);
+
+            $form->init_input( $form->params );
+            $form->validate_fields;
+
+            ok( ! $form->field("rep_1.$_.text")->disabled, "#$_ is not disabled" ) for ( 0 .. 5 );
+        };
+    };
+
     memory_cycle_ok( $form, 'Still no memory cycles' );
     done_testing();
 }
