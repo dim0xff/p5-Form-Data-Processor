@@ -56,7 +56,7 @@ has multiple => (
 
 has max_input_length => (
     is        => 'rw',
-    isa       => 'Int|Undef',
+    isa       => 'Maybe[Int]',
     predicate => 'has_max_input_length',
     clearer   => 'clear_max_input_length',
     trigger   => sub { $_[0]->clear_max_input_length unless defined $_[1] },
@@ -177,16 +177,24 @@ sub internal_validation {
     # Value must be ArrayRef
     return $self->add_error( 'invalid', $values ) unless ref $values eq 'ARRAY';
 
-    # Check input length
-    # Number of input values must not be great
-    # than max_input_length or num_options
-    return $self->add_error( 'max_input_length', $values )
-        if @{$values}
-        > ( ( $self->max_input_length // $self->num_options ) || @{$values} );
 
-    # If is not multiple and more than one value
-    return $self->add_error( 'is_not_multiple', $values )
-        if !$self->multiple && @{$values} > 1;
+    # Check input length for multiple field
+    if ( $self->multiple ) {
+
+        # Number of input values must not be great
+        # than max_input_length or num_options
+        if ( ( ( $self->max_input_length // $self->num_options ) || @{$values} )
+            < @{$values} )
+        {
+            return $self->add_error( 'max_input_length', $values );
+        }
+    }
+
+    # If is not multiple then only one value allowed
+    elsif ( @{$values} > 1 ) {
+        return $self->add_error( 'is_not_multiple', $values );
+    }
+
 
     # If no errors, then check each value
     for my $value ( @{$values} ) {
@@ -354,15 +362,13 @@ B<Notice:> current attribute is resettable.
 
 =over 4
 
-=item Type: Int|Undef
-
-=item Default: undef
+=item Type: Int
 
 =back
 
-Indicate max number of input values, which could be provided to validate.
-C<Zero> means no limit. C<Undef> means, that max number is equal
-to C<num_options>.
+When field allows L</multiple> input, indicate max number of input values,
+which could be provided to validate. C<Zero> means no limit. If undefined,
+then max number is equal to C<num_options>.
 
 B<Notice:> when you set it to C<zero> and try to validate huge number
 of non unique values, this could take a lot of time.

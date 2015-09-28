@@ -18,7 +18,7 @@ has format => (
 
 has locale => (
     is        => 'rw',
-    isa       => 'Str|Undef',
+    isa       => 'Maybe[Str]',
     predicate => 'has_locale',
     clearer   => 'clear_locale',
     trigger   => sub { $_[0]->clear_locale unless defined $_[1] },
@@ -26,7 +26,7 @@ has locale => (
 
 has time_zone => (
     is        => 'rw',
-    isa       => 'Str|Undef',
+    isa       => 'Maybe[Str]',
     predicate => 'has_time_zone',
     clearer   => 'clear_time_zone',
     trigger   => sub { $_[0]->clear_time_zone unless defined $_[1] },
@@ -34,7 +34,7 @@ has time_zone => (
 
 has min => (
     is        => 'rw',
-    isa       => 'Str|Undef',
+    isa       => 'Maybe[Str]',
     predicate => 'has_min',
     clearer   => 'clear_min',
     trigger   => sub { $_[0]->clear_min unless defined $_[1] },
@@ -42,7 +42,7 @@ has min => (
 
 has max => (
     is        => 'rw',
-    isa       => 'Str|Undef',
+    isa       => 'Maybe[Str]',
     predicate => 'has_max',
     clearer   => 'clear_max',
     trigger   => sub { $_[0]->clear_max unless defined $_[1] },

@@ -11,7 +11,7 @@ use String::Numeric ('is_numeric');
 
 has min => (
     is        => 'rw',
-    isa       => 'Num|Undef',
+    isa       => 'Maybe[Num]',
     predicate => 'has_min',
     clearer   => 'clear_min',
     trigger   => sub { $_[0]->clear_min unless defined $_[1] },
@@ -19,7 +19,7 @@ has min => (
 
 has max => (
     is        => 'rw',
-    isa       => 'Num|Undef',
+    isa       => 'Maybe[Num]',
     predicate => 'has_max',
     clearer   => 'clear_max',
     trigger   => sub { $_[0]->clear_max unless defined $_[1] },
