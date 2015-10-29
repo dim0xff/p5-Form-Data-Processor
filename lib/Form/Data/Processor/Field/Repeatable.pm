@@ -65,9 +65,9 @@ around clone => sub {
     my $clone = $self->$orig(@_);
 
     if ( $self->has_contains ) {
-        my $contains
-            = $self->contains->clone( form => $clone->form, contains => undef );
+        my $contains = $self->contains->clone( form => $clone->form );
 
+        # Need here to provide right full_name
         $contains->parent($clone);
         $clone->contains($contains);
     }
@@ -187,7 +187,7 @@ sub internal_validation {
         && $self->input_length > $self->max_input_length;
 
     $self->validate_fields;
-};
+}
 
 sub _result {
     my $self = shift;
