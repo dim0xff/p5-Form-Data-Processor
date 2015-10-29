@@ -67,6 +67,14 @@ package Form {
                                     name    => 'compound.repeatable.compound.float',
                                     type    => 'Number::Float',
                                 },
+                    {
+                        name     => 'repeatable',
+                        type     => 'Repeatable',
+                    },
+                        {
+                            name     => 'repeatable.contains',
+                            type     => 'Repeatable',
+                        },
                 ],
                 #>>>
             };
