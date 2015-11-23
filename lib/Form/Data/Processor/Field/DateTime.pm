@@ -100,9 +100,8 @@ sub validate_datetime {
 
     my $strp = DateTime::Format::Strptime->new( $self->_strptime_options );
 
-    my $dt = eval { $strp->parse_datetime($value) };
+    my $dt = $strp->parse_datetime($value) or return;
 
-    return 0 if $@ || $strp->errmsg;
     return $self->_set_result($dt);
 }
 
@@ -134,7 +133,8 @@ sub _strptime_options {
     my $self = shift;
 
     return (
-        pattern => $self->format,
+        on_error => sub {},
+        pattern  => $self->format,
         ( $self->has_time_zone ? ( time_zone => $self->time_zone ) : () ),
         ( $self->has_locale    ? ( locale    => $self->locale )    : () ),
     );

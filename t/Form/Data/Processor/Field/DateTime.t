@@ -76,7 +76,7 @@ package main {
             !$form->process(
                 {
                     zone         => Time::Piece->new->ymd . "",
-                    format_start => '2013-12-1',
+                    format_start => '30-11-13',
                     format_end   => '02 Dec, 2013',
                 },
             ),
@@ -98,7 +98,7 @@ package main {
                 {
                     zone         => Time::Piece->new->ymd . "T27:28:01",
                     format_start => '1-12-12',
-                    format_end   => '1 Nov, 2012 13:00',
+                    format_end   => '1 Nov, 2012',
                 },
             ),
             'Form validated with errors'
@@ -120,7 +120,7 @@ package main {
             $form->process(
                 {
                     zone         => '2014-12-28T18:26:28+0300',
-                    format_start => '05-12-13T16:00:21+0300',
+                    format_start => '05-12-13',
                     format_end   => '1 Nov, 2012',
                 },
             ),
