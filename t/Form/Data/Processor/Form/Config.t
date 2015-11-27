@@ -105,7 +105,7 @@ package My::Form::Person {
 package main {
     my $config = {
         form => {
-            field_name_space => ['My::Field'],
+            field_namespace => ['My::Field'],
         },
         prefields => [
             {

@@ -35,7 +35,7 @@ package Form {
 
     with 'Form::Data::Processor::TraitFor::Form::DumpErrors';
 
-    has '+field_name_space' => ( default => sub { ['Form'] } );
+    has '+field_namespace' => ( default => sub { ['Form'] } );
 
     has_field field => ( type => 'Field' );
 }

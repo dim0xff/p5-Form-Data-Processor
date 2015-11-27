@@ -106,7 +106,7 @@ package Form::Prev {
 
     extends 'Form::Data::Processor::Form';
 
-    has '+field_name_space' => ( default => sub { ['Form'] } );
+    has '+field_namespace' => ( default => sub { ['Form'] } );
 
     has_field field_1 => (
         type     => 'Field1',
