@@ -103,7 +103,7 @@ package My::Form::Person {
 
 
 package main {
-    my $config = {
+    our $config = {
         form => {
             field_namespace => ['My::Field'],
         },
@@ -142,7 +142,7 @@ package main {
                 name  => '+addresses.contains.type',
                 title => 'Address type',
             },
-        ]
+        ],
     };
 
     my ( $fh, $filename ) = tempfile(
@@ -168,6 +168,37 @@ package main {
             'Fail to load from non existing file. Message OK.'
         );
 
+        do {
+            local $config = [
+                {
+                    name               => 'addresses',
+                    title              => 'Person Addresses',
+                    type               => 'Repeatable',
+                    max_input_length   => 2,
+                    prebuild_subfields => 2,
+                },
+                {
+                    name  => 'addresses.address',
+                    title => 'String',
+                },
+                {
+                    name  => 'addresses.type',
+                    title => 'Number::Int',
+                },
+            ];
+
+            ok(
+                $form = Form::Data::Processor::Form::Config->new(
+                    config => $config
+                ),
+                'Config loaded from ArrayRef'
+            );
+            is_deeply(
+                $form->_config,
+                { fields => $config },
+                '...and config is OK'
+            );
+        };
 
         ok(
             $form = Form::Data::Processor::Form::Config->new(
@@ -176,7 +207,6 @@ package main {
             'Config loaded from file'
         );
         is_deeply( $form->_config, $config, '... and config is OK' );
-
 
         ok(
             $form
