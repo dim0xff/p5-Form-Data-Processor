@@ -695,7 +695,7 @@ Do L<reset|Form::Data::Processor::Field/reset> and
 
 =back
 
-Wrapper around base class C<return> method.
+Wrapper around base class C<result> method.
 
 Return C<undef> when "L<has errors|/has_fields_errors>". Or result of original
 C<result> method call.
