@@ -5,8 +5,7 @@ package Form::Data::Processor::Form;
 use Moose;
 use namespace::autoclean;
 
-with 'Form::Data::Processor::Role::Errors';
-with 'Form::Data::Processor::Role::Fields';
+with 'Form::Data::Processor::Role::Errors', 'Form::Data::Processor::Role::Fields';
 
 use Data::Clone ();
 

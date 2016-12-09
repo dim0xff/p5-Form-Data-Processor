@@ -43,6 +43,11 @@ package Form {
             },
         },
     );
+
+    has_field without_custom_result => (
+        type   => 'Boolean',
+        traits => ['Boolean::CustomResult'],
+    );
 }
 
 package main {
@@ -55,32 +60,51 @@ package main {
     };
 
     subtest 'confirm' => sub {
-        ok( $form->process( { confirm => 1, confirm_ref => 1 } ),
-            'Form processed' );
+        ok(
+            $form->process(
+                {
+                    confirm               => 1,
+                    confirm_ref           => 1,
+                    without_custom_result => 'abc',
+                }
+            ),
+            'Form processed'
+        );
         is_deeply(
             $form->result,
             {
-                confirm     => 'Yes, confirmed',
-                confirm_ref => { title => 'Success', value => 1 },
+                confirm               => 'Yes, confirmed',
+                confirm_ref           => { title => 'Success', value => 1 },
+                without_custom_result => 1,
             },
             'Proper result'
         );
     };
 
     subtest 'no result' => sub {
-        ok( $form->process( { confirm => '0', confirm_ref => 0 } ),
-            'Form processed' );
+        ok(
+            $form->process(
+                {
+                    confirm               => '0',
+                    confirm_ref           => 0,
+                    without_custom_result => undef,
+                }
+            ),
+            'Form processed'
+        );
         is_deeply(
             $form->result,
             {
-                confirm     => $Bool::false,
-                confirm_ref => { title => 'Failed', value => 0 },
+                confirm               => $Bool::false,
+                confirm_ref           => { title => 'Failed', value => 0 },
+                without_custom_result => 0,
             },
             'Proper result'
         );
     };
 
     subtest 'reset' => sub {
+
         # Change data in result
         $form->result->{confirm_ref}{title} = 'Success';
 

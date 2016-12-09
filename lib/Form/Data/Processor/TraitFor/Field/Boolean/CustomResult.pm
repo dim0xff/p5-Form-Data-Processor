@@ -15,7 +15,8 @@ has custom_result => (
         true  => Optional [Any],
         false => Optional [Any],
     ],
-    clearer => 'clear_custom_result',
+    default   => sub { +{ true => undef, false => undef } },
+    clearer   => 'clear_custom_result',
 );
 
 after populate_defaults => sub {

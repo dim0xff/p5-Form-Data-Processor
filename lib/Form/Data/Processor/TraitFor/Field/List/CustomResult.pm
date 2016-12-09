@@ -25,6 +25,8 @@ sub _result {
 sub _result_for {
     my ( $self, $value ) = @_;
 
+    return $value unless defined $value;
+
     return
           exists $self->_options_index->{$value}{result}
         ? ref $self->_options_index->{$value}{result}

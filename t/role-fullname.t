@@ -30,7 +30,7 @@ package Base {
     use Form::Data::Processor::Moose;
     extends 'Form::Data::Processor::Form';
 
-    has '+field_name_space' => ( default => sub { ['Form::Field'] } );
+    has '+field_namespace' => ( default => sub { ['Form::Field'] } );
 
     sub dump_errors {
         return { map { $_->full_name => [ $_->all_errors ] }

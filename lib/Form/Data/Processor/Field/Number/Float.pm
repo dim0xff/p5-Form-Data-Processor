@@ -7,7 +7,7 @@ use namespace::autoclean;
 
 extends 'Form::Data::Processor::Field::Number';
 
-use String::Numeric ('is_decimal');
+use String::Numeric qw(is_decimal);
 
 # $1 integer part
 # $2 decimal part with dot

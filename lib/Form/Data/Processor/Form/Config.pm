@@ -12,7 +12,7 @@ use Storable qw(dclone);
 
 has config => (
     is       => 'rw',
-    isa      => 'HashRef|Str',
+    isa      => 'HashRef|ArrayRef|Str',
     required => 1,
 );
 
@@ -30,7 +30,6 @@ around _build_fields => sub {
     my $self = shift;
 
     $self->load_config;
-
 
     $self->_init_config_form;
     $self->_build_config_fields('prefields');
@@ -56,11 +55,16 @@ sub load_config {
 
     # Config from hash and it is ready to use
     if ( ref $self->config eq 'HASH' ) {
-        $self->_set_config( dclone( $self->config ) );
+        return $self->_set_config( dclone( $self->config ) );
+    }
+
+    # Config from array - fields provided
+    elsif ( ref $self->config eq 'ARRAY' ) {
+        return $self->_set_config( { fields => dclone( $self->config ) } );
     }
 
     # Need to read config from file
-    else {
+    elsif ( !ref $self->config ) {
         confess "Form config file is not found (${\$self->config})"
             unless -f $self->config;
 
@@ -73,8 +77,10 @@ sub load_config {
         );
 
         $config = $config->[0]{ $self->config } || {};
-        $self->_set_config($config);
+        return $self->_set_config($config);
     }
+
+    confess "Unknown config ref type: " . ( ref $self->config );
 }
 
 sub _init_config_form {
@@ -143,6 +149,19 @@ Form can be extended by using the usual way.
 When C<HashRef>, then it will be interpreted as config and will used
 to setup form.
 
+When C<ArrayRef>, then it will be treated as C<fields> sections in C<HashRef>
+form.
+
+    # In this case $define from SYNOPSIS looks like:
+    my $define = [
+        { name => 'name',            type => 'String', required => 1 },
+        { name => 'email',           type => 'Email',  required => 1 },
+        { name => 'address',         type => 'Copmound' },
+        { name => 'address.city',    type => 'String' },
+        { name => 'address.state',   type => 'String' },
+        { name => 'address.address', type => 'Text' },
+    ];
+
 When C<Str>, then it will be interpreted as config file and will be loaded
 via L<Config::Any>, after that loaded config will be used to setup form.
 
@@ -171,12 +190,12 @@ Config schema is:
 Here could be placed attributes with values for form. These attributes will be
 assigned to form B<before> creating any fields.
 
-=item \@prefields
+=item \@prefields C<ArrayRef>
 
 Here could be placed C<HashRef>s with fields definition attributes. These fields
 will be created B<before> creation form defined fields.
 
-=item \@fields
+=item \@fields C<ArrayRef>
 
 Here could be placed C<HashRef>s with fields definition attributes. These fields
 will be created B<after> creation form defined fields.
