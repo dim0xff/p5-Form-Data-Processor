@@ -8,7 +8,7 @@ use namespace::autoclean;
 use Class::Load qw(load_optional_class);
 use Data::Clone ();
 
-requires 'form', 'has_errors', 'clear_errors', 'has_errors';
+requires 'form', 'has_errors', 'clear_errors';
 
 
 #

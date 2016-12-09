@@ -7,6 +7,11 @@ use namespace::autoclean;
 
 use List::MoreUtils qw(uniq);
 
+sub errors;
+sub clear_errors;
+sub has_errors;
+sub num_errors;
+
 has errors => (
     is      => 'rw',
     isa     => 'ArrayRef',
@@ -20,6 +25,11 @@ has errors => (
         num_errors   => 'count',
     }
 );
+
+
+sub error_messages;
+sub set_error_message;
+sub get_error_message;
 
 has error_messages => (
     is      => 'rw',
