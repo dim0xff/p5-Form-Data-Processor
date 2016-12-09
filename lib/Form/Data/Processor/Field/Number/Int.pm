@@ -7,7 +7,7 @@ use namespace::autoclean;
 
 extends 'Form::Data::Processor::Field::Number';
 
-use String::Numeric ('is_integer');
+use String::Numeric qw(is_integer);
 
 sub BUILD {
     my $self = shift;

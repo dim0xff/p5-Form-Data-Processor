@@ -7,7 +7,6 @@ package                                         # hide from PAUSE
 # and Form::Data::Processor::Moose meta
 
 use Moose::Role;
-use namespace::autoclean;
 
 has field_list => (
     is      => 'rw',

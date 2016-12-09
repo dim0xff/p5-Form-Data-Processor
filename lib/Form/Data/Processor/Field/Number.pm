@@ -7,7 +7,7 @@ use namespace::autoclean;
 
 extends 'Form::Data::Processor::Field';
 
-use String::Numeric ('is_numeric');
+use String::Numeric qw(is_numeric);
 
 has min => (
     is        => 'rw',

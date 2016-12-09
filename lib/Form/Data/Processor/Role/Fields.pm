@@ -69,14 +69,14 @@ has has_fields_errors => (
     }
 );
 
-has field_name_space => (
+has field_namespace => (
     is      => 'rw',
     isa     => 'ArrayRef[Str]',
     traits  => ['Array'],
     lazy    => 1,
     default => sub { [] },
     handles => {
-        add_field_name_space => 'push',
+        add_field_namespace => 'push',
     },
 );
 
@@ -337,8 +337,8 @@ sub _find_field_class {
 
     my $field_ns
         = $self->form
-        ? $self->form->field_name_space
-        : $self->field_name_space;
+        ? $self->form->field_namespace
+        : $self->field_namespace;
 
     my @classes;
     push @classes, $type if $type =~ s/^\+//;
@@ -473,7 +473,7 @@ Actually this role should be used with L<Form::Data::Processor::Role::Errors>,
 or class should provide the same methods as C<Form::Data::Processor::Role::Errors>.
 
 
-=attr field_name_space
+=attr field_namespace
 
 =over 4
 
@@ -487,12 +487,12 @@ It contains name spaces for searching fields classes, look L<Form::Data::Process
 for more information. By default only C<Form::Data::ProcessorX::Field>
 and C<Form::Data::Processor::Field> name spaces are being used.
 
-Provides method C<add_field_name_space> for adding new field name space.
+Provides method C<add_field_namespace> for adding new field name space.
 
     package My::Form;
     extends 'Form::Data::Processor::Form';
 
-    has +field_name_space => (
+    has +field_namespace => (
         default => sub { ['My::Form::Field'] }
     );
 
@@ -695,7 +695,7 @@ Do L<reset|Form::Data::Processor::Field/reset> and
 
 =back
 
-Wrapper around base class C<return> method.
+Wrapper around base class C<result> method.
 
 Return C<undef> when "L<has errors|/has_fields_errors>". Or result of original
 C<result> method call.
